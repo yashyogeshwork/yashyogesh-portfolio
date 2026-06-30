@@ -1,0 +1,111 @@
+/* ==========================================================================
+   ABOUT PAGE
+   ========================================================================== */
+
+.about-hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: var(--space-6) 0;
+  margin-top: 64px; /* clear fixed nav */
+}
+
+.about-hero-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: var(--space-6);
+  align-items: center;
+  width: 100%;
+}
+
+.about-portrait {
+  aspect-ratio: 3 / 4;
+  background: var(--color-bg-section);
+  max-height: 70vh;
+}
+
+.about-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.about-statement {
+  font-size: 28px;
+  font-weight: var(--fw-medium);
+  line-height: 1.35;
+  letter-spacing: var(--ls-heading);
+}
+
+.about-body {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-6);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.about-body p {
+  max-width: var(--content-max-width);
+  margin-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.about-body p:last-child {
+  margin-bottom: 0;
+}
+
+.about-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.about-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-fact-label {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.about-fact-value {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.about-cv {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  width: fit-content;
+  transition: background var(--duration-hover) var(--ease-cinematic),
+              border-color var(--duration-hover) var(--ease-cinematic);
+}
+
+.about-cv:hover {
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  border-color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .about-hero-grid,
+  .about-body {
+    grid-template-columns: 1fr;
+  }
+  .about-statement {
+    font-size: 24px;
+  }
+}

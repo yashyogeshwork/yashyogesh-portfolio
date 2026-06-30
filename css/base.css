@@ -1,0 +1,209 @@
+/* ==========================================================================
+   RESET
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* Visible keyboard focus — accessibility floor */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-small);
+}
+
+/* ==========================================================================
+   TYPOGRAPHY
+   ========================================================================== */
+
+h1, h2, h3, h4 {
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  color: var(--color-text-primary);
+}
+
+h1 {
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-medium);
+}
+
+h2 {
+  font-size: var(--fs-section);
+  font-weight: var(--fw-medium);
+}
+
+p {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.caption {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   LAYOUT UTILITIES
+   ========================================================================== */
+
+.container {
+  max-width: var(--site-max-width);
+  margin: 0 auto;
+  padding: 0 var(--side-padding-desktop);
+}
+
+.content-width {
+  max-width: var(--content-max-width);
+}
+
+.section {
+  padding: var(--space-7) 0;
+}
+
+.section-alt {
+  background: var(--color-bg-section);
+}
+
+/* ==========================================================================
+   IMAGE TREATMENT — locked: rounded corners, hover-enlarge
+   ========================================================================== */
+
+.img-rounded {
+  border-radius: var(--radius-image);
+  overflow: hidden;
+}
+
+.img-hover-enlarge {
+  overflow: hidden;
+  border-radius: var(--radius-image);
+}
+
+.img-hover-enlarge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-hover) var(--ease-cinematic);
+}
+
+.img-hover-enlarge:hover img {
+  transform: scale(1.04);
+}
+
+/* Dark gradient overlay — for text over video/image, anchored bottom by default */
+.gradient-overlay-top {
+  position: relative;
+}
+
+.gradient-overlay-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gradient-overlay-bottom {
+  position: relative;
+}
+
+.gradient-overlay-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   ACCENT — used sparingly, ~3% of site
+   ========================================================================== */
+
+.accent-underline {
+  position: relative;
+}
+
+.accent-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--color-accent);
+  transition: width var(--duration-hover) var(--ease-cinematic);
+}
+
+.accent-underline:hover::after {
+  width: 100%;
+}

@@ -1,0 +1,80 @@
+/* ==========================================================================
+   YASH YOGESH — DESIGN SYSTEM
+   Locked tokens. Do not introduce new values outside this scale.
+   ========================================================================== */
+
+:root {
+  /* ---- Color ---- */
+  --color-bg: #FFFFFF;
+  --color-bg-section: #F5F5F3;
+  --color-border: #E8E8E5;
+  --color-text-primary: #111111;
+  --color-text-secondary: #888888;
+  --color-accent: #FFB3D0;
+
+  /* ---- Typography ---- */
+  --font-primary: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --fs-hero: 64px;
+  --fs-section: 36px;
+  --fs-body: 17px;
+  --fs-caption: 13px;
+
+  --lh-heading: 1.1;
+  --lh-body: 1.6;
+
+  --ls-heading: -0.02em;
+  --ls-body: 0em;
+
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* ---- Spacing scale — 8 / 16 / 24 / 40 / 64 / 96 / 160 ---- */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+  --space-6: 96px;
+  --space-7: 160px;
+
+  /* ---- Layout ---- */
+  --content-max-width: 720px;
+  --site-max-width: 1440px;
+  --side-padding-desktop: 64px;
+  --side-padding-tablet: 40px;
+  --side-padding-mobile: 24px;
+
+  /* ---- Motion ---- */
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-standard: 0.6s;
+  --duration-hover: 0.3s;
+
+  /* ---- Radius ---- */
+  --radius-image: 12px;
+  --radius-pill: 999px;
+  --radius-small: 6px;
+}
+
+/* ==========================================================================
+   RESPONSIVE TYPE SCALE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --fs-hero: 40px;
+    --fs-section: 28px;
+    --fs-body: 16px;
+    --side-padding-desktop: var(--side-padding-mobile);
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --fs-hero: 52px;
+    --fs-section: 32px;
+    --side-padding-desktop: var(--side-padding-tablet);
+  }
+}

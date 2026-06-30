@@ -1,0 +1,258 @@
+/* ==========================================================================
+   WHITE STUDIO — curved gallery experience
+   Cylindrical curve of still images, drifting past the viewer.
+   Pure CSS 3D — no animation libraries required, lightweight.
+   ========================================================================== */
+
+.studio {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* ---- Boot sequence ---- */
+
+.studio-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.2s var(--ease-cinematic);
+}
+
+.studio-boot.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.studio-boot-mark {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  animation: boot-flicker 1.8s var(--ease-cinematic) forwards;
+}
+
+@keyframes boot-flicker {
+  0% { opacity: 0; }
+  30% { opacity: 0.5; }
+  45% { opacity: 0.1; }
+  60% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+/* ==========================================================================
+   PROJECT SELECTOR — which installation's gallery is showing
+   ========================================================================== */
+
+.studio-project-nav {
+  position: absolute;
+  top: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  gap: var(--space-4);
+}
+
+.studio-project-btn {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding-bottom: var(--space-1);
+  border-bottom: 1.5px solid transparent;
+  transition: color var(--duration-hover) var(--ease-cinematic),
+              border-color var(--duration-hover) var(--ease-cinematic);
+}
+
+.studio-project-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.studio-project-btn.is-active {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-accent);
+}
+
+/* ==========================================================================
+   CURVED GALLERY — the cylindrical screen experience
+   ========================================================================== */
+
+.studio-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1800px;
+}
+
+.studio-curve {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  cursor: grab;
+}
+
+.studio-curve.is-dragging {
+  cursor: grabbing;
+}
+
+.studio-slide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(46vw, 620px);
+  height: min(58vh, 720px);
+  margin-top: calc(min(58vh, 720px) / -2);
+  margin-left: calc(min(46vw, 620px) / -2);
+  border-radius: var(--radius-image);
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  transition: filter 0.5s var(--ease-cinematic),
+              opacity 0.5s var(--ease-cinematic);
+  backface-visibility: hidden;
+}
+
+.studio-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.45), transparent 45%);
+  opacity: 0;
+  transition: opacity var(--duration-hover) var(--ease-cinematic);
+}
+
+.studio-slide.is-center::after {
+  opacity: 1;
+}
+
+.studio-slide.is-center {
+  cursor: pointer;
+}
+
+.studio-slide:not(.is-center) {
+  filter: brightness(0.7) saturate(0.85);
+}
+
+.studio-slide.is-hovered:not(.is-center) {
+  filter: brightness(0.85) saturate(1);
+}
+
+/* Caption only visible on the centered/focused slide */
+.studio-slide-caption {
+  position: absolute;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
+  color: var(--color-bg);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--duration-standard) var(--ease-cinematic),
+              transform var(--duration-standard) var(--ease-cinematic);
+}
+
+.studio-slide.is-center .studio-slide-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.studio-slide-eyebrow {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+
+.studio-slide-title {
+  font-size: 24px;
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+}
+
+/* ---- Drag hint ---- */
+
+.studio-hint {
+  position: absolute;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  pointer-events: none;
+  transition: opacity var(--duration-standard) var(--ease-cinematic);
+}
+
+.studio-hint.is-hidden {
+  opacity: 0;
+}
+
+/* ---- Click-to-enter transition ---- */
+
+.studio-enter-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: var(--color-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease-cinematic);
+}
+
+.studio-enter-transition.is-active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ==========================================================================
+   MOBILE — simplified, gentler curve, touch-first
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .studio-project-nav {
+    top: var(--space-5);
+    gap: var(--space-3);
+  }
+
+  .studio-project-btn {
+    font-size: 10px;
+  }
+
+  .studio-stage {
+    perspective: 900px;
+  }
+
+  .studio-slide {
+    width: 78vw;
+    height: 46vh;
+    margin-top: calc(46vh / -2);
+    margin-left: calc(78vw / -2);
+  }
+
+  .studio-slide-title {
+    font-size: 19px;
+  }
+
+  .studio-hint {
+    bottom: var(--space-4);
+  }
+}

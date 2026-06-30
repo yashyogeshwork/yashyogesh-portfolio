@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yash Yogesh — Transportation Designer</title>
+  <meta name="description" content="Yash Yogesh — Transportation Designer. Incoming MFA, Umeå Institute of Design.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/studio.css">
+</head>
+<body data-page="home">
+
+  <!-- Boot sequence -->
+  <div class="studio-boot" id="studioBoot">
+    <div class="studio-boot-mark">YY</div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="site-nav is-hidden-home" id="siteNav">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">YY</a>
+      <div class="nav-links">
+        <a href="about.html" class="nav-link">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- White Studio — curved gallery -->
+  <main class="studio">
+
+    <div class="studio-project-nav">
+      <button class="studio-project-btn is-active" data-project="hive">Hive</button>
+      <button class="studio-project-btn" data-project="toad">TOAD</button>
+      <button class="studio-project-btn" data-project="surface">Surface C1</button>
+      <button class="studio-project-btn" data-project="sketches">Sketches</button>
+    </div>
+
+    <div class="studio-stage">
+      <div class="studio-curve" id="studioCurve"></div>
+    </div>
+
+    <div class="studio-hint" id="studioHint">Drag to explore</div>
+
+  </main>
+
+  <div class="studio-enter-transition" id="studioEnterTransition"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="js/studio.js"></script>
+</body>
+</html>
