@@ -213,13 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 150);
   }
 
-  /* ---------- Scroll: single-step advance, exits past the last slide ---------- */
+  /* ---------- Shared step logic — used by BOTH desktop wheel scroll
+     AND vertical touch swipe, so the two behave identically: same
+     trigger threshold, same easing, same label update, same exit. ---------- */
   let wheelAcc = 0;
   const WHEEL_TRIGGER = 90;
-  function onWheel(e) {
-    e.preventDefault();
+  function stepFromDelta(delta) {
     if (state !== 'hold' || exited) return;
-    wheelAcc += e.deltaY;
+    wheelAcc += delta;
     if (Math.abs(wheelAcc) < WHEEL_TRIGGER) return;
     const dir = wheelAcc > 0 ? 1 : -1;
     wheelAcc = 0;
@@ -234,9 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
     commitLabel(target);
     animateEase(dir, STEP_MS, scheduleHold);
   }
+
+  function onWheel(e) {
+    e.preventDefault();
+    stepFromDelta(e.deltaY);
+  }
   addEventListener('wheel', onWheel, { passive: false });
 
-  /* ---------- Direct drag / swipe — 1:1, own control, never exits ---------- */
+  /* ---------- Direct drag — 1:1, own control, never exits ---------- */
   let dragging = false;
   let dragStartX = 0;
   let dragStartPos = 0;
@@ -271,9 +277,61 @@ document.addEventListener('DOMContentLoaded', () => {
   cinema.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
   addEventListener('mousemove', (e) => dragMove(e.clientX));
   addEventListener('mouseup', dragEnd);
-  cinema.addEventListener('touchstart', (e) => dragStart(e.touches[0].clientX), { passive: true });
-  addEventListener('touchmove', (e) => dragMove(e.touches[0].clientX), { passive: true });
-  addEventListener('touchend', dragEnd);
+
+  /* ---------- Unified touch gesture ----------
+     A touch could mean either "drag the carousel horizontally" or
+     "swipe to scroll-step" — we don't know which until the finger has
+     actually moved a little. Deciding per-gesture (rather than reserving
+     one axis for native scrolling ahead of time) is what removes the
+     browser's direction-disambiguation hesitation that read as friction,
+     and is also what makes vertical swipe finally do something: it now
+     feeds the exact same stepFromDelta() as desktop wheel scroll. */
+  let touchMode = null; // null (undecided) | 'drag' | 'scroll'
+  let touchStartX = 0, touchStartY = 0, touchLastY = 0;
+  const AXIS_LOCK_PX = 6;
+
+  function onTouchStart(e) {
+    if (exited) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchLastY = t.clientY;
+    touchMode = null;
+  }
+
+  function onTouchMove(e) {
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+
+    if (touchMode === null) {
+      if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return; // not enough movement to decide yet
+      touchMode = Math.abs(dx) > Math.abs(dy) ? 'drag' : 'scroll';
+      if (touchMode === 'drag') dragStart(touchStartX);
+    }
+
+    e.preventDefault();
+    if (touchMode === 'drag') {
+      dragMove(t.clientX);
+    } else {
+      // Swipe up (finger moves up the screen) reads as "scroll forward",
+      // matching the same sign convention as a natural downward wheel
+      // scroll — swipe up = advance, swipe down = go back.
+      const deltaY = touchLastY - t.clientY;
+      touchLastY = t.clientY;
+      stepFromDelta(deltaY);
+    }
+  }
+
+  function onTouchEnd() {
+    if (touchMode === 'drag') dragEnd();
+    touchMode = null;
+  }
+
+  cinema.addEventListener('touchstart', onTouchStart, { passive: true });
+  cinema.addEventListener('touchmove', onTouchMove, { passive: false });
+  addEventListener('touchend', onTouchEnd);
+
 
   /* ---------- Exit to About: accelerate away (mirror of entrance),
      scene dissolves, THEN the shared page-transition veil covers and
