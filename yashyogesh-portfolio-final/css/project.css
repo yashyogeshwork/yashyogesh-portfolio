@@ -1,0 +1,175 @@
+/* ==========================================================================
+   PROJECT PAGE TEMPLATE — used by Hive, TOAD, Surface C1
+   Cinematic intro -> full scroll case study, per the locked site architecture.
+   ========================================================================== */
+
+.project-intro {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--color-bg-section);
+}
+
+.project-intro-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-intro-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-bottom: var(--space-6);
+  color: var(--color-bg);
+}
+
+.project-intro-eyebrow {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: var(--space-1);
+}
+
+.project-intro-title {
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+  line-height: 1;
+  margin-bottom: var(--space-2);
+  color: var(--color-bg);
+}
+
+.project-intro-sub {
+  max-width: 560px;
+  font-size: 18px;
+  opacity: 0.85;
+  color: var(--color-bg);
+}
+
+.project-scroll-cue {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-5);
+  z-index: 2;
+  color: var(--color-bg);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* ---- Case study sections ---- */
+
+.cs-section {
+  padding: var(--space-7) 0;
+}
+
+.cs-section:first-of-type {
+  padding-top: calc(64px + var(--space-6));
+}
+
+.cs-section-alt {
+  background: var(--color-bg-section);
+}
+
+.cs-eyebrow {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.cs-heading {
+  font-size: var(--fs-section);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+  max-width: var(--content-max-width);
+  margin-bottom: var(--space-3);
+}
+
+.cs-body {
+  max-width: var(--content-max-width);
+  color: var(--color-text-secondary);
+}
+
+.cs-fullbleed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: var(--space-5) 0;
+}
+
+.cs-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+
+.cs-grid-2 .img-rounded {
+  aspect-ratio: 4 / 5;
+}
+
+.cs-stat-row {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.cs-stat-value {
+  font-size: 32px;
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+}
+
+.cs-stat-label {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Next project navigation ---- */
+
+.cs-next {
+  padding: var(--space-7) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.cs-next-label {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-2);
+}
+
+.cs-next-title {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+  display: inline-block;
+}
+
+.cs-next-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 768px) {
+  .cs-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .project-intro-title {
+    font-size: 36px;
+  }
+}

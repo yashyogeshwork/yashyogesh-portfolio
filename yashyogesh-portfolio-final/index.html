@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Yash Yogesh — Transportation Designer</title>
+  <meta name="description" content="Yash Yogesh — Transportation Designer. Incoming MFA, Umeå Institute of Design.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/studio.css">
+</head>
+<body data-page="home">
+
+<!-- Bowed cinema-screen clip path, shared by every panel -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="studioBow" clipPathUnits="objectBoundingBox">
+      <path d="M 0,0.025 Q 0.5,0.095 1,0.025 L 1,0.975 Q 0.5,0.905 0,0.975 Z"/>
+    </clipPath>
+  </defs>
+</svg>
+
+<header class="studio-frame-top">
+  <a class="studio-mark" href="index.html">Yash Yogesh</a>
+  <nav class="studio-frame-links">
+    <a class="studio-frame-link" href="about.html">About</a>
+    <a class="studio-frame-link" href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main class="studio-stage">
+  <div class="studio-cinema" id="studioCinema">
+    <div class="studio-track" id="studioTrack"></div>
+  </div>
+</main>
+
+<div class="studio-label-bar" id="studioLabelBar"></div>
+<div class="studio-hint" id="studioHint">Scroll or drag to explore</div>
+
+<script src="js/page-transition.js"></script>
+<script src="js/studio.js"></script>
+</body>
+</html>

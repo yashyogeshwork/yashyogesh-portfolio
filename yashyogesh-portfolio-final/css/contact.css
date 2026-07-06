@@ -1,0 +1,52 @@
+/* ==========================================================================
+   CONTACT PAGE
+   ========================================================================== */
+
+.contact-hero {
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-7) 0;
+}
+
+.contact-statement {
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-medium);
+  line-height: 1.05;
+  letter-spacing: var(--ls-heading);
+  max-width: 900px;
+  margin-bottom: var(--space-5);
+}
+
+.contact-email {
+  font-size: 28px;
+  font-weight: var(--fw-medium);
+  position: relative;
+  width: fit-content;
+}
+
+.contact-links {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.contact-link {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  transition: color var(--duration-hover) var(--ease-cinematic);
+}
+
+.contact-link:hover {
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .contact-statement {
+    font-size: 36px;
+  }
+  .contact-email {
+    font-size: 20px;
+  }
+}

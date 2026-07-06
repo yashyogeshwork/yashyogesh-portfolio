@@ -1,0 +1,184 @@
+/* ==========================================================================
+   WHITE STUDIO — homepage carousel.
+   You sit facing a curved cinema wall of four panels (Hive / TOAD / C1 /
+   Sketches). It never sits static: idle auto-advance is the default
+   resting state, scroll/drag temporarily take over, and it always eases
+   back to idle. See js/studio.js for the full motion state machine.
+   ========================================================================== */
+
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ---------- Header — editorial, quiet, sits over the scene ---------- */
+
+.studio-frame-top {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 42px var(--side-padding-desktop) 30px;
+}
+
+.studio-mark {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+@media (min-width: 769px) {
+  .studio-mark {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.studio-frame-links {
+  display: flex;
+  gap: var(--space-4);
+  margin-left: auto;
+}
+
+.studio-frame-link {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity var(--duration-hover) ease;
+}
+
+.studio-frame-link:hover,
+.studio-frame-link:active {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .studio-frame-top { padding: 22px var(--side-padding-mobile); }
+}
+
+/* ---------- Stage ---------- */
+
+.studio-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: pan-y;
+  transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
+}
+
+.studio-stage.is-vanishing {
+  opacity: 0;
+  filter: blur(6px);
+  transform: scale(1.04);
+}
+
+.studio-cinema {
+  position: relative;
+  width: 100vw;
+  height: min(66vh, 700px);
+  clip-path: url(#studioBow);
+  overflow: hidden;
+  cursor: grab;
+}
+
+.studio-cinema.is-grabbing { cursor: grabbing; }
+
+@media (max-width: 768px) {
+  .studio-cinema { height: 48vh; }
+}
+
+.studio-track {
+  position: absolute;
+  inset: 0;
+}
+
+.studio-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  will-change: transform;
+}
+
+.studio-panel-inner {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.94) saturate(0.9);
+  transition: filter 0.4s ease;
+  pointer-events: none;
+}
+
+.studio-panel.is-center .studio-panel-inner {
+  filter: none;
+}
+
+/* ---------- Label bar — clickable, editorial caps, no motion drama ---------- */
+
+.studio-label-bar {
+  position: fixed;
+  bottom: 7vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  gap: var(--space-4);
+  pointer-events: none;
+}
+
+.studio-label {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C9C6C2;
+  transition: color 0.4s ease;
+  pointer-events: auto;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 4px 0;
+}
+
+.studio-label.is-active {
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .studio-label { font-size: 10px; }
+  .studio-label-bar { gap: var(--space-3); bottom: 8.5vh; }
+}
+
+.studio-hint {
+  position: fixed;
+  bottom: 3vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+
+.studio-hint.is-visible { opacity: 0.65; }
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-panel-inner, .studio-label { transition: none; }
+}
