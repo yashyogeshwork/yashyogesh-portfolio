@@ -158,3 +158,30 @@
     font-size: var(--fs-section);
   }
 }
+
+/* ==========================================================================
+   SCROLL-REVEAL — house style, applied site-wide (site-wide art direction
+   principle #2). Restrained fade-up-on-enter, locked easing curve, no
+   spring/bounce. Add class="reveal" to any heading/image/block; the
+   js/scroll-reveal.js script adds .is-visible once it enters the viewport.
+   ========================================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s var(--ease-cinematic),
+              transform 0.9s var(--ease-cinematic);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

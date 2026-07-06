@@ -1,250 +1,309 @@
 /* ==========================================================================
-   WHITE STUDIO — curved gallery engine
-   Positions images along an invisible cylinder using CSS 3D transforms.
-   Pure JS + CSS — no animation library dependency.
+   WHITE STUDIO — homepage carousel engine.
+   Idle auto-advance is the default, always-running state. Scroll and drag
+   temporarily take over and always ease back to idle afterward. Sustained
+   forward scroll past the last panel (Sketches) exits to About. Clicking
+   the centered panel navigates to that project's real page.
+
+   Motion tone: no spring/bounce/elastic overshoot anywhere — ease-in-out
+   for single steps, true linear deceleration/acceleration (real
+   kinematics, not a curve) for the entrance and exit sweeps.
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const boot = document.getElementById('studioBoot');
-  const curve = document.getElementById('studioCurve');
+  const cinema = document.getElementById('studioCinema');
+  const track = document.getElementById('studioTrack');
+  const labelBar = document.getElementById('studioLabelBar');
   const hint = document.getElementById('studioHint');
-  const projectBtns = document.querySelectorAll('.studio-project-btn');
-  const enterTransition = document.getElementById('studioEnterTransition');
+  const stage = document.querySelector('.studio-stage');
 
-  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (!cinema || !track) return; // guard: only runs on the homepage
 
-  const projects = {
-    hive: {
-      href: 'hive.html',
-      slides: [
-        { eyebrow: '01 — Hyundai', title: 'Hive', bg: 'linear-gradient(135deg, #F5F5F3, #E8E8E5)' },
-        { eyebrow: 'Departure', title: 'Home pickup', bg: 'linear-gradient(135deg, #EFEAE0, #D9D0BE)' },
-        { eyebrow: 'Transit', title: 'Sensory learning', bg: 'linear-gradient(135deg, #F0E4E8, #DCC4CE)' },
-        { eyebrow: 'Hub', title: 'Pods dock together', bg: 'linear-gradient(135deg, #E6EEF5, #C7D6E5)' },
-      ]
-    },
-    toad: {
-      href: 'toad.html',
-      slides: [
-        { eyebrow: '02 — Toyota', title: 'TOAD', bg: 'linear-gradient(135deg, #F0EDE5, #DCD5C5)' },
-        { eyebrow: 'Dawn', title: 'Scanning the field', bg: 'linear-gradient(135deg, #E5EBE0, #C9D4BD)' },
-        { eyebrow: 'Midday', title: 'Independent work', bg: 'linear-gradient(135deg, #ECE6DC, #D6C9AF)' },
-        { eyebrow: 'Dusk', title: 'Companion mode', bg: 'linear-gradient(135deg, #E0E5E8, #BCC8CE)' },
-      ]
-    },
-    surface: {
-      href: 'surface-c1.html',
-      slides: [
-        { eyebrow: '03 — Surface Moto', title: 'C1', bg: 'linear-gradient(135deg, #ECECEC, #D4D4D4)' },
-        { eyebrow: 'Concept', title: 'First sketches', bg: 'linear-gradient(135deg, #EFEFEF, #DADADA)' },
-        { eyebrow: 'Fabrication', title: 'Cut, weld, paint', bg: 'linear-gradient(135deg, #E3E3E3, #C5C5C5)' },
-        { eyebrow: 'Launch', title: 'Public showcase', bg: 'linear-gradient(135deg, #E8E8E8, #CFCFCF)' },
-      ]
-    },
-    sketches: {
-      href: 'sketches.html',
-      slides: [
-        { eyebrow: '04 — Daily Practice', title: '5 years. Every day.', bg: '#FFFFFF' },
-        { eyebrow: 'Practice', title: 'Still going', bg: '#FAFAFA' },
-      ]
-    }
-  };
+  const isMobile = matchMedia('(max-width: 768px)').matches;
 
-  let activeProject = 'hive';
-  let rotation = 0;
-  let targetRotation = 0;
-  let radius = 760;
-  let isDragging = false;
-  let dragStartX = 0;
-  let dragStartRotation = 0;
-  let autoplayId = null;
-  let renderId = null;
+  /* Real project pages — exactly one slide per project. */
+  const slides = [
+    { key: 'hive',     title: 'HIVE',     bg: 'linear-gradient(135deg,#E8E2D5,#C9BFA8)', href: 'hive.html' },
+    { key: 'toad',     title: 'TOAD',     bg: 'linear-gradient(135deg,#DCE5D2,#AEC49A)', href: 'toad.html' },
+    { key: 'surface',  title: 'C1',       bg: 'linear-gradient(135deg,#E5E5E5,#C2C2C2)', href: 'surface-c1.html' },
+    { key: 'sketches', title: 'SKETCHES', bg: 'linear-gradient(135deg,#F5EFE5,#DCD0BC)', href: 'sketches.html' },
+  ];
+  const N = slides.length;
 
-  function computeRadius() {
-    const slideWidth = curve.parentElement.clientWidth * (isMobile ? 0.78 : 0.46);
-    const maxWidth = isMobile ? slideWidth : Math.min(slideWidth, 620);
-    radius = maxWidth * (isMobile ? 1.05 : 1.15);
+  /* ---------- Geometry ---------- */
+  let vw = innerWidth, panelW, gap, unit;
+  function computeGeom() {
+    vw = innerWidth;
+    panelW = isMobile ? vw * 0.80 : Math.min(vw * 0.58, 860);
+    // ~10% of viewport — measured from the Figma reference — gives real
+    // visible breathing room between the center panel and the peek.
+    gap = isMobile ? vw * 0.05 : vw * 0.10;
+    unit = panelW + gap;
   }
 
-  function buildSlides(projectKey) {
-    curve.innerHTML = '';
-    const data = projects[projectKey];
-    const count = data.slides.length;
-    const angleStep = 360 / count;
+  /* ---------- State ----------
+     pos = continuous position in "slide units" (panel i is centered when
+     pos ≡ i mod N). Exactly one thing ever owns motion at a time. */
+  let pos = 0;
+  let currentIndex = 0;
+  let state = 'entrance'; // entrance | hold | auto | step | drag | exiting
+  let holdTimer = null;
+  let raf = null;
+  let exited = false;
 
-    data.slides.forEach((slide, i) => {
-      const el = document.createElement('div');
-      el.className = 'studio-slide';
-      el.style.background = slide.bg;
-      el.dataset.angle = i * angleStep;
-      el.dataset.href = data.href;
+  const HOLD_MS = 4200;
+  const STEP_MS = 900;
+  const ENTRANCE_MS = 2600;
+  const ENTRANCE_SWEEP = 3 * N;
+  const EXIT_SWEEP_MS = 900;
 
-      const caption = document.createElement('div');
-      caption.className = 'studio-slide-caption';
-      caption.innerHTML = `
-        <div class="studio-slide-eyebrow">${slide.eyebrow}</div>
-        <div class="studio-slide-title">${slide.title}</div>
-      `;
-      el.appendChild(caption);
+  /* ---------- Build ---------- */
+  const panelEls = [];
+  slides.forEach((s) => {
+    const p = document.createElement('div');
+    p.className = 'studio-panel';
+    const inner = document.createElement('div');
+    inner.className = 'studio-panel-inner';
+    inner.style.background = s.bg;
+    p.appendChild(inner);
+    track.appendChild(p);
+    panelEls.push(p);
+  });
 
-      el.addEventListener('click', () => {
-        if (el.classList.contains('is-center')) {
-          enterProject(data.href);
-        } else {
-          const angle = parseFloat(el.dataset.angle);
-          targetRotation = -angle;
-        }
-      });
-
-      el.addEventListener('mouseenter', () => {
-        if (!isMobile) el.classList.add('is-hovered');
-      });
-      el.addEventListener('mouseleave', () => {
-        el.classList.remove('is-hovered');
-      });
-
-      curve.appendChild(el);
-    });
-  }
-
-  function enterProject(href) {
-    enterTransition.classList.add('is-active');
-    setTimeout(() => {
-      window.location.href = href;
-    }, 500);
+  slides.forEach((s, i) => {
+    const l = document.createElement('button');
+    l.type = 'button';
+    l.className = 'studio-label';
+    l.dataset.key = s.key;
+    l.textContent = s.title;
+    l.addEventListener('click', () => jumpToIndex(i));
+    labelBar.appendChild(l);
+  });
+  const labelEls = [...labelBar.children];
+  function commitLabel(i) {
+    labelEls.forEach((el, j) => el.classList.toggle('is-active', j === i));
   }
 
   function render() {
-    rotation += (targetRotation - rotation) * 0.06;
-
-    const slides = curve.querySelectorAll('.studio-slide');
-    let closestEl = null;
-    let closestDelta = Infinity;
-
-    slides.forEach((el) => {
-      const baseAngle = parseFloat(el.dataset.angle);
-      const angle = baseAngle + rotation;
-      const rad = (angle * Math.PI) / 180;
-
-      const x = Math.sin(rad) * radius;
-      const z = Math.cos(rad) * radius - radius;
-      const scale = 0.78 + 0.22 * ((z + radius) / radius);
-      const opacity = 0.35 + 0.65 * ((z + radius) / radius);
-
-      el.style.transform = `translate3d(${x}px, 0, ${z}px) scale(${scale})`;
-      el.style.opacity = Math.max(0.15, Math.min(1, opacity));
-      el.style.zIndex = Math.round(z + radius);
-
-      const normalized = ((angle % 360) + 360) % 360;
-      const delta = Math.min(normalized, 360 - normalized);
-      if (delta < closestDelta) {
-        closestDelta = delta;
-        closestEl = el;
-      }
+    const h = cinema.clientHeight;
+    panelEls.forEach((p, i) => {
+      let d = (i - pos) % N;
+      if (d > N / 2) d -= N;
+      if (d < -N / 2) d += N;
+      const x = vw / 2 - panelW / 2 + d * unit;
+      p.style.width = panelW + 'px';
+      p.style.height = h + 'px';
+      p.style.transform = `translateX(${x}px)`;
+      p.classList.toggle('is-center', Math.abs(d) < 0.02);
     });
+  }
 
-    slides.forEach((el) => el.classList.remove('is-center'));
-    if (closestEl && closestDelta < 18) {
-      closestEl.classList.add('is-center');
+  /* ---------- Easing primitives ----------
+     Editorial tone: no spring, no overshoot, no elastic bounce anywhere. */
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function animateEase(delta, ms, onDone) {
+    cancelAnimationFrame(raf);
+    const from = pos, t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min((now - t0) / ms, 1);
+      pos = from + delta * easeInOutCubic(t);
+      render();
+      if (t < 1) raf = requestAnimationFrame(frame);
+      else { pos = from + delta; render(); onDone && onDone(); }
+    })(performance.now());
+  }
+
+  function animateLinearDecel(delta, ms, onDone) {
+    cancelAnimationFrame(raf);
+    const from = pos, v0 = 2 * delta / ms, t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min(now - t0, ms);
+      pos = from + v0 * t - (v0 / (2 * ms)) * t * t;
+      render();
+      if (t < ms) raf = requestAnimationFrame(frame);
+      else { pos = from + delta; render(); onDone && onDone(); }
+    })(performance.now());
+  }
+
+  function animateLinearAccel(delta, ms, onDone) {
+    cancelAnimationFrame(raf);
+    const from = pos, a = 2 * delta / (ms * ms), t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min(now - t0, ms);
+      pos = from + 0.5 * a * t * t;
+      render();
+      if (t < ms) raf = requestAnimationFrame(frame);
+      else { pos = from + delta; render(); onDone && onDone(); }
+    })(performance.now());
+  }
+
+  /* ---------- Hold / auto-advance loop — always running ---------- */
+  function scheduleHold() {
+    state = 'hold';
+    pos = ((pos % N) + N) % N;
+    currentIndex = Math.round(pos) % N;
+    render();
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(autoAdvance, HOLD_MS);
+  }
+
+  function autoAdvance() {
+    if (exited) return;
+    state = 'auto';
+    const next = (currentIndex + 1) % N;
+    commitLabel(next);
+    animateEase(1, STEP_MS, scheduleHold);
+  }
+
+  /* ---------- Direct navigation via label bar — only from a settled
+     hold state, to avoid the stuck-mid-transition race. ---------- */
+  function jumpToIndex(target) {
+    if (exited || state !== 'hold') return;
+    if (target === currentIndex) return;
+    let diff = (target - currentIndex + N) % N;
+    if (diff > N / 2) diff -= N;
+    if (diff === 0) return;
+
+    clearTimeout(holdTimer);
+    state = 'step';
+    commitLabel(target);
+    const ms = Math.max(STEP_MS, Math.abs(diff) * 550);
+    animateEase(diff, ms, () => { currentIndex = target; scheduleHold(); });
+  }
+
+  /* ---------- Watchdog — force-finish if anything ever gets stuck ---------- */
+  let lastPos = pos;
+  let lastMoveAt = performance.now();
+  setInterval(() => {
+    if (state === 'hold' || state === 'entrance' || dragging) { lastPos = pos; lastMoveAt = performance.now(); return; }
+    if (pos !== lastPos) { lastPos = pos; lastMoveAt = performance.now(); return; }
+    if (performance.now() - lastMoveAt > 1000) {
+      cancelAnimationFrame(raf);
+      const target = Math.round(pos);
+      pos = target;
+      render();
+      currentIndex = ((target % N) + N) % N;
+      commitLabel(currentIndex);
+      scheduleHold();
     }
+  }, 500);
 
-    renderId = requestAnimationFrame(render);
-  }
-
-  function startAutoplay() {
-    stopAutoplay();
-    autoplayId = setInterval(() => {
-      targetRotation -= 360 / projects[activeProject].slides.length;
-    }, 4200);
-  }
-
-  function stopAutoplay() {
-    clearInterval(autoplayId);
-  }
-
-  function onPointerDown(e) {
-    isDragging = true;
-    curve.classList.add('is-dragging');
-    dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
-    dragStartRotation = targetRotation;
-    stopAutoplay();
-    hint.classList.add('is-hidden');
-  }
-
-  function onPointerMove(e) {
-    if (!isDragging) return;
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const delta = x - dragStartX;
-    targetRotation = dragStartRotation + delta * 0.25;
-  }
-
-  function onPointerUp() {
-    if (!isDragging) return;
-    isDragging = false;
-    curve.classList.remove('is-dragging');
-    const step = 360 / projects[activeProject].slides.length;
-    targetRotation = Math.round(targetRotation / step) * step;
-    setTimeout(startAutoplay, 3000);
-  }
-
-  curve.addEventListener('mousedown', onPointerDown);
-  window.addEventListener('mousemove', onPointerMove);
-  window.addEventListener('mouseup', onPointerUp);
-
-  curve.addEventListener('touchstart', onPointerDown, { passive: true });
-  window.addEventListener('touchmove', onPointerMove, { passive: true });
-  window.addEventListener('touchend', onPointerUp);
-
-  projectBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.project;
-      if (key === activeProject) return;
-      activeProject = key;
-      rotation = 0;
-      targetRotation = 0;
-      projectBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
-      buildSlides(key);
-      startAutoplay();
+  /* ---------- Click centered panel → real project page ---------- */
+  panelEls.forEach((p, i) => {
+    const inner = p.querySelector('.studio-panel-inner');
+    inner.style.cursor = 'pointer';
+    inner.addEventListener('click', () => {
+      if (state !== 'hold') return;
+      if (i === currentIndex) {
+        thumpThenEnter(inner, slides[i].href);
+      } else {
+        jumpToIndex(i);
+      }
     });
   });
 
-  window.addEventListener('resize', computeRadius);
-
-  function init() {
-    computeRadius();
-    buildSlides(activeProject);
-    render();
-    startAutoplay();
-    setTimeout(() => hint.classList.add('is-hidden'), 5000);
-
-    // Entrance choreography — visible motion on load
-    if (window.gsap) {
-      gsap.set('.site-nav', { opacity: 0, y: -16 });
-      gsap.set('.studio-project-nav', { opacity: 0, y: -12 });
-      gsap.set('.studio-hint', { opacity: 0 });
-      gsap.set('.studio-slide', { opacity: 0 });
-
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      tl.to('.site-nav', { opacity: 1, y: 0, duration: 0.8 })
-        .to('.studio-project-nav', { opacity: 1, y: 0, duration: 0.8 }, '-=0.5')
-        .to('.studio-slide', {
-            opacity: (i, target) => target.classList.contains('is-center') ? 1 : 0.6,
-            duration: 1,
-            stagger: 0.08
-          }, '-=0.4')
-        .to('.studio-hint', { opacity: 0.6, duration: 0.6 }, '-=0.3');
-    }
-  }
-
-  const bootSeen = sessionStorage.getItem('studioBootSeen');
-  if (bootSeen) {
-    boot.classList.add('is-hidden');
-    init();
-  } else {
+  function thumpThenEnter(inner, href) {
+    inner.style.transition = 'transform 0.16s cubic-bezier(0.5,0,0.75,0)';
+    inner.style.transform = 'scale(0.94)';
     setTimeout(() => {
-      boot.classList.add('is-hidden');
-      sessionStorage.setItem('studioBootSeen', 'true');
-      init();
-    }, 1500);
+      window.pageTransitionOut ? window.pageTransitionOut(href) : (window.location.href = href);
+    }, 150);
   }
+
+  /* ---------- Scroll: single-step advance, exits past the last slide ---------- */
+  let wheelAcc = 0;
+  const WHEEL_TRIGGER = 90;
+  function onWheel(e) {
+    e.preventDefault();
+    if (state !== 'hold' || exited) return;
+    wheelAcc += e.deltaY;
+    if (Math.abs(wheelAcc) < WHEEL_TRIGGER) return;
+    const dir = wheelAcc > 0 ? 1 : -1;
+    wheelAcc = 0;
+
+    if (dir > 0 && currentIndex === N - 1) {
+      exitToAbout();
+      return;
+    }
+    const target = (currentIndex + dir + N) % N;
+    state = 'step';
+    clearTimeout(holdTimer);
+    commitLabel(target);
+    animateEase(dir, STEP_MS, scheduleHold);
+  }
+  addEventListener('wheel', onWheel, { passive: false });
+
+  /* ---------- Direct drag / swipe — 1:1, own control, never exits ---------- */
+  let dragging = false;
+  let dragStartX = 0;
+  let dragStartPos = 0;
+
+  function dragStart(clientX) {
+    if (exited) return;
+    dragging = true;
+    state = 'drag';
+    clearTimeout(holdTimer);
+    cancelAnimationFrame(raf);
+    dragStartX = clientX;
+    dragStartPos = pos;
+    cinema.classList.add('is-grabbing');
+  }
+  function dragMove(clientX) {
+    if (!dragging) return;
+    const dx = clientX - dragStartX;
+    pos = dragStartPos - dx / unit;
+    render();
+  }
+  function dragEnd() {
+    if (!dragging) return;
+    dragging = false;
+    cinema.classList.remove('is-grabbing');
+    const target = Math.round(pos);
+    const delta = target - pos;
+    state = 'step';
+    commitLabel(((target % N) + N) % N);
+    animateEase(delta, 420, scheduleHold);
+  }
+
+  cinema.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
+  addEventListener('mousemove', (e) => dragMove(e.clientX));
+  addEventListener('mouseup', dragEnd);
+  cinema.addEventListener('touchstart', (e) => dragStart(e.touches[0].clientX), { passive: true });
+  addEventListener('touchmove', (e) => dragMove(e.touches[0].clientX), { passive: true });
+  addEventListener('touchend', dragEnd);
+
+  /* ---------- Exit to About: accelerate away (mirror of entrance),
+     scene dissolves, THEN the shared page-transition veil covers and
+     navigates for real. ---------- */
+  function exitToAbout() {
+    exited = true;
+    state = 'exiting';
+    clearTimeout(holdTimer);
+    animateLinearAccel(3, EXIT_SWEEP_MS, () => {
+      stage.classList.add('is-vanishing');
+      setTimeout(() => {
+        if (window.pageTransitionOut) {
+          window.pageTransitionOut('about.html', 550);
+        } else {
+          window.location.href = 'about.html';
+        }
+      }, 250);
+    });
+  }
+
+  addEventListener('resize', () => { computeGeom(); render(); });
+
+  /* ---------- Entrance: fast, constant-rate deceleration, lands on Hive ---------- */
+  computeGeom();
+  commitLabel(0);
+  pos = -ENTRANCE_SWEEP;
+  render();
+  state = 'entrance';
+  animateLinearDecel(ENTRANCE_SWEEP, ENTRANCE_MS, () => {
+    scheduleHold();
+    setTimeout(() => hint.classList.add('is-visible'), 900);
+  });
 });

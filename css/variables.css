@@ -1,6 +1,7 @@
 /* ==========================================================================
    YASH YOGESH — DESIGN SYSTEM
    Locked tokens. Do not introduce new values outside this scale.
+   Monochrome palette — no accent color. Restraint is the whole point.
    ========================================================================== */
 
 :root {
@@ -10,7 +11,7 @@
   --color-border: #E8E8E5;
   --color-text-primary: #111111;
   --color-text-secondary: #888888;
-  --color-accent: #FFB3D0;
+  --color-accent: #111111; /* monochrome — accent now means "emphasis," not a hue */
 
   /* ---- Typography ---- */
   --font-primary: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
