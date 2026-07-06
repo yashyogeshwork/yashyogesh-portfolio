@@ -19,7 +19,7 @@
 
   <nav class="site-nav is-hidden-home" id="siteNav">
     <div class="container nav-inner">
-      <a href="index.html" class="nav-logo" style="color: var(--color-bg);">YY</a>
+      <a href="index.html" class="nav-logo" style="color: var(--color-bg);">Yash Yogesh</a>
       <div class="nav-links">
         <a href="about.html" class="nav-link" style="color: rgba(255,255,255,0.8);">About</a>
         <a href="contact.html" class="nav-link" style="color: rgba(255,255,255,0.8);">Contact</a>
@@ -27,7 +27,8 @@
     </div>
   </nav>
 
-  <!-- Cinematic intro — swap gradient with real Hive video -->
+  <!-- Cinematic intro — swap gradient with real Hive video. Not revealed
+       on scroll since it's visible immediately on load. -->
   <section class="project-intro gradient-overlay-bottom">
     <div class="project-intro-media" style="background: linear-gradient(160deg, #E8E2D5 0%, #C9BFA8 45%, #8A9B7E 100%);"></div>
     <div class="container project-intro-content">
@@ -42,9 +43,9 @@
   <section class="cs-section">
     <div class="container">
       <div class="cs-eyebrow">The problem</div>
-      <h2 class="cs-heading">Rural children lose hours every day just reaching school — and their parents lose just as much getting them there.</h2>
-      <p class="cs-body">Centralized schools serve low-density regions inefficiently. A 7 to 14 year old in the countryside may travel long distances daily, and a parent often has to leave work to manage the trip. The commute itself becomes the barrier to education, not the curriculum.</p>
-      <div class="cs-stat-row">
+      <h2 class="cs-heading reveal">Rural children lose hours every day just reaching school — and their parents lose just as much getting them there.</h2>
+      <p class="cs-body reveal">Centralized schools serve low-density regions inefficiently. A 7 to 14 year old in the countryside may travel long distances daily, and a parent often has to leave work to manage the trip. The commute itself becomes the barrier to education, not the curriculum.</p>
+      <div class="cs-stat-row reveal">
         <div>
           <div class="cs-stat-value">7–14</div>
           <div class="cs-stat-label">Target age group</div>
@@ -61,9 +62,9 @@
   <section class="cs-section cs-section-alt">
     <div class="container">
       <div class="cs-eyebrow">The system</div>
-      <h2 class="cs-heading">Hive isn't a redesigned bus. It's a personal pod that becomes a classroom.</h2>
-      <p class="cs-body">A subscription-based Hyundai service. An autonomous pod picks a child up from home, travels to a local community docking station, and connects with other pods arriving from the same area — forming a temporary, shared learning space.</p>
-      <div class="cs-fullbleed img-rounded" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94);"></div>
+      <h2 class="cs-heading reveal">Hive isn't a redesigned bus. It's a personal pod that becomes a classroom.</h2>
+      <p class="cs-body reveal">A subscription-based Hyundai service. An autonomous pod picks a child up from home, travels to a local community docking station, and connects with other pods arriving from the same area — forming a temporary, shared learning space.</p>
+      <div class="cs-fullbleed img-rounded reveal" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94);"></div>
     </div>
   </section>
 
@@ -71,11 +72,11 @@
   <section class="cs-section">
     <div class="container">
       <div class="cs-eyebrow">Exterior</div>
-      <h2 class="cs-heading">Form inspired by tetrapods — load-distributing, tip-resistant, naturally interlocking.</h2>
-      <p class="cs-body">The tripod leg structure lets pods sit stably alone and connect seamlessly when docked side by side, forming a continuous corridor children can move through freely.</p>
+      <h2 class="cs-heading reveal">Form inspired by tetrapods — load-distributing, tip-resistant, naturally interlocking.</h2>
+      <p class="cs-body reveal">The tripod leg structure lets pods sit stably alone and connect seamlessly when docked side by side, forming a continuous corridor children can move through freely.</p>
       <div class="cs-grid-2">
-        <div class="img-rounded img-hover-enlarge" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8);"></div>
-        <div class="img-rounded img-hover-enlarge" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9);"></div>
+        <div class="img-rounded img-hover-enlarge reveal" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8);"></div>
+        <div class="img-rounded img-hover-enlarge reveal" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9);"></div>
       </div>
     </div>
   </section>
@@ -84,16 +85,16 @@
   <section class="cs-section cs-section-alt">
     <div class="container">
       <div class="cs-eyebrow">Interior</div>
-      <h2 class="cs-heading">A sensory learning environment, not a transit cabin.</h2>
-      <p class="cs-body">Pressure-responsive panels, a ceiling projector, and a tactile floor turn the commute into engagement rather than dead time — calm enough not to overstimulate, interactive enough to hold a child's attention.</p>
-      <div class="cs-fullbleed img-rounded" style="background: linear-gradient(135deg, #F0D9DE, #D9A8B5);"></div>
+      <h2 class="cs-heading reveal">A sensory learning environment, not a transit cabin.</h2>
+      <p class="cs-body reveal">Pressure-responsive panels, a ceiling projector, and a tactile floor turn the commute into engagement rather than dead time — calm enough not to overstimulate, interactive enough to hold a child's attention.</p>
+      <div class="cs-fullbleed img-rounded reveal" style="background: linear-gradient(135deg, #F0D9DE, #D9A8B5);"></div>
     </div>
   </section>
 
   <!-- Next project -->
   <section class="cs-next">
     <div class="container">
-      <a href="toad.html" class="cs-next-link">
+      <a href="toad.html" class="cs-next-link reveal">
         <div>
           <div class="cs-next-label">Next project</div>
           <span class="cs-next-title accent-underline">Toyota TOAD</span>
@@ -109,6 +110,8 @@
     </div>
   </footer>
 
+  <script src="js/page-transition.js"></script>
+  <script src="js/scroll-reveal.js"></script>
   <script src="js/project-nav.js"></script>
 </body>
 </html>

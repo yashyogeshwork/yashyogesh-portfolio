@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Yash Yogesh — Transportation Designer</title>
   <meta name="description" content="Yash Yogesh — Transportation Designer. Incoming MFA, Umeå Institute of Design.">
 
@@ -12,48 +12,37 @@
 
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/studio.css">
 </head>
 <body data-page="home">
 
-  <!-- Boot sequence -->
-  <div class="studio-boot" id="studioBoot">
-    <div class="studio-boot-mark">YY</div>
-  </div>
+<!-- Bowed cinema-screen clip path, shared by every panel -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="studioBow" clipPathUnits="objectBoundingBox">
+      <path d="M 0,0.025 Q 0.5,0.095 1,0.025 L 1,0.975 Q 0.5,0.905 0,0.975 Z"/>
+    </clipPath>
+  </defs>
+</svg>
 
-  <!-- Navigation -->
-  <nav class="site-nav is-hidden-home" id="siteNav">
-    <div class="container nav-inner">
-      <a href="index.html" class="nav-logo">YY</a>
-      <div class="nav-links">
-        <a href="about.html" class="nav-link">About</a>
-        <a href="contact.html" class="nav-link">Contact</a>
-      </div>
-    </div>
+<header class="studio-frame-top">
+  <a class="studio-mark" href="index.html">Yash Yogesh</a>
+  <nav class="studio-frame-links">
+    <a class="studio-frame-link" href="about.html">About</a>
+    <a class="studio-frame-link" href="contact.html">Contact</a>
   </nav>
+</header>
 
-  <!-- White Studio — curved gallery -->
-  <main class="studio">
+<main class="studio-stage">
+  <div class="studio-cinema" id="studioCinema">
+    <div class="studio-track" id="studioTrack"></div>
+  </div>
+</main>
 
-    <div class="studio-project-nav">
-      <button class="studio-project-btn is-active" data-project="hive">Hive</button>
-      <button class="studio-project-btn" data-project="toad">TOAD</button>
-      <button class="studio-project-btn" data-project="surface">Surface C1</button>
-      <button class="studio-project-btn" data-project="sketches">Sketches</button>
-    </div>
+<div class="studio-label-bar" id="studioLabelBar"></div>
+<div class="studio-hint" id="studioHint">Scroll or drag to explore</div>
 
-    <div class="studio-stage">
-      <div class="studio-curve" id="studioCurve"></div>
-    </div>
-
-    <div class="studio-hint" id="studioHint">Drag to explore</div>
-
-  </main>
-
-  <div class="studio-enter-transition" id="studioEnterTransition"></div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="js/studio.js"></script>
+<script src="js/page-transition.js"></script>
+<script src="js/studio.js"></script>
 </body>
 </html>
