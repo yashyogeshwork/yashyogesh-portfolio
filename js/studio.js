@@ -181,10 +181,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------- Direct navigation via label bar — only from a settled
-     hold state, to avoid the stuck-mid-transition race. ---------- */
+     hold state, to avoid the stuck-mid-transition race. Clicking the
+     label for the ALREADY-centered project enters it, exactly like
+     tapping the slide itself — clicking any other label rotates there. */
   function jumpToIndex(target) {
     if (exited || state !== 'hold') return;
-    if (target === currentIndex) return;
+
+    if (target === currentIndex) {
+      const inner = panelEls[target].querySelector('.studio-panel-inner');
+      thumpThenEnter(inner, slides[target].href);
+      return;
+    }
+
     let diff = (target - currentIndex + N) % N;
     if (diff > N / 2) diff -= N;
     if (diff === 0) return;
