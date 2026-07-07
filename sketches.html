@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sketches — Yash Yogesh</title>
+  <meta name="description" content="Five years of daily sketching. Still going.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/sketchwall.css">
+</head>
+<body data-page="sketches">
+
+<header class="wall-frame-top">
+  <a class="wall-mark" href="index.html" data-c="site.name">Yash Yogesh</a>
+  <nav class="wall-frame-links">
+    <a class="wall-frame-link" href="about.html" data-c="site.navAbout">About</a>
+    <a class="wall-frame-link" href="contact.html" data-c="site.navContact">Contact</a>
+  </nav>
+</header>
+
+<div class="wall-headline-wrap">
+  <div class="wall-headline">
+    <span data-c="sketchwall.headlineLine1">5 years. Every day.</span><br>
+    <span class="muted" data-c="sketchwall.headlineLine2">Still going.</span>
+  </div>
+</div>
+
+<main class="wall-field" id="wallField"></main>
+
+<div class="wall-hint" id="wallHint" data-c="sketchwall.hint">Move through the sketches</div>
+
+<div class="wall-expand-veil" id="wallExpandVeil">
+  <div class="wall-expand-card" id="wallExpandCard"></div>
+  <div class="wall-expand-title" id="wallExpandTitle"></div>
+</div>
+<button class="wall-expand-close" id="wallExpandClose" type="button">Close ✕</button>
+
+<script src="js/content.js"></script>
+<script src="js/apply-content.js"></script>
+<script src="js/page-transition.js"></script>
+<script src="js/sketchwall.js"></script>
+</body>
+</html>

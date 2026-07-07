@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Editor — Yash Yogesh</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #F5F5F3;
+    color: #111;
+    padding: 40px 20px 120px;
+    max-width: 860px;
+    margin: 0 auto;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+  .sub { color: #888; margin-bottom: 28px; }
+  .howto {
+    background: #fff; border: 1px solid #E8E8E5; border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 32px; font-size: 14px;
+  }
+  .howto b { font-weight: 600; }
+  .howto ol { margin: 10px 0 0 18px; }
+  .howto li { margin-bottom: 6px; }
+  details {
+    background: #fff; border: 1px solid #E8E8E5; border-radius: 12px;
+    margin-bottom: 14px; overflow: hidden;
+  }
+  summary {
+    padding: 16px 24px; font-weight: 600; cursor: pointer;
+    font-size: 15px; user-select: none;
+  }
+  .fields { padding: 4px 24px 20px; }
+  label { display: block; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #888; margin: 14px 0 5px; }
+  input[type=text], textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid #E0E0DD;
+    border-radius: 8px; font-family: inherit; font-size: 14px;
+    background: #FCFCFB;
+  }
+  textarea { min-height: 74px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid #111; border-color: #111; }
+  .sketch-row {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 8px;
+  }
+  .sketch-row input { flex: 1; }
+  .sketch-row .num { width: 34px; color: #aaa; font-size: 12px; text-align: right; }
+  .sketch-row button {
+    border: 1px solid #E0E0DD; background: #fff; border-radius: 8px;
+    width: 34px; height: 34px; cursor: pointer; font-size: 14px; color: #888;
+    flex-shrink: 0;
+  }
+  .sketch-row button:hover { color: #111; border-color: #111; }
+  .add-btn {
+    margin-top: 12px; padding: 9px 18px; border: 1px solid #111;
+    background: #fff; border-radius: 999px; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+  }
+  .add-btn:hover { background: #111; color: #fff; }
+  .bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff; border-top: 1px solid #E8E8E5;
+    padding: 16px 20px; display: flex; justify-content: center; gap: 12px;
+    z-index: 10;
+  }
+  .bar button {
+    padding: 12px 28px; border-radius: 999px; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+  }
+  #downloadBtn { background: #111; color: #fff; border: none; }
+  #downloadBtn:hover { background: #333; }
+  #previewBtn { background: #fff; color: #111; border: 1px solid #111; }
+  .note { font-size: 12px; color: #aaa; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Site Editor</h1>
+<p class="sub">Edit any text on the site and manage the sketch wall — no coding needed.</p>
+
+<div class="howto">
+  <b>How publishing works (3 steps):</b>
+  <ol>
+    <li>Edit anything below, then press <b>Download updated content.js</b>.</li>
+    <li>Go to your GitHub repo → open the <b>js</b> folder → click <b>content.js</b> → click the pencil/edit — or simpler: use <b>Add file → Upload files</b> into the <b>js</b> folder and upload your downloaded file (it replaces the old one).</li>
+    <li>Commit. Netlify republishes automatically in about a minute. Done.</li>
+  </ol>
+  <br>
+  <b>Adding / replacing sketches:</b>
+  <ol>
+    <li>On GitHub, open the <b>images/sketches</b> folder → <b>Add file → Upload files</b> → upload your sketch image (JPG or PNG).</li>
+    <li>To <b>replace</b> an existing sketch: upload a new file with the <b>same filename</b> — nothing else needed, it's live after commit.</li>
+    <li>To <b>add a new</b> sketch: upload the file, then add its filename in the Sketch Wall section below and download/upload the new content.js.</li>
+  </ol>
+</div>
+
+<div id="editor"></div>
+
+<div class="bar">
+  <button id="previewBtn" type="button">Preview changes locally</button>
+  <button id="downloadBtn" type="button">Download updated content.js</button>
+</div>
+
+<script src="js/content.js"></script>
+<script>
+(() => {
+  const C = JSON.parse(JSON.stringify(window.CONTENT)); // working copy
+  const editor = document.getElementById('editor');
+
+  /* Human-readable labels for each section/field */
+  const SECTIONS = [
+    { key: 'site', title: 'Site-wide (name, navigation, footer)' },
+    { key: 'home', title: 'Homepage', skip: ['projects'] },
+    { key: 'hive', title: 'Project — Hive' },
+    { key: 'toad', title: 'Project — TOAD' },
+    { key: 'c1', title: 'Project — Surface C1' },
+    { key: 'sketchwall', title: 'Sketch Wall (headline + sketches)', skip: ['items'] },
+    { key: 'about', title: 'About page' },
+    { key: 'contact', title: 'Contact page' },
+  ];
+
+  function fieldHTML(section, key, value) {
+    const long = value.length > 70;
+    const id = `f_${section}_${key}`;
+    return `
+      <label for="${id}">${key}</label>
+      ${long
+        ? `<textarea id="${id}" data-section="${section}" data-key="${key}">${value.replace(/</g,'&lt;')}</textarea>`
+        : `<input type="text" id="${id}" data-section="${section}" data-key="${key}" value="${value.replace(/"/g,'&quot;')}">`}
+    `;
+  }
+
+  SECTIONS.forEach((sec) => {
+    const obj = C[sec.key];
+    if (!obj) return;
+    const d = document.createElement('details');
+    if (sec.key === 'site') d.open = true;
+    let inner = `<summary>${sec.title}</summary><div class="fields">`;
+    Object.keys(obj).forEach((k) => {
+      if (sec.skip && sec.skip.includes(k)) return;
+      if (typeof obj[k] !== 'string') return;
+      inner += fieldHTML(sec.key, k, obj[k]);
+    });
+    inner += '</div>';
+    d.innerHTML = inner;
+    editor.appendChild(d);
+  });
+
+  /* ---- Homepage project titles ---- */
+  const dProjects = document.createElement('details');
+  let pInner = '<summary>Homepage — project titles &amp; images</summary><div class="fields">';
+  C.home.projects.forEach((p, i) => {
+    pInner += `
+      <label>Project ${i + 1} — title</label>
+      <input type="text" data-proj="${i}" data-pkey="title" value="${p.title}">
+      <label>Project ${i + 1} — image file (in images/ folder; leave empty for placeholder)</label>
+      <input type="text" data-proj="${i}" data-pkey="image" value="${p.image || ''}" placeholder="e.g. images/hive-hero.jpg">
+    `;
+  });
+  pInner += '<p class="note">Order and links are fixed here to keep the carousel stable — ask for an HTML edit if a project is added or removed.</p></div>';
+  dProjects.innerHTML = pInner;
+  editor.appendChild(dProjects);
+
+  /* ---- Sketch list ---- */
+  const dSketch = document.createElement('details');
+  dSketch.open = true;
+  dSketch.innerHTML = '<summary>Sketch Wall — the sketches</summary><div class="fields"><p class="note" style="margin-bottom:12px">Each row is one sketch. The filename must match a file uploaded to images/sketches/ on GitHub. Empty filename = placeholder gradient.</p><div id="sketchList"></div><button class="add-btn" type="button" id="addSketch">+ Add sketch</button></div>';
+  editor.appendChild(dSketch);
+  const sketchList = dSketch.querySelector('#sketchList');
+
+  function renderSketches() {
+    sketchList.innerHTML = '';
+    C.sketchwall.items.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.className = 'sketch-row';
+      row.innerHTML = `
+        <span class="num">${i + 1}</span>
+        <input type="text" placeholder="filename e.g. sketch-${String(i+1).padStart(2,'0')}.jpg" value="${item.image || ''}" data-si="${i}" data-sk="image">
+        <input type="text" placeholder="title (optional)" value="${item.title || ''}" data-si="${i}" data-sk="title" style="max-width:180px">
+        <button type="button" title="Remove" data-remove="${i}">✕</button>
+      `;
+      sketchList.appendChild(row);
+    });
+  }
+  renderSketches();
+
+  sketchList.addEventListener('input', (e) => {
+    const i = e.target.dataset.si, k = e.target.dataset.sk;
+    if (i != null && k) C.sketchwall.items[i][k] = e.target.value;
+  });
+  sketchList.addEventListener('click', (e) => {
+    const r = e.target.dataset.remove;
+    if (r != null) { C.sketchwall.items.splice(Number(r), 1); renderSketches(); }
+  });
+  dSketch.querySelector('#addSketch').addEventListener('click', () => {
+    C.sketchwall.items.push({ image: '', title: '' });
+    renderSketches();
+  });
+
+  /* ---- Collect edits from text fields ---- */
+  editor.addEventListener('input', (e) => {
+    const s = e.target.dataset.section, k = e.target.dataset.key;
+    if (s && k) C[s][k] = e.target.value;
+    const pi = e.target.dataset.proj, pk = e.target.dataset.pkey;
+    if (pi != null && pk) C.home.projects[pi][pk] = e.target.value;
+  });
+
+  /* ---- Generate the new content.js ---- */
+  function generate() {
+    return '/* Generated by admin.html — ' + new Date().toISOString().slice(0, 10) + ' */\n' +
+           'window.CONTENT = ' + JSON.stringify(C, null, 2) + ';\n';
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const blob = new Blob([generate()], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'content.js';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  /* ---- Local preview: stores the working copy in this browser only.
+     Pages on THIS device will show the preview; the live site is
+     unchanged until content.js is uploaded to GitHub. ---- */
+  const previewBtn = document.getElementById('previewBtn');
+  function refreshPreviewBtn() {
+    previewBtn.textContent = localStorage.getItem('contentPreviewJSON')
+      ? 'Clear local preview'
+      : 'Preview changes locally';
+  }
+  refreshPreviewBtn();
+  previewBtn.addEventListener('click', () => {
+    if (localStorage.getItem('contentPreviewJSON')) {
+      localStorage.removeItem('contentPreviewJSON');
+      alert('Preview cleared — pages in this browser now show the published content again.');
+    } else {
+      try {
+        localStorage.setItem('contentPreviewJSON', JSON.stringify(C));
+        alert('Preview saved for THIS browser only. Open any page of the site in this same browser to see your edits.\n\nThe live site is unchanged until you upload the downloaded content.js to GitHub.');
+      } catch (err) {
+        alert('Could not save preview in this browser.');
+      }
+    }
+    refreshPreviewBtn();
+  });
+})();
+</script>
+</body>
+</html>

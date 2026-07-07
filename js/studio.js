@@ -21,13 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const isMobile = matchMedia('(max-width: 768px)').matches;
 
-  /* Real project pages — exactly one slide per project. */
-  const slides = [
+  /* Real project pages — driven by js/content.js when present. */
+  const defaultSlides = [
     { key: 'hive',     title: 'HIVE',     bg: 'linear-gradient(135deg,#E8E2D5,#C9BFA8)', href: 'hive.html' },
     { key: 'toad',     title: 'TOAD',     bg: 'linear-gradient(135deg,#DCE5D2,#AEC49A)', href: 'toad.html' },
     { key: 'surface',  title: 'C1',       bg: 'linear-gradient(135deg,#E5E5E5,#C2C2C2)', href: 'surface-c1.html' },
     { key: 'sketches', title: 'SKETCHES', bg: 'linear-gradient(135deg,#F5EFE5,#DCD0BC)', href: 'sketches.html' },
   ];
+  const slides = (window.CONTENT && window.CONTENT.home && window.CONTENT.home.projects)
+    ? window.CONTENT.home.projects
+    : defaultSlides;
   const N = slides.length;
 
   /* ---------- Geometry ---------- */
@@ -51,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let raf = null;
   let exited = false;
 
-  const HOLD_MS = 4200;
-  const STEP_MS = 900;
+  const HOLD_MS = 2800;
+  const STEP_MS = 650;
   const ENTRANCE_MS = 2600;
   const ENTRANCE_SWEEP = 3 * N;
   const EXIT_SWEEP_MS = 900;
@@ -64,7 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
     p.className = 'studio-panel';
     const inner = document.createElement('div');
     inner.className = 'studio-panel-inner';
-    inner.style.background = s.bg;
+    inner.style.background = (s.image && s.image.length)
+      ? `url('${s.image}') center/cover no-repeat, ${s.bg}`
+      : s.bg;
     p.appendChild(inner);
     track.appendChild(p);
     panelEls.push(p);
@@ -84,15 +89,32 @@ document.addEventListener('DOMContentLoaded', () => {
     labelEls.forEach((el, j) => el.classList.toggle('is-active', j === i));
   }
 
+  let cinemaHeight = 0;
+
+  function applySizes() {
+    // Width/height are layout-affecting properties — setting them here,
+    // ONCE, rather than inside render() (which runs every single frame
+    // during a drag or animation), is what lets the browser handle
+    // motion purely on the compositor/GPU. Rewriting width/height every
+    // frame forces a full layout recalculation every frame, which is
+    // exactly what produced the heavy, non-native "draggy" feeling.
+    cinemaHeight = cinema.clientHeight;
+    panelEls.forEach((p) => {
+      p.style.width = panelW + 'px';
+      p.style.height = cinemaHeight + 'px';
+    });
+  }
+
   function render() {
-    const h = cinema.clientHeight;
+    // Runs every frame during drag/animation — touches ONLY transform
+    // (and a class toggle), nothing layout-affecting, so the browser can
+    // push this straight to the compositor. This is the actual fix for
+    // the reported drag friction.
     panelEls.forEach((p, i) => {
       let d = (i - pos) % N;
       if (d > N / 2) d -= N;
       if (d < -N / 2) d += N;
       const x = vw / 2 - panelW / 2 + d * unit;
-      p.style.width = panelW + 'px';
-      p.style.height = h + 'px';
       p.style.transform = `translateX(${x}px)`;
       p.classList.toggle('is-center', Math.abs(d) < 0.02);
     });
@@ -352,10 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  addEventListener('resize', () => { computeGeom(); render(); });
+  addEventListener('resize', () => { computeGeom(); applySizes(); render(); });
 
   /* ---------- Entrance: fast, constant-rate deceleration, lands on Hive ---------- */
   computeGeom();
+  applySizes();
   commitLabel(0);
   pos = -ENTRANCE_SWEEP;
   render();
