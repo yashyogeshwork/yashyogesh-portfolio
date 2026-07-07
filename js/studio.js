@@ -213,28 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 500);
 
-  /* ---------- Click centered panel → real project page ---------- */
-  panelEls.forEach((p, i) => {
-    const inner = p.querySelector('.studio-panel-inner');
-    inner.style.cursor = 'pointer';
-    inner.addEventListener('click', () => {
-      if (state !== 'hold') return;
-      if (i === currentIndex) {
-        thumpThenEnter(inner, slides[i].href);
-      } else {
-        jumpToIndex(i);
-      }
-    });
-  });
-
-  function thumpThenEnter(inner, href) {
-    inner.style.transition = 'transform 0.16s cubic-bezier(0.5,0,0.75,0)';
-    inner.style.transform = 'scale(0.94)';
-    setTimeout(() => {
-      window.pageTransitionOut ? window.pageTransitionOut(href) : (window.location.href = href);
-    }, 150);
-  }
-
   /* ---------- Shared step logic — used by BOTH desktop wheel scroll
      AND vertical touch swipe, so the two behave identically: same
      trigger threshold, same easing, same label update, same exit. ---------- */
@@ -264,30 +242,44 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   addEventListener('wheel', onWheel, { passive: false });
 
-  /* ---------- Direct drag — 1:1, own control, never exits ---------- */
-  let dragging = false;
-  let dragStartX = 0;
-  let dragStartPos = 0;
+  /* ---------- Unified pointer gesture (mouse + touch + pen, one system) ----------
+     Previously mouse and touch were handled as two separate systems
+     (mousedown/mouseup vs touchstart/touchend), plus a third separate
+     'click' listener for tap-to-enter. On touch devices, browsers fire a
+     synthetic "ghost" mousedown/mouseup/click sequence after a real tap
+     for legacy compatibility — that ghost mousedown was briefly flipping
+     the carousel out of 'hold' state, so by the time the real click
+     event fired and checked `state`, it was no longer 'hold' and the tap
+     was silently ignored. That's exactly why label-bar taps worked (a
+     separate element, untouched by this) while tapping the slide itself
+     didn't.
 
-  function dragStart(clientX) {
-    if (exited) return;
-    dragging = true;
+     The Pointer Events API unifies mouse/touch/pen into one event stream
+     with no ghost-event duplication, and tap-detection happens directly
+     inside pointerup rather than depending on a separately-timed browser
+     'click' event — removing the whole class of bug. */
+  let pointerActive = false;
+  let pointerMode = null; // null (undecided) | 'drag' | 'scroll'
+  let pointerId = null;
+  let startX = 0, startY = 0, startTime = 0, lastY = 0;
+  const TAP_MAX_MOVE = 8;
+  const TAP_MAX_MS = 500;
+  const AXIS_LOCK_PX = 6;
+
+  function beginDrag() {
     state = 'drag';
     clearTimeout(holdTimer);
     cancelAnimationFrame(raf);
-    dragStartX = clientX;
     dragStartPos = pos;
     cinema.classList.add('is-grabbing');
   }
-  function dragMove(clientX) {
-    if (!dragging) return;
-    const dx = clientX - dragStartX;
+  let dragStartPos = 0;
+  function dragMoveTo(clientX) {
+    const dx = clientX - startX;
     pos = dragStartPos - dx / unit;
     render();
   }
-  function dragEnd() {
-    if (!dragging) return;
-    dragging = false;
+  function endDrag() {
     cinema.classList.remove('is-grabbing');
     const target = Math.round(pos);
     const delta = target - pos;
@@ -296,63 +288,87 @@ document.addEventListener('DOMContentLoaded', () => {
     animateEase(delta, 420, scheduleHold);
   }
 
-  cinema.addEventListener('mousedown', (e) => { e.preventDefault(); dragStart(e.clientX); });
-  addEventListener('mousemove', (e) => dragMove(e.clientX));
-  addEventListener('mouseup', dragEnd);
+  function handleTap(clientX, clientY) {
+    if (state !== 'hold' || exited) return;
+    const target = document.elementFromPoint(clientX, clientY);
+    const panelInner = target && target.closest('.studio-panel-inner');
+    if (!panelInner) return;
+    const panel = panelInner.closest('.studio-panel');
+    const i = panelEls.indexOf(panel);
+    if (i === -1) return;
 
-  /* ---------- Unified touch gesture ----------
-     A touch could mean either "drag the carousel horizontally" or
-     "swipe to scroll-step" — we don't know which until the finger has
-     actually moved a little. Deciding per-gesture (rather than reserving
-     one axis for native scrolling ahead of time) is what removes the
-     browser's direction-disambiguation hesitation that read as friction,
-     and is also what makes vertical swipe finally do something: it now
-     feeds the exact same stepFromDelta() as desktop wheel scroll. */
-  let touchMode = null; // null (undecided) | 'drag' | 'scroll'
-  let touchStartX = 0, touchStartY = 0, touchLastY = 0;
-  const AXIS_LOCK_PX = 6;
-
-  function onTouchStart(e) {
-    if (exited) return;
-    const t = e.touches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-    touchLastY = t.clientY;
-    touchMode = null;
+    if (i === currentIndex) {
+      thumpThenEnter(panelInner, slides[i].href);
+    } else {
+      jumpToIndex(i);
+    }
   }
 
-  function onTouchMove(e) {
-    const t = e.touches[0];
-    const dx = t.clientX - touchStartX;
-    const dy = t.clientY - touchStartY;
+  function thumpThenEnter(inner, href) {
+    inner.style.transition = 'transform 0.16s cubic-bezier(0.5,0,0.75,0)';
+    inner.style.transform = 'scale(0.94)';
+    setTimeout(() => {
+      window.pageTransitionOut ? window.pageTransitionOut(href) : (window.location.href = href);
+    }, 150);
+  }
 
-    if (touchMode === null) {
-      if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return; // not enough movement to decide yet
-      touchMode = Math.abs(dx) > Math.abs(dy) ? 'drag' : 'scroll';
-      if (touchMode === 'drag') dragStart(touchStartX);
+  cinema.style.touchAction = 'none';
+
+  cinema.addEventListener('pointerdown', (e) => {
+    if (exited) return;
+    pointerActive = true;
+    pointerMode = null;
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    lastY = e.clientY;
+    startTime = performance.now();
+    cinema.setPointerCapture(e.pointerId);
+  });
+
+  cinema.addEventListener('pointermove', (e) => {
+    if (!pointerActive || e.pointerId !== pointerId) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (pointerMode === null) {
+      if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return; // still could be a tap
+      pointerMode = Math.abs(dx) > Math.abs(dy) ? 'drag' : 'scroll';
+      if (pointerMode === 'drag') beginDrag();
     }
 
-    e.preventDefault();
-    if (touchMode === 'drag') {
-      dragMove(t.clientX);
+    if (pointerMode === 'drag') {
+      dragMoveTo(e.clientX);
     } else {
-      // Swipe up (finger moves up the screen) reads as "scroll forward",
-      // matching the same sign convention as a natural downward wheel
-      // scroll — swipe up = advance, swipe down = go back.
-      const deltaY = touchLastY - t.clientY;
-      touchLastY = t.clientY;
+      // Vertical swipe reads as scroll — swipe up = advance, matching
+      // the same sign convention as a natural downward wheel scroll.
+      const deltaY = lastY - e.clientY;
+      lastY = e.clientY;
       stepFromDelta(deltaY);
     }
-  }
+  });
 
-  function onTouchEnd() {
-    if (touchMode === 'drag') dragEnd();
-    touchMode = null;
-  }
+  function onPointerUp(e) {
+    if (!pointerActive || e.pointerId !== pointerId) return;
+    pointerActive = false;
 
-  cinema.addEventListener('touchstart', onTouchStart, { passive: true });
-  cinema.addEventListener('touchmove', onTouchMove, { passive: false });
-  addEventListener('touchend', onTouchEnd);
+    if (pointerMode === 'drag') {
+      endDrag();
+    } else if (pointerMode === null) {
+      // No axis was ever locked in — this was a genuine tap/click, not a
+      // drag. Handle it directly here rather than relying on a separate
+      // browser 'click' event, which is what let the ghost-event race
+      // condition slip through before.
+      const elapsed = performance.now() - startTime;
+      if (elapsed < TAP_MAX_MS) handleTap(e.clientX, e.clientY);
+    }
+    pointerMode = null;
+  }
+  cinema.addEventListener('pointerup', onPointerUp);
+  cinema.addEventListener('pointercancel', () => {
+    pointerActive = false;
+    pointerMode = null;
+  });
 
 
   /* ---------- Exit to About: accelerate away (mirror of entrance),
