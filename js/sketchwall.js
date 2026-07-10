@@ -167,6 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
     px = e.touches[0].clientX; py = e.touches[0].clientY;
     hasPointer = true;
   }, { passive: true });
+  // Without these, hasPointer stayed true forever after the very first
+  // touch — permanently locking out gyroscope tilt, since the tilt
+  // code only runs while hasPointer is false. Real touch position
+  // should win while you're actively touching; tilt should take back
+  // over the instant your finger lifts.
+  addEventListener('touchend', () => { hasPointer = false; }, { passive: true });
+  addEventListener('touchcancel', () => { hasPointer = false; }, { passive: true });
 
   let tiltX = 0, tiltY = 0;
   function enableTilt() {
