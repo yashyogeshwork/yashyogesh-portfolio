@@ -111,6 +111,8 @@ html, body {
 
 .wall-sketch {
   position: absolute;
+  left: 0;
+  top: 0;
   will-change: transform;
   cursor: pointer;
   border-radius: 6px;
@@ -118,6 +120,69 @@ html, body {
   transition: box-shadow 0.25s ease;
   background-size: cover;
   background-position: center;
+  /* Rotation pivots at the pin's mounting point (top-center), not the
+     element's own center — so swiveling reads as a real pinned object
+     swinging on its pin, not a card spinning around its own middle. */
+  transform-origin: 50% 0%;
+}
+
+/* Pin — a small physical detail mounting each sketch to the wall, like a
+   real corkboard pushpin. Kept purely metallic/monochrome (no color) to
+   stay inside the locked palette. It counter-rotates in JS so it always
+   reads as upright, the way a real pin would, regardless of how much
+   the sketch itself is tilted. */
+.wall-sketch-pin {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fdfdfd, #b8b8b8 55%, #85817c 100%);
+  box-shadow: 0 2px 3px rgba(17,17,17,0.32), inset 0 -1px 1px rgba(0,0,0,0.22);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Shine — a faint, soft pass of light when you hover, not a bright bar
+   sweeping through. Restrained on purpose: premium reads as quiet, not
+   loud. Angle/duration/intensity vary per sketch (set via CSS custom
+   properties from JS) so it never feels like the same mechanical effect
+   firing identically everywhere — real light doesn't behave identically
+   twice, and that small imperfection is what keeps it from feeling fake. */
+.wall-sketch-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.wall-sketch-shine::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -70%;
+  width: 38%;
+  height: 220%;
+  background: linear-gradient(var(--shine-angle, 78deg),
+    transparent 0%,
+    rgba(255,255,255,var(--shine-op, 0.24)) 50%,
+    transparent 100%);
+  filter: blur(2px);
+  opacity: 0;
+}
+
+.wall-sketch.is-shining .wall-sketch-shine::before {
+  animation: sketch-shine-sweep var(--shine-dur, 1.3s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes sketch-shine-sweep {
+  0%   { left: -70%; opacity: 0; }
+  22%  { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { left: 140%; opacity: 0; }
 }
 
 /* ---------- Expanded view ---------- */

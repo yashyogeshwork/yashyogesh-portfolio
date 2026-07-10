@@ -103,8 +103,8 @@ window.CONTENT = {
 
   /* ---- Sketch wall page ---- */
   sketchwall: {
-    headlineLine1: '5 years. Every day.',
-    headlineLine2: 'Still going.',
+    headlineLine1: 'A 5-year sketching challenge.',
+    headlineLine2: 'Imperfect. Ongoing.',
     hint: 'Move through the sketches',
     /* ---- THE SKETCH LIST ----
        Each entry is one sketch on the wall.
@@ -137,26 +137,6 @@ window.CONTENT = {
       { image: '', title: 'Sketch 18' },
       { image: '', title: 'Sketch 19' },
       { image: '', title: 'Sketch 20' },
-      { image: '', title: 'Sketch 21' },
-      { image: '', title: 'Sketch 22' },
-      { image: '', title: 'Sketch 23' },
-      { image: '', title: 'Sketch 24' },
-      { image: '', title: 'Sketch 25' },
-      { image: '', title: 'Sketch 26' },
-      { image: '', title: 'Sketch 27' },
-      { image: '', title: 'Sketch 28' },
-      { image: '', title: 'Sketch 29' },
-      { image: '', title: 'Sketch 30' },
-      { image: '', title: 'Sketch 31' },
-      { image: '', title: 'Sketch 32' },
-      { image: '', title: 'Sketch 33' },
-      { image: '', title: 'Sketch 34' },
-      { image: '', title: 'Sketch 35' },
-      { image: '', title: 'Sketch 36' },
-      { image: '', title: 'Sketch 37' },
-      { image: '', title: 'Sketch 38' },
-      { image: '', title: 'Sketch 39' },
-      { image: '', title: 'Sketch 40' },
     ],
   },
 
