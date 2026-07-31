@@ -1,386 +1,420 @@
-/* ==========================================================================
-   SKETCH WALL ENGINE
-   Organic Poisson-style scatter (no overlap, ever — including during
-   motion), always-on ambient drift with a shared breathing pulse,
-   cursor/gyroscope proximity push-away, gallery spotlight-dim on hover,
-   click to expand. Sketch list comes from CONTENT.sketchwall.items:
-   entries with an 'image' use it; entries without get a placeholder
-   gradient, so the wall works from day one and evolves as real sketches
-   are uploaded.
-   ========================================================================== */
-
-document.addEventListener('DOMContentLoaded', () => {
+(() => {
   const field = document.getElementById('wallField');
-  const hint = document.getElementById('wallHint');
+  const dragCursor = document.getElementById('dragCursor');
+
+  const tones = [
+    'linear-gradient(135deg,#E8E2D5,#C9BFA8)', 'linear-gradient(135deg,#DCE5D2,#AEC49A)',
+    'linear-gradient(135deg,#E5E5E5,#C2C2C2)', 'linear-gradient(135deg,#F5EFE5,#DCD0BC)',
+    'linear-gradient(135deg,#DCE3E5,#AEC0C4)', 'linear-gradient(135deg,#EFE7D6,#D8CDA8)',
+  ];
+
+  const N = 20;
+  const cards = [];
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  const FRICTION = 0.965;
+  const RESTITUTION = 0.62;
+  const GRAVITY = 0.38; // constant downward pull — this alone produces a real rise-apex-fall arc, no scripting needed
+  const STOP_THRESHOLD = 4;
+
+  let topZ = 10;
+
+  function computeLayout(sizes) {
+    const w = innerWidth, h = innerHeight;
+    const headlineExcludeH = h * 0.3; // only the headline's own vertical band
+    const placed = [];
+    const result = [];
+    const minGap = -55; // negative = cards can genuinely overlap, creating a real layered stack
+
+    function tryPoint(size) {
+      const x = rand(size / 2 + 20, Math.max(size / 2 + 21, w - size / 2 - 20));
+      const y = rand(size / 2 + 8, Math.max(size / 2 + 9, h - size / 2 - 60));
+      return { x, y };
+    }
+    function isBehindHeadline(x, y, size) {
+      // Only the small central-top region behind the headline text —
+      // NOT the entire top band. That's what was compressing everything
+      // into the lower portion of the page.
+      return x > w * 0.28 && x < w * 0.72 && y < headlineExcludeH + size * 0.3;
+    }
+
+    sizes.forEach((originalSize) => {
+      let size = originalSize;
+      let attempts = 0;
+      let done = false;
+      while (!done) {
+        attempts++;
+        const r = size * 0.62;
+        const { x, y } = tryPoint(size);
+        if (isBehindHeadline(x, y, size)) continue;
+        let ok = true;
+        for (const p of placed) {
+          if (Math.hypot(x - p.x, y - p.y) < r + p.r + minGap) { ok = false; break; }
+        }
+        if (ok) {
+          placed.push({ x, y, r });
+          result.push({ x: x - size / 2, y: y - size / 2, rot: rand(-24, 24), size });
+          done = true;
+        } else if (attempts > 400) {
+          // Struggling to fit at this size — shrink THIS item slightly
+          // and keep trying, rather than silently dropping it. Every
+          // sketch is guaranteed to actually appear.
+          size *= 0.96;
+          attempts = 0;
+          if (size < 40) {
+            // absolute floor — place it even if it means a touch of
+            // overlap, rather than never rendering it at all
+            const { x: x2, y: y2 } = tryPoint(size);
+            const r2 = size * 0.62;
+            placed.push({ x: x2, y: y2, r: r2 });
+            result.push({ x: x2 - size / 2, y: y2 - size / 2, rot: rand(-24, 24), size });
+            done = true;
+          }
+        }
+      }
+    });
+    return result;
+  }
+
+  function buildField() {
+    field.innerHTML = '';
+    cards.length = 0;
+    const FILL_RATIO = 0.4;
+    const baseArea = (innerWidth * innerHeight * FILL_RATIO) / N;
+    const baseRadius = Math.sqrt(baseArea / Math.PI);
+    const baseSize = Math.max(130, Math.min(210, baseRadius / 0.62));
+    const sizes = Array.from({ length: N }, () => baseSize * rand(0.85, 1.15));
+    const positions = computeLayout(sizes);
+    const order = positions.map((_, i) => i).sort(() => Math.random() - 0.5);
+
+    positions.forEach((pos, i) => {
+      const size = pos.size;
+      const el = document.createElement('div');
+      el.className = 'scatter-card';
+      el.style.width = size + 'px';
+      el.style.height = (size * rand(0.92, 1.08)) + 'px';
+      const item = ((window.CONTENT && CONTENT.sketchwall && CONTENT.sketchwall.items) || [])[i];
+      el.style.background = (item && item.image) ? `url('${item.image}') center/cover` : tones[i % tones.length];
+      el.style.zIndex = topZ++;
+
+      const shine = document.createElement('div');
+      shine.className = 'scatter-shine';
+      el.appendChild(shine);
+      field.appendChild(el);
+
+      const title = (item && item.title) || `Sketch ${String(i + 1).padStart(2, '0')}`;
+      const card = {
+        el, shine, size, title,
+        x: pos.x, y: pos.y, baseRot: pos.rot,
+        w: size, h: size,
+        vx: 0, vy: 0,
+        hovered: false, dragging: false, inMotion: false, exploding: false, gliding: false,
+      };
+      cards.push(card);
+      wireCard(card);
+
+      const delay = order.indexOf(i) * 45 + rand(0, 80);
+      el.style.transform = `translate(${pos.x}px, ${pos.y}px) rotate(${pos.rot}deg) scale(0.3)`;
+      setTimeout(() => {
+        el.style.transition = 'transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease';
+        el.style.opacity = '1';
+        el.style.transform = `translate(${pos.x}px, ${pos.y}px) rotate(${pos.rot}deg) scale(1)`;
+        setTimeout(() => { el.style.transition = ''; }, 600);
+      }, delay);
+    });
+  }
+
+  function render(card) {
+    let rot;
+    if (card.exploding || card.gliding) {
+      // Flight rotation is set ONCE, at the moment of launch — not
+      // recalculated from live velocity every frame. Recomputing it
+      // continuously was the actual bug: as speed decays toward zero
+      // the angle math becomes unstable and jitters, and a wall bounce
+      // flips the velocity sign instantly, snapping the visual rotation
+      // by up to 180° in a single frame. A fixed angle can't do either.
+      rot = card.flightRot;
+    } else {
+      rot = card.hovered ? 0 : card.baseRot;
+    }
+    const scale = card.curScale || 1;
+    card.el.style.transform = `translate(${card.x}px, ${card.y}px) rotate(${rot}deg) scale(${scale})`;
+  }
+
+  function wireCard(card) {
+    const { el, shine } = card;
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let lastMoveX = 0, lastMoveY = 0, lastMoveT = 0;
+    let downX = 0, downY = 0;
+
+    el.addEventListener('pointerenter', () => {
+      if (card.dragging) return;
+      card.hovered = true;
+      card.el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
+      render(card);
+      card.el.style.zIndex = ++topZ;
+    });
+    el.addEventListener('pointerleave', () => {
+      if (card.dragging) return;
+      card.hovered = false;
+      card.el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
+      render(card);
+      dragCursor.classList.remove('is-visible');
+    });
+    el.addEventListener('pointermove', (e) => {
+      dragCursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
+      if (!card.dragging) dragCursor.classList.add('is-visible');
+
+      if (card.dragging || !card.hovered) return;
+      const rect = el.getBoundingClientRect();
+      const localX = (e.clientX - rect.left) / rect.width;
+      const localY = (e.clientY - rect.top) / rect.height;
+      shine.style.background =
+        `radial-gradient(circle at ${(localX*100).toFixed(0)}% ${(localY*100).toFixed(0)}%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 60%)`;
+    });
+
+    el.addEventListener('pointerdown', (e) => {
+      card.dragging = true;
+      card.vx = 0; card.vy = 0; card.inMotion = false;
+      el.classList.add('is-dragging');
+      el.style.zIndex = ++topZ;
+      el.setPointerCapture(e.pointerId);
+      dragOffsetX = e.clientX - card.x;
+      dragOffsetY = e.clientY - card.y;
+      lastMoveX = e.clientX; lastMoveY = e.clientY; lastMoveT = performance.now();
+      downX = e.clientX; downY = e.clientY;
+      // Immediate squash-and-stretch pop on grab — real, snappy, tactile
+      // feedback the instant you touch it, not just a shadow change.
+      // Snap to the pop instantly (no transition), then let it relax
+      // down to a resting "held" scale with an actual eased transition.
+      card.el.style.transition = 'none';
+      card.curScale = 1.16;
+      render(card);
+      requestAnimationFrame(() => {
+        card.el.style.transition = 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        card.curScale = 1.06;
+        render(card);
+      });
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!card.dragging) return;
+      card.x = e.clientX - dragOffsetX;
+      card.y = e.clientY - dragOffsetY;
+      render(card);
+
+      const now = performance.now();
+      const dt = Math.max(1, now - lastMoveT);
+      card.vx = ((e.clientX - lastMoveX) / dt) * 16;
+      card.vy = ((e.clientY - lastMoveY) / dt) * 16;
+      lastMoveX = e.clientX; lastMoveY = e.clientY; lastMoveT = now;
+    });
+    function endDrag(e) {
+      if (!card.dragging) return;
+      card.dragging = false;
+      el.classList.remove('is-dragging');
+
+      const throwSpeed = Math.hypot(card.vx, card.vy);
+      const THROW_THRESHOLD = 3; // a real deliberate flick, not an accidental nudge
+      const moveDist = e ? Math.hypot(e.clientX - downX, e.clientY - downY) : 999;
+
+      if (moveDist < 6) {
+        // Barely moved at all — this was a click, not a drag. Open the
+        // real expand view instead of settling in place.
+        card.el.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        card.curScale = 1;
+        render(card);
+        openExpand(card);
+        return;
+      }
+
+      if (throwSpeed > THROW_THRESHOLD) {
+        // It's being thrown — JS will drive its transform every single
+        // frame during flight, so a CSS transition here would fight
+        // those updates and smear. Snap scale back instantly instead;
+        // the curving flight itself is the feedback for a throw.
+        card.el.style.transition = '';
+        card.curScale = 1;
+        card.inMotion = true;
+        card.gliding = true; // banking orientation — the nose visually tracks the flight direction
+        // Rotation is set once, right here, from the actual throw
+        // direction — then it stays fixed for the whole flight. A
+        // small one-time random variance gives it character without
+        // ever letting the angle drift or destabilize mid-flight.
+        const throwAngle = Math.atan2(card.vy, card.vx) * (180 / Math.PI);
+        card.flightRot = throwAngle + rand(-8, 8);
+      } else {
+        // Just a drop, not a throw — safe to use a real CSS transition
+        // here since nothing else is touching its transform right now.
+        // Elastic overshoot settle, not a flat instant snap.
+        card.el.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        card.curScale = 1;
+        render(card);
+      }
+    }
+    el.addEventListener('pointerup', (e) => endDrag(e));
+    el.addEventListener('pointercancel', () => endDrag(null));
+  }
+
+  let isExploding = false;
+
+  function physicsTick() {
+    const w = innerWidth, h = innerHeight;
+    const now = performance.now();
+    cards.forEach((card) => {
+      if (!card.inMotion) return;
+
+      card.x += card.vx;
+      card.y += card.vy;
+      card.vx *= card.exploding ? 0.994 : FRICTION;
+      card.vy *= card.exploding ? 0.994 : FRICTION;
+
+      if (card.exploding) {
+        // Real, continuous projectile motion — constant gravity acting
+        // from the moment it launches is what naturally produces the
+        // rise, the deceleration, the apex, and the fall. No scripted
+        // phase-switch, no instant velocity swap — this is just actual
+        // physics, the same reason a thrown ball arcs instead of
+        // stopping dead and reversing.
+        card.vy += GRAVITY * card.gravityMul; // each sketch has its own weight — heavier ones fall faster, lighter ones float longer
+
+        // A little banking character layered on top — small and
+        // decaying at its own per-sketch rate, so no two curve the
+        // same way or straighten out at the same time.
+        const turnRad = card.curveRate * (Math.PI / 180);
+        card.curveRate *= card.curveDecay;
+        const cosT = Math.cos(turnRad), sinT = Math.sin(turnRad);
+        const newVx = card.vx * cosT - card.vy * sinT;
+        const newVy = card.vx * sinT + card.vy * cosT;
+        card.vx = newVx;
+        card.vy = newVy;
+
+        // A visible flutter — real paper doesn't fly on a perfectly
+        // smooth banked line, it wobbles as it cuts through the air.
+        // Layered on top of the velocity-tracking orientation, not
+        // replacing it, so it still visibly banks into its real path.
+        const baseRot = Math.atan2(card.vy, card.vx) * (180 / Math.PI);
+        const flutter = Math.sin(now / 1000 * card.flutterFreq + card.flutterPhase) * card.flutterAmp;
+        card.flightRot = baseRot + flutter;
+      } else {
+        const minX = 0, maxX = w - card.w;
+        const minY = 0, maxY = h - card.h;
+        if (card.x < minX) { card.x = minX; card.vx = -card.vx * RESTITUTION; }
+        if (card.x > maxX) { card.x = maxX; card.vx = -card.vx * RESTITUTION; }
+        if (card.y < minY) { card.y = minY; card.vy = -card.vy * RESTITUTION; }
+        if (card.y > maxY) { card.y = maxY; card.vy = -card.vy * RESTITUTION; }
+      }
+
+      render(card);
+
+      if (!card.exploding && Math.abs(card.vx) < STOP_THRESHOLD / 60 && Math.abs(card.vy) < STOP_THRESHOLD / 60) {
+        card.inMotion = false;
+        card.vx = 0; card.vy = 0;
+        if (card.gliding && card.flightRot != null) {
+          // It can fly at any angle mid-flight, but the resting rotation
+          // it lands at shouldn't exceed 50° — beyond that it's genuinely
+          // harder to view the sketch properly. Hovering still straightens
+          // it to 0° regardless, exactly as before.
+          card.baseRot = Math.max(-50, Math.min(50, card.flightRot));
+        }
+        card.gliding = false;
+        // A satisfying little "landing" pulse now that it's genuinely
+        // at rest — safe to use a real transition here, nothing else
+        // is touching its transform anymore.
+        card.el.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        card.curScale = 1.08;
+        render(card);
+        setTimeout(() => {
+          card.curScale = 1;
+          render(card);
+        }, 20);
+      }
+    });
+
+    // Rebuild the instant every sketch has actually cleared the screen —
+    // not after a fixed guessed delay. Only checked once every sketch
+    // has actually launched, so it can't fire early while some are
+    // still waiting in the stagger queue.
+    if (isExploding && launchedCount === totalToLaunch && totalToLaunch > 0) {
+      const stillFlying = cards.some((c) => c.exploding && c.y < h + 120);
+      if (!stillFlying) {
+        buildField();
+        isExploding = false;
+        rescatterBtn.disabled = false;
+      }
+    }
+
+    requestAnimationFrame(physicsTick);
+  }
+
+  // ---------------- Rescatter: explode everything off-screen, then pop
+  // a brand new random layout back in ----------------
+  const rescatterBtn = document.getElementById('rescatterBtn');
+  let launchedCount = 0;
+  let totalToLaunch = 0;
+
+  function rescatter() {
+    if (isExploding) return;
+    isExploding = true;
+    rescatterBtn.disabled = true;
+    launchedCount = 0;
+    totalToLaunch = cards.length;
+
+    // Anticipation — every sketch flinches inward slightly before the
+    // burst, a brief windup that makes the payoff read as a real
+    // release of energy, not just things suddenly moving.
+    cards.forEach((card) => {
+      card.el.style.transition = 'transform 0.13s cubic-bezier(0.4, 0, 0.6, 1)';
+      card.curScale = 0.92;
+      render(card);
+    });
+
+    setTimeout(() => {
+      cards.forEach((card) => {
+        // Each sketch launches on its own small random delay, so the
+        // burst cascades outward like a real string of firecrackers,
+        // not one mechanical simultaneous event.
+        const launchDelay = rand(0, 900);
+        setTimeout(() => {
+          // A swift, mostly-vertical launch upward — like a firework
+          // going up. Real gravity (applied every frame in physicsTick)
+          // takes it from here: it'll decelerate, reach a natural apex,
+          // and fall — genuine continuous physics, not a scripted phase.
+          // Real variety, not a uniform launch — wide angle spread, wide
+          // speed range, and a per-sketch "weight" so some feel heavier
+          // (fall faster, bank less) and others lighter and flightier,
+          // like real paper airplanes never fold identically.
+          const angle = rand(-135, -45) * (Math.PI / 180);
+          const speed = rand(16, 34);
+          card.vx = Math.cos(angle) * speed;
+          card.vy = Math.sin(angle) * speed;
+          card.curveRate = rand(3, 12) * (Math.random() < 0.5 ? 1 : -1);
+          card.curveDecay = rand(0.965, 0.992); // some straighten out fast, others keep curving much longer
+          card.gravityMul = rand(0.6, 1.6); // heavier or lighter than average — wider spread means flight durations genuinely differ
+          card.flutterAmp = rand(2, 8);
+          card.flutterFreq = rand(2, 5);
+          card.flutterPhase = rand(0, Math.PI * 2);
+          card.flightRot = Math.atan2(card.vy, card.vx) * (180 / Math.PI);
+          card.el.style.transition = '';
+          card.curScale = 1.1; // a little pop right as it launches
+          card.exploding = true;
+          card.hovered = false;
+          card.inMotion = true;
+          launchedCount++;
+        }, launchDelay);
+      });
+    }, 128);
+  }
+  rescatterBtn.addEventListener('click', rescatter);
+
+  // ---------------- Expand view — the real site's existing modal ----------------
   const expandVeil = document.getElementById('wallExpandVeil');
   const expandCard = document.getElementById('wallExpandCard');
   const expandTitle = document.getElementById('wallExpandTitle');
   const expandClose = document.getElementById('wallExpandClose');
 
-  if (!field) return;
-
-  const items = (window.CONTENT && window.CONTENT.sketchwall && window.CONTENT.sketchwall.items) || [];
-
-  const gradients = [
-    'linear-gradient(135deg,#E8E2D5,#C9BFA8)',
-    'linear-gradient(135deg,#DCE5D2,#AEC49A)',
-    'linear-gradient(135deg,#E5E5E5,#C2C2C2)',
-    'linear-gradient(135deg,#F5EFE5,#DCD0BC)',
-    'linear-gradient(135deg,#DCE3E5,#AEC0C4)',
-    'linear-gradient(135deg,#EFE7D6,#D8CDA8)',
-    'linear-gradient(135deg,#E2E9D5,#B7CB9E)',
-    'linear-gradient(135deg,#ECECEC,#CFCFCF)',
-  ];
-
-  const sketches = [];
-
-  function rand(min, max) { return min + Math.random() * (max - min); }
-
-  function buildField() {
-    field.innerHTML = '';
-    sketches.length = 0;
-    const w = innerWidth;
-    const h = innerHeight; // strictly one screen — no scrolling
-    const headlineExcludeH = h * 0.4;
-    const placed = [];
-
-    // Size is computed from actual screen area, not a fixed guess — this
-    // is what guarantees all N sketches genuinely fit on one screen
-    // without needing to scroll, on any device.
-    const FILL_RATIO = 0.6;
-    const SIZE_VARIANCE = 0.08;
-    const baseArea = (w * h * FILL_RATIO) / items.length;
-    const baseRadius = Math.sqrt(baseArea / Math.PI);
-    let baseSize = baseRadius / 0.62;
-    let sizeMin = baseSize * (1 - SIZE_VARIANCE);
-    let sizeMax = baseSize * (1 + SIZE_VARIANCE);
-
-    let i = 0;
-    let attempts = 0;
-    const SHRINK_THRESHOLD = 900; // if placement is struggling this hard, ease sizes down slightly rather than ever scrolling
-    const HARD_ATTEMPT_CAP = 20000;
-
-    while (i < items.length && attempts < HARD_ATTEMPT_CAP) {
-      attempts++;
-      if (attempts % SHRINK_THRESHOLD === 0) {
-        sizeMin *= 0.94;
-        sizeMax *= 0.94;
-      }
-
-      const size = rand(sizeMin, sizeMax);
-      const r = size * 0.62;
-      const x = rand(size / 2, w - size / 2);
-      const y = rand(size / 2, h - size / 2);
-
-      if (x > w * 0.24 && x < w * 0.76 && y < headlineExcludeH) continue;
-
-      const minGap = 14;
-      let ok = true;
-      for (const p of placed) {
-        const d = Math.hypot(x - p.x, y - p.y);
-        if (d < r + p.r + minGap) { ok = false; break; }
-      }
-      if (!ok) continue;
-
-      placed.push({ x, y, r });
-
-      const item = items[i];
-      const el = document.createElement('div');
-      el.className = 'wall-sketch';
-      el.style.width = size + 'px';
-      el.style.height = (size * rand(0.9, 1.1)) + 'px';
-
-      const gradIdx = i % gradients.length;
-      if (item.image && item.image.length) {
-        el.style.backgroundImage = `url('images/sketches/${item.image}')`;
-        el.style.backgroundColor = '#F5F5F3';
-      } else {
-        el.style.background = gradients[gradIdx];
-      }
-
-      const pin = document.createElement('div');
-      pin.className = 'wall-sketch-pin';
-      el.appendChild(pin);
-
-      const shine = document.createElement('div');
-      shine.className = 'wall-sketch-shine';
-      shine.style.setProperty('--shine-angle', `${rand(66, 90)}deg`);
-      shine.style.setProperty('--shine-dur', `${rand(1.15, 1.75).toFixed(2)}s`);
-      shine.style.setProperty('--shine-op', rand(0.16, 0.3).toFixed(2));
-      el.appendChild(shine);
-
-      sketches.push({
-        el,
-        pin,
-        item,
-        gradIdx,
-        baseX: x - size / 2,
-        baseY: y - size / 2,
-        r,
-        baseRot: rand(-16, 16),
-        baseOpacity: rand(0.6, 0.95),
-        phase: rand(0, Math.PI * 2),
-        speed: rand(0.22, 0.48),
-        wobbleSpeed: rand(0.3, 0.6),
-        wobblePhase: rand(0, Math.PI * 2),
-        curTiltX: 0, curTiltY: 0,
-        tiltVelX: 0, tiltVelY: 0,
-        swivelAngle: 0, swivelVel: 0,
-        // Small per-sketch variance in how strongly it responds — real
-        // pinned objects wouldn't all react with identical stiffness.
-        responseMul: rand(0.8, 1.2),
-        hovered: false,
-      });
-      i++;
-    }
-
-    // Position never changes after this point, so there's no more need
-    // to compute a safe wander radius — every reaction from here on is
-    // pure rotation around the pin.
-    sketches.forEach((s) => {
-      s.el.style.opacity = s.baseOpacity;
-      s.el.addEventListener('click', () => openExpand(s));
-      s.el.addEventListener('mouseenter', () => {
-        s.hovered = true;
-        s.el.classList.remove('is-shining');
-        void s.el.offsetWidth; // force reflow so the animation restarts even on repeat hovers
-        s.el.classList.add('is-shining');
-      });
-      s.el.addEventListener('mouseleave', () => { s.hovered = false; });
-      field.appendChild(s.el);
-    });
-
-    field.style.height = h + 'px'; // exactly one screen — no scrolling
-  }
-
-  /* ---------- Pointer / gyroscope ---------- */
-  let px = innerWidth / 2, py = innerHeight / 2;
-  let hasPointer = false;
-
-  addEventListener('mousemove', (e) => {
-    px = e.clientX; py = e.clientY;
-    hasPointer = true;
-    hint.classList.add('is-visible');
-  });
-  addEventListener('mouseleave', () => { hasPointer = false; });
-  addEventListener('touchmove', (e) => {
-    px = e.touches[0].clientX; py = e.touches[0].clientY;
-    hasPointer = true;
-  }, { passive: true });
-  // Without these, hasPointer stayed true forever after the very first
-  // touch — permanently locking out gyroscope tilt, since the tilt
-  // code only runs while hasPointer is false. Real touch position
-  // should win while you're actively touching; tilt should take back
-  // over the instant your finger lifts.
-  addEventListener('touchend', () => { hasPointer = false; }, { passive: true });
-  addEventListener('touchcancel', () => { hasPointer = false; }, { passive: true });
-
-  let tiltX = 0, tiltY = 0;
-  function enableTilt() {
-    addEventListener('deviceorientation', (e) => {
-      if (e.gamma == null || e.beta == null) return;
-      tiltX = Math.max(-30, Math.min(30, e.gamma));
-      tiltY = Math.max(-30, Math.min(30, e.beta - 45));
-    });
-  }
-
-  if (window.DeviceOrientationEvent) {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      // iOS 13+ Safari: deviceorientation silently never fires unless
-      // permission is explicitly requested from within a real tap —
-      // it cannot be requested automatically on page load. Ask on the
-      // first touch anywhere on the page, once.
-      const askOnce = () => {
-        removeEventListener('touchend', askOnce);
-        DeviceOrientationEvent.requestPermission()
-          .then((state) => { if (state === 'granted') enableTilt(); })
-          .catch(() => {});
-      };
-      addEventListener('touchend', askOnce, { once: true });
-    } else {
-      // Android / older iOS — no permission gate needed.
-      enableTilt();
-    }
-  }
-  const isTouch = matchMedia('(pointer: coarse)').matches;
-
-  // Wind — instead of a synchronized "breathing" pulse, sketches sway
-  // like paper pinned to a wall in a breeze. Wind direction and gust
-  // strength wander slowly and irregularly over time (layered sine waves
-  // standing in for turbulence — real gusts aren't a clean sine wave),
-  // and each sketch responds with its own phase/weight so they don't
-  // all sway in perfect unison, the way real pinned paper wouldn't.
-  const WIND_SWAY_DEG = 16;
-
-  function windAngle(time) {
-    // Irregular wandering direction, not a fixed compass bearing.
-    return Math.sin(time * 0.12) * 1.4 + Math.sin(time * 0.05 + 2) * 0.8;
-  }
-  function windGust(time) {
-    // Irregular gust strength, 0..1 — layered waves so it doesn't feel
-    // like a metronome the way a single sine wave would.
-    const g = Math.sin(time * 0.22) * 0.5 + Math.sin(time * 0.09 + 1.3) * 0.35 + Math.sin(time * 0.4 + 3) * 0.15;
-    return Math.max(0, (g + 1) / 2); // normalized to 0..1, biased toward calmer moments
-  }
-
-  // Swivel — like running a finger across pinned photos: as the cursor
-  // passes near a sketch, its motion imparts a torque that makes the
-  // sketch swing on its pin, then settle back like a damped pendulum.
-  // Torque is the TANGENTIAL cursor speed relative to each sketch,
-  // normalized by distance — contact-like, so brushing directly over a
-  // sketch gives the strongest kick, tapering smoothly with distance
-  // (the earlier version wasn't normalized, so farther sketches within
-  // range could get MORE kick than ones you brushed right over, which
-  // is backwards). Spring/damping are now dt-scaled too, so the swing
-  // settles at the same real-world speed regardless of screen refresh
-  // rate — previously it was tied to frame count, not real time.
-  const SWIVEL_RADIUS = 150;
-  const SWIVEL_KICK_SCALE = 0.00085;
-  const SWIVEL_SPRING_K = 0.012;
-  const SWIVEL_DAMPING = 0.92;
-  const SWIVEL_MAX_DEG = 34;
-
-  // Holographic tilt — like the reference card: real 3D rotateX/rotateY
-  // that follows the cursor directly (proportional, not physics-
-  // integrated like the swivel above), so a sketch appears to turn and
-  // face your cursor as you approach, like a trading card catching the
-  // light. Layered on top of the swivel, not replacing it — swivel gives
-  // the "brushed and swinging" motion, this gives the "looking toward
-  // you" 3D depth. Pivots from the pin via transform-origin, same as
-  // everything else.
-  const TILT_RADIUS = 220;
-  const TILT_KICK_SCALE = 0.0011;
-  const TILT_SPRING_K = 0.014;
-  const TILT_DAMPING = 0.91;
-  const TILT_MAX_DEG = 28;
-
-  let lastCursorX = px, lastCursorY = py;
-
-  function tick(t) {
-    const time = t / 1000;
-    const dt = Math.min(0.05, (t - (tick.lastT || t)) / 1000);
-    tick.lastT = t;
-
-    let targetX = px, targetY = py;
-    if (isTouch && !hasPointer) {
-      targetX = innerWidth / 2 + tiltX * 6;
-      targetY = innerHeight / 2 + tiltY * 6;
-    }
-    // Sketches are positioned in document coordinates (the field can be
-    // taller than one screen now), but mouse/touch coordinates are
-    // viewport-relative — add the scroll offset so proximity/torque
-    // comparisons stay correct no matter how far down the page you are.
-    targetY += window.scrollY;
-
-    const cursorVX = targetX - lastCursorX;
-    const cursorVY = targetY - lastCursorY;
-    lastCursorX = targetX;
-    lastCursorY = targetY;
-
-    // Every sketch stays pinned exactly where it was placed. Ambient
-    // motion now comes from shared wind — direction and gust strength
-    // computed once per frame — rather than each sketch independently
-    // breathing in a synced pulse. Swivel/tilt physics only engage on
-    // actual hover, not just general proximity.
-    const gustGlobal = windGust(time);
-    const angleGlobal = windAngle(time);
-
-    sketches.forEach((s) => {
-      // The pin's position NEVER changes — it's fixed to the wall,
-      // exactly where it was placed. Everything below is rotation only,
-      // pivoting around that fixed point via transform-origin — nothing
-      // here ever translates the element's position again.
-      const cx = s.baseX + s.el.offsetWidth / 2;
-      const cy = s.baseY + s.el.offsetHeight / 2;
-      s._dist = Math.hypot(cx - targetX, cy - targetY);
-
-      // Per-sketch weight so they don't all sway in perfect unison, the
-      // way real pinned paper of slightly different sizes wouldn't.
-      const weight = 0.55 + 0.45 * Math.sin(s.phase * 3);
-      const gustLocal = gustGlobal * weight;
-      // Idle wind: a gentle side-to-side SWING (rotation), not a
-      // position shift — like paper hanging from a pin, blown by air
-      // that comes and goes irregularly, never a mechanical pulse.
-      const windLean = angleGlobal * (WIND_SWAY_DEG / 3) * gustLocal
-                      + Math.sin(time * s.wobbleSpeed + s.wobblePhase) * WIND_SWAY_DEG * 0.35 * gustLocal;
-      // A touch of idle X/Y nod too — a hanging object catches air
-      // unevenly, not just side to side. Small on purpose; the pin is
-      // still the anchor, this is a whisper, not a tumble.
-      const windNodX = Math.sin(time * s.wobbleSpeed * 0.7 + s.phase) * 3.5 * gustLocal;
-      const windNodY = Math.cos(time * s.wobbleSpeed * 0.55 + s.wobblePhase) * 3 * gustLocal;
-
-      s.el.style.boxShadow = '';
-      s.el.style.zIndex = s.hovered ? 6 : '';
-
-      // Brushing (proximity) — a DIFFERENT behavior from idle wind, as
-      // asked: an actual torque kick from your cursor's motion, not
-      // random gusting. Still pure rotation, still pivoting from the pin.
-      const dx = cx - targetX, dy = cy - targetY;
-      if (s._dist < SWIVEL_RADIUS) {
-        const proximity = 1 - s._dist / SWIVEL_RADIUS;
-        const torque = (cursorVX * dy - cursorVY * dx) * SWIVEL_KICK_SCALE * proximity * s.responseMul;
-        s.swivelVel += torque;
-      }
-      s.swivelVel += -s.swivelAngle * SWIVEL_SPRING_K;
-      s.swivelVel *= SWIVEL_DAMPING;
-      s.swivelAngle += s.swivelVel;
-      s.swivelAngle = Math.max(-SWIVEL_MAX_DEG, Math.min(SWIVEL_MAX_DEG, s.swivelAngle));
-
-      // Holographic tilt is now real torque physics too — vertical
-      // cursor motion tips the sketch around X, horizontal motion tips
-      // it around Y, exactly the same paradigm as the Z-axis swivel
-      // above. All three axes now swing together as one unified 3D
-      // tumble around the pin, instead of Z being physical while X/Y
-      // just snapped directly to cursor position.
-      if (s._dist < TILT_RADIUS) {
-        const proximity = 1 - s._dist / TILT_RADIUS;
-        s.tiltVelX += cursorVY * TILT_KICK_SCALE * proximity * s.responseMul;
-        s.tiltVelY += -cursorVX * TILT_KICK_SCALE * proximity * s.responseMul;
-      }
-      s.tiltVelX += -s.curTiltX * TILT_SPRING_K;
-      s.tiltVelY += -s.curTiltY * TILT_SPRING_K;
-      s.tiltVelX *= TILT_DAMPING;
-      s.tiltVelY *= TILT_DAMPING;
-      s.curTiltX += s.tiltVelX;
-      s.curTiltY += s.tiltVelY;
-      s.curTiltX = Math.max(-TILT_MAX_DEG, Math.min(TILT_MAX_DEG, s.curTiltX));
-      s.curTiltY = Math.max(-TILT_MAX_DEG, Math.min(TILT_MAX_DEG, s.curTiltY));
-
-      // Position is permanently s.baseX/s.baseY — never modified.
-      const x = s.baseX;
-      const y = s.baseY;
-      const rot = s.baseRot + windLean + s.swivelAngle;
-
-      // perspective() as a transform function (not the parent's CSS
-      // perspective property) gives this element its OWN 3D viewing
-      // distance, so rotateX/rotateY tilt correctly regardless of what's
-      // around it — and since transform-origin is pinned at the top
-      // (the pin's location), every rotation here — in-plane swivel AND
-      // 3D tilt — pivots from the pin, exactly like a real pinned photo.
-      s.el.style.transform = `translate(${x}px, ${y}px) perspective(550px) rotateX(${s.curTiltX + windNodX}deg) rotateY(${s.curTiltY + windNodY}deg) rotateZ(${rot}deg)`;
-      s.el.style.opacity = s.baseOpacity;
-      // Counter-rotate the pin against the sketch's own rotation — a real
-      // pin stays upright no matter how the paper underneath it tilts.
-      s.pin.style.transform = `translateX(-50%) rotate(${-rot}deg)`;
-    });
-
-    requestAnimationFrame(tick);
-  }
-
-  /* ---------- Expand ---------- */
-  function openExpand(s) {
-    if (s.item.image && s.item.image.length) {
-      expandCard.style.background = '';
-      expandCard.style.backgroundImage = `url('images/sketches/${s.item.image}')`;
-      expandCard.style.backgroundSize = 'contain';
-      expandCard.style.backgroundPosition = 'center';
-      expandCard.style.backgroundRepeat = 'no-repeat';
-      expandCard.style.backgroundColor = '#FFFFFF';
-    } else {
-      expandCard.style.backgroundImage = '';
-      expandCard.style.background = gradients[s.gradIdx];
-    }
-    expandTitle.textContent = s.item.title || '';
+  function openExpand(card) {
+    expandCard.style.background = card.el.style.background;
+    expandTitle.textContent = card.title || '';
     expandVeil.classList.add('is-active');
     expandClose.classList.add('is-active');
   }
@@ -388,13 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
     expandVeil.classList.remove('is-active');
     expandClose.classList.remove('is-active');
   }
-  expandVeil.addEventListener('click', closeExpand);
-  expandCard.addEventListener('click', (e) => e.stopPropagation());
+  expandVeil.addEventListener('click', (e) => { if (e.target === expandVeil) closeExpand(); });
   expandClose.addEventListener('click', closeExpand);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closeExpand(); });
 
   addEventListener('resize', buildField);
-
   buildField();
-  requestAnimationFrame(tick);
-  setTimeout(() => { if (!isTouch) hint.classList.add('is-visible'); }, 1200);
-});
+  requestAnimationFrame(physicsTick);
+})();

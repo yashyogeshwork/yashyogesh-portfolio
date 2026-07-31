@@ -1,0 +1,64 @@
+/* ==========================================================================
+   SURFACE C1 — scatter-field hero. Scoped to body[data-page="project-c1"]
+   wherever it touches shared classes (.project-intro etc.), so Hive and
+   TOAD — which use the same shared project.css — are never affected.
+   ========================================================================== */
+
+body[data-page="project-c1"] .project-intro {
+  background:#3A3A3A;
+  background-image:radial-gradient(circle, #525252 1.2px, transparent 1.2px);
+  background-size:26px 26px;
+}
+
+body[data-page="project-c1"] .project-intro-content {
+  z-index:6; /* above the top/bottom underlays below, which don't exist on Hive/TOAD */
+}
+
+body[data-page="project-c1"] .project-scroll-cue {
+  z-index:6;
+}
+
+.c1-top-underlay {
+  position:absolute; top:0; left:0; right:0; height:22%;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+  pointer-events:none; z-index:5;
+}
+.c1-bottom-underlay {
+  position:absolute; bottom:0; left:0; right:0; height:22%;
+  background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  pointer-events:none; z-index:5;
+}
+
+.c1-card {
+  position:absolute;
+  border-radius:0;
+  background-size:cover; background-position:center;
+  box-shadow:0 10px 22px -10px rgba(17,17,17,0.18);
+  cursor:pointer;
+}
+
+.c1-expand-veil {
+  position:fixed; inset:0; z-index:100;
+  background:rgba(17,17,17,0.85);
+  backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.4s ease;
+}
+.c1-expand-veil.is-active { opacity:1; pointer-events:all; }
+.c1-expand-card {
+  width:min(60vw,480px); height:min(60vw,480px);
+  border-radius:0;
+  box-shadow:0 40px 90px -20px rgba(0,0,0,0.5);
+  background-size:cover; background-position:center;
+  transform:scale(0.95);
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.c1-expand-veil.is-active .c1-expand-card { transform:scale(1); }
+.c1-expand-close {
+  position:fixed; top:30px; right:40px; z-index:101;
+  color:#fff; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+  opacity:0; pointer-events:none; transition:opacity 0.3s ease;
+  background:none; border:none; cursor:pointer; font-family:inherit;
+}
+.c1-expand-close.is-active { opacity:0.8; pointer-events:all; }

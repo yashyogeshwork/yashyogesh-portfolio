@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/project.css">
+  <link rel="stylesheet" href="css/c1-hero.css">
 </head>
 <body data-page="project-c1">
 
@@ -22,22 +23,28 @@
       <a href="index.html" class="nav-logo" style="color: var(--color-bg);" data-c="site.name">Yash Yogesh</a>
       <div class="nav-links">
         <a href="about.html" class="nav-link" style="color: rgba(255,255,255,0.8);">About</a>
-        <a href="contact.html" class="nav-link" style="color: rgba(255,255,255,0.8);">Contact</a>
       </div>
     </div>
   </nav>
 
-  <!-- Cinematic intro — swap gradient with real Hive video. Not revealed
-       on scroll since it's visible immediately on load. -->
+  <!-- Cinematic intro — scatter-field of 32 campaign photos, drifting
+       upward, scroll-locked until the full reel has cycled through -->
   <section class="project-intro gradient-overlay-bottom">
-    <div class="project-intro-media" style="background: linear-gradient(160deg, #E8E8E8 0%, #C2C2C2 45%, #7A7A7A 100%);"></div>
+    <div class="project-intro-media" id="c1Field"></div>
+    <div class="c1-top-underlay"></div>
+    <div class="c1-bottom-underlay"></div>
     <div class="container project-intro-content">
-      <div class="project-intro-eyebrow" data-c="c1.eyebrow">Hyundai — Concept</div>
-      <h1 class="project-intro-title" data-c="c1.title">Hive</h1>
-      <p class="project-intro-sub" data-c="c1.subtitle">What if the journey to school was the school?</p>
+      <div class="project-intro-eyebrow" data-c="c1.eyebrow">Surface Moto — Production</div>
+      <h1 class="project-intro-title" data-c="c1.title">C1</h1>
+      <p class="project-intro-sub" data-c="c1.subtitle">An electric commuter, taken from first sketch to the street.</p>
     </div>
     <div class="project-scroll-cue">Scroll</div>
   </section>
+
+  <div class="c1-expand-veil" id="c1ExpandVeil">
+    <div class="c1-expand-card" id="c1ExpandCard"></div>
+  </div>
+  <button class="c1-expand-close" id="c1ExpandClose" type="button">Close ✕</button>
 
   <!-- Problem -->
   <section class="cs-section">
@@ -115,5 +122,6 @@
   <script src="js/page-transition.js"></script>
   <script src="js/scroll-reveal.js"></script>
   <script src="js/project-nav.js"></script>
+  <script src="js/c1-hero.js"></script>
 </body>
 </html>

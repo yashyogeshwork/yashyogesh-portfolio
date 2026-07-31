@@ -10,6 +10,14 @@
 
 html {
   scroll-behavior: smooth;
+  background: #FFFFFF;
+  /* Stops Safari/mobile browsers from intercepting a horizontal swipe as
+     their own back/forward navigation gesture — without this, a drag
+     starting anywhere near the screen edge can get swallowed by the OS
+     before it ever reaches our own touch handling, which reads as "one
+     direction works, the other doesn't" since only edge-triggered
+     gestures get hijacked, not drags starting mid-screen. */
+  overscroll-behavior-x: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -33,6 +41,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 img, video {

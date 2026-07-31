@@ -14,13 +14,12 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/sketchwall.css">
 </head>
-<body data-page="sketches">
+<body data-page="sketches" style="cursor:none;">
 
 <header class="wall-frame-top">
   <a class="wall-mark" href="index.html" data-c="site.name">Yash Yogesh</a>
   <nav class="wall-frame-links">
     <a class="wall-frame-link" href="about.html" data-c="site.navAbout">About</a>
-    <a class="wall-frame-link" href="contact.html" data-c="site.navContact">Contact</a>
   </nav>
 </header>
 
@@ -31,9 +30,18 @@
   </div>
 </div>
 
+<div class="canvas-bg"></div>
+
+<button class="rescatter-btn" id="rescatterBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.36"/><path d="M21 3v6h-6"/></svg>
+  Rescatter
+</button>
+
 <main class="wall-field" id="wallField"></main>
 
-<div class="wall-hint" id="wallHint" data-c="sketchwall.hint">Move through the sketches</div>
+<div class="drag-cursor" id="dragCursor">Drag</div>
+
+<div class="below"><a href="https://instagram.com/yash.yogesh_" target="_blank">Take me to Instagram</a></div>
 
 <div class="wall-expand-veil" id="wallExpandVeil">
   <div class="wall-expand-card" id="wallExpandCard"></div>

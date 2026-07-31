@@ -2,32 +2,88 @@
    ABOUT PAGE
    ========================================================================== */
 
+body[data-page="about"] .nav-inner {
+  padding: 0 var(--space-2);
+}
+
 .about-hero {
-  min-height: 100vh;
   display: flex;
   align-items: center;
-  padding: var(--space-6) 0;
-  margin-top: 64px; /* clear fixed nav */
+  padding: 100px 0 var(--space-6);
 }
 
 .about-hero-grid {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 0.7fr 1.3fr;
   gap: var(--space-6);
-  align-items: center;
+  align-items: start;
   width: 100%;
 }
 
+.about-portrait-col {
+  display: flex;
+  flex-direction: column;
+}
+
 .about-portrait {
+  width: 240px;
   aspect-ratio: 3 / 4;
   background: var(--color-bg-section);
-  max-height: 70vh;
 }
 
 .about-intro {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 20px;
+}
+
+.about-greeting-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.about-greeting-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.about-greeting {
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+  color: var(--color-text-primary);
+  transition: opacity 0.4s var(--ease-cinematic);
+}
+
+.about-eyes {
+  display: flex;
+  gap: 6px;
+}
+
+.about-eye {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease;
+}
+
+.about-eye.is-blinking {
+  transform: scaleY(0.1);
+}
+
+.about-pupil {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  transition: transform 0.1s ease-out;
 }
 
 .about-statement {
@@ -38,20 +94,24 @@
 }
 
 .about-body {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: var(--space-6);
-  padding: var(--space-6) 0;
+  padding: var(--space-5) 0;
   border-top: 1px solid var(--color-border);
 }
 
-.about-body p {
+.about-body-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.about-story p {
   max-width: var(--content-max-width);
   margin-bottom: var(--space-3);
   color: var(--color-text-secondary);
 }
 
-.about-body p:last-child {
+.about-story p:last-child {
   margin-bottom: 0;
 }
 
@@ -79,33 +139,270 @@
   font-weight: var(--fw-medium);
 }
 
+.about-fact-live {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  min-height: 16px;
+}
+
 .about-cv {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  margin-top: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
+  margin-top: var(--space-3);
+  padding: 12px 22px;
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  border: 1px solid var(--color-text-primary);
   border-radius: var(--radius-pill);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
   font-weight: var(--fw-medium);
   width: fit-content;
   transition: background var(--duration-hover) var(--ease-cinematic),
-              border-color var(--duration-hover) var(--ease-cinematic);
+              opacity var(--duration-hover) var(--ease-cinematic);
 }
 
 .about-cv:hover {
-  background: var(--color-text-primary);
-  color: var(--color-bg);
-  border-color: var(--color-text-primary);
+  opacity: 0.82;
+}
+
+/* ---- Intro contact — visible immediately, not buried after the story ---- */
+.about-intro-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+
+.about-intro-line {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  max-width: 480px;
+}
+
+.about-status-group {
+  white-space: nowrap;
+}
+
+.about-status-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2ECC71;
+  vertical-align: middle;
+  margin: 0 6px 2px 1px;
+}
+
+.about-status-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: #2ECC71;
+  opacity: 0.4;
+  animation: statusPulse 2s ease-out infinite;
+}
+
+@keyframes statusPulse {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.about-email {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  width: fit-content;
+}
+
+/* ---- Reference sidebar — Experience, Recognition, Skills stacked with
+   real breathing room between each block. This is what fills the space
+   that used to sit empty on the right. ---- */
+.about-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.about-recognition {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.about-recognition-label {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.about-recognition-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-recognition-title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.about-recognition-sub {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+}
+
+.about-skills-list {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-body);
 }
 
 @media (max-width: 768px) {
   .about-hero-grid,
-  .about-body {
+  .about-body-grid {
     grid-template-columns: 1fr;
   }
   .about-statement {
     font-size: 24px;
   }
+}
+
+/* ---- Write me a note — the one deliberate invitation on this page.
+   No form, no widget, just a real email opening. This is intentionally
+   the quietest possible version of "give feedback" — matching the
+   site's restraint rather than adding a gimmick. ---- */
+.about-note {
+  padding: 100px 0;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.about-note-link {
+  display: inline-block;
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-heading);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+  transition: border-color var(--duration-hover) var(--ease-cinematic),
+              opacity var(--duration-hover) var(--ease-cinematic);
+}
+
+.about-note-link:hover {
+  border-color: var(--color-text-primary);
+  opacity: 0.75;
+}
+
+/* ---- Anonymous reaction + note ---- */
+.about-react {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+  max-width: 620px;
+}
+
+.about-react-label {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.about-react-stickers {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.react-sticker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  background: var(--color-bg);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-hover) var(--ease-cinematic),
+              background var(--duration-hover) var(--ease-cinematic),
+              color var(--duration-hover) var(--ease-cinematic);
+}
+
+.react-sticker svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.react-sticker:hover {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+.react-sticker.is-selected {
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-bg);
+}
+
+.about-react-note-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.about-react-textarea,
+.about-react-name {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+}
+
+.about-react-textarea {
+  resize: none;
+  height: 56px;
+}
+
+.about-react-submit {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+  padding: 9px 20px;
+  border: none;
+  border-radius: 100px;
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: opacity var(--duration-hover) var(--ease-cinematic);
+}
+
+.about-react-submit:hover {
+  opacity: 0.82;
+}
+
+.about-react-submit.is-sent {
+  background: var(--color-bg-section);
+  color: var(--color-text-secondary);
+  cursor: default;
+  opacity: 1;
 }

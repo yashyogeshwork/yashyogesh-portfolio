@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------- Build ---------- */
   const panelEls = [];
+  const panelLinks = [];
   slides.forEach((s) => {
     const p = document.createElement('div');
     p.className = 'studio-panel';
@@ -70,10 +71,50 @@ document.addEventListener('DOMContentLoaded', () => {
     inner.style.background = (s.image && s.image.length)
       ? `url('${s.image}') center/cover no-repeat, ${s.bg}`
       : s.bg;
+    // A real, native link overlay covering the panel. This is the
+    // actual navigation path — a plain anchor with an href, no custom
+    // tap/drag logic between the click and the page load, so it simply
+    // cannot silently fail. Only the centered panel's link accepts
+    // clicks (see updateActiveLink); the rest have pointer-events off
+    // so drag/scroll still passes through them.
+    const link = document.createElement('a');
+    link.className = 'studio-panel-link';
+    link.href = s.href;
+    link.style.cssText = 'position:absolute;inset:0;z-index:3;pointer-events:none;';
+    link.draggable = false;
+    link.addEventListener('dragstart', (ev) => ev.preventDefault());
+    link.addEventListener('click', (ev) => {
+      // Safety guard: if a real drag just happened, don't navigate even
+      // if the browser still fires a synthetic click on the link
+      // afterward — the person was dragging, not clicking.
+      if (dragOccurred) { ev.preventDefault(); return; }
+      // Native anchor already navigates on its own — but route through
+      // the shared page transition when available, for the consistent
+      // fade. If anything about the transition fails, the browser's
+      // own default anchor navigation still carries it through.
+      if (window.pageTransitionOut) {
+        ev.preventDefault();
+        window.pageTransitionOut(s.href);
+      }
+    });
+    inner.appendChild(link);
     p.appendChild(inner);
     track.appendChild(p);
     panelEls.push(p);
+    panelLinks.push(link);
   });
+
+  // Keep exactly one panel's link clickable: whichever is actually
+  // centered on screen right now. Runs every frame via the render loop.
+  function updateActiveLink() {
+    const centerX = innerWidth / 2;
+    panelEls.forEach((panel, i) => {
+      const rect = panel.getBoundingClientRect();
+      const pc = rect.left + rect.width / 2;
+      const centered = rect.width > 0 && Math.abs(pc - centerX) < rect.width * 0.4;
+      panelLinks[i].style.pointerEvents = (centered && state === 'hold' && !exited) ? 'auto' : 'none';
+    });
+  }
 
   slides.forEach((s, i) => {
     const l = document.createElement('button');
@@ -118,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
       p.style.transform = `translateX(${x}px)`;
       p.classList.toggle('is-center', Math.abs(d) < 0.02);
     });
+    updateActiveLink();
   }
 
   /* ---------- Easing primitives ----------
@@ -126,12 +168,34 @@ document.addEventListener('DOMContentLoaded', () => {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
   function animateEase(delta, ms, onDone) {
     cancelAnimationFrame(raf);
     const from = pos, t0 = performance.now();
     (function frame(now) {
       const t = Math.min((now - t0) / ms, 1);
       pos = from + delta * easeInOutCubic(t);
+      render();
+      if (t < 1) raf = requestAnimationFrame(frame);
+      else { pos = from + delta; render(); onDone && onDone(); }
+    })(performance.now());
+  }
+
+  // A dedicated snap for drag release specifically — it needs to respond
+  // immediately to the moment you let go (ease-OUT: fast start,
+  // decelerating into place), not ease-in-out, which has a perceptible
+  // dead moment right at release before it starts moving. That mismatch
+  // between "you just let go" and "nothing visibly responds yet" is
+  // what reads as unpolished/laggy.
+  function animateSnap(delta, ms, onDone) {
+    cancelAnimationFrame(raf);
+    const from = pos, t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min((now - t0) / ms, 1);
+      pos = from + delta * easeOutCubic(t);
       render();
       if (t < 1) raf = requestAnimationFrame(frame);
       else { pos = from + delta; render(); onDone && onDone(); }
@@ -208,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastPos = pos;
   let lastMoveAt = performance.now();
   setInterval(() => {
-    if (state === 'hold' || state === 'entrance' || dragging) { lastPos = pos; lastMoveAt = performance.now(); return; }
+    if (state === 'hold' || state === 'entrance' || state === 'drag') { lastPos = pos; lastMoveAt = performance.now(); return; }
     if (pos !== lastPos) { lastPos = pos; lastMoveAt = performance.now(); return; }
     if (performance.now() - lastMoveAt > 1000) {
       cancelAnimationFrame(raf);
@@ -226,6 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
      trigger threshold, same easing, same label update, same exit. ---------- */
   let wheelAcc = 0;
   const WHEEL_TRIGGER = 90;
+  let lapsCompleted = 0; // how many times we've cycled all the way through
+
   function stepFromDelta(delta) {
     if (state !== 'hold' || exited) return;
     wheelAcc += delta;
@@ -233,9 +299,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const dir = wheelAcc > 0 ? 1 : -1;
     wheelAcc = 0;
 
+    // Reaching the end and continuing forward completes a lap. The
+    // first time this happens, we just loop back to the start and let
+    // them go through everything again — someone curious enough to
+    // reach the end once deserves a second pass, not an immediate exit.
+    // Only on the SECOND lap do we actually leave for About.
     if (dir > 0 && currentIndex === N - 1) {
-      exitToAbout();
-      return;
+      lapsCompleted++;
+      if (lapsCompleted >= 2) {
+        exitToAbout();
+        return;
+      }
     }
     const target = (currentIndex + dir + N) % N;
     state = 'step';
@@ -274,26 +348,89 @@ document.addEventListener('DOMContentLoaded', () => {
   const TAP_MAX_MS = 500;
   const AXIS_LOCK_PX = 6;
 
+  let lastDragX = 0, lastDragT = 0, dragVelocity = 0;
+
+  let dragRafId = null;
+  function dragRenderLoop() {
+    render();
+    dragRafId = requestAnimationFrame(dragRenderLoop);
+  }
+
+  let dragOccurred = false;
+
   function beginDrag() {
     state = 'drag';
+    dragOccurred = true;
     clearTimeout(holdTimer);
     cancelAnimationFrame(raf);
     dragStartPos = pos;
     cinema.classList.add('is-grabbing');
+    lastDragX = startX;
+    lastDragT = performance.now();
+    dragVelocity = 0;
+    dragRafId = requestAnimationFrame(dragRenderLoop);
   }
   let dragStartPos = 0;
   function dragMoveTo(clientX) {
     const dx = clientX - startX;
     pos = dragStartPos - dx / unit;
-    render();
+    // No direct render() here — a persistent rAF loop (dragRenderLoop)
+    // handles painting while dragging, exactly once per real display
+    // frame. Calling render() directly on every raw pointermove event
+    // was the actual cause of the lag: pointermove can fire faster than
+    // the screen can paint, so the DOM was doing wasted, redundant work
+    // that competed with the real paint cycle instead of syncing to it.
+
+    // Track real velocity (panels per second) from the most recent
+    // movement, not the whole gesture — this is what lets a fast flick
+    // feel different from a slow, deliberate drag on release.
+    const now = performance.now();
+    const dt = now - lastDragT;
+    if (dt > 8) {
+      dragVelocity = -(clientX - lastDragX) / unit / (dt / 1000);
+      lastDragX = clientX;
+      lastDragT = now;
+    }
   }
-  function endDrag() {
+  function endDrag(e) {
+    cancelAnimationFrame(dragRafId);
     cinema.classList.remove('is-grabbing');
-    const target = Math.round(pos);
+
+    // Real human clicking — especially with a mouse or trackpad — very
+    // commonly involves a few pixels of incidental movement even when
+    // the actual intent was just "click this." That was enough to cross
+    // AXIS_LOCK_PX and get classified as a drag, after which this
+    // function had no path back to handleTap — it just silently snapped
+    // back in place. This is the actual fix: recognize genuinely small
+    // total movement as the tap it was meant to be.
+    const totalMove = e ? Math.hypot(e.clientX - startX, e.clientY - startY) : 999;
+    if (totalMove < 12) {
+      state = 'hold';
+      handleTap(e.clientX, e.clientY);
+      return;
+    }
+
+    // A fast flick should carry to the next panel over, not just
+    // whichever one you happened to be closest to when you let go —
+    // that's what makes it feel like real momentum, not just a
+    // position snap.
+    const FLICK_THRESHOLD = 0.45; // panels/sec
+    let projected = pos;
+    if (Math.abs(dragVelocity) > FLICK_THRESHOLD) {
+      projected += Math.sign(dragVelocity) * Math.min(1, Math.abs(dragVelocity) * 0.18);
+    }
+    const target = Math.round(projected);
     const delta = target - pos;
+
+    // Faster release = snappier, shorter settle; a gentle drag eases
+    // more slowly — the snap duration itself responds to how the
+    // gesture actually felt, not a fixed generic time for every release.
+    const speed = Math.min(1, Math.abs(dragVelocity) / 3);
+    const duration = 380 - speed * 160; // 380ms gentle -> 220ms for a fast flick
+
     state = 'step';
     commitLabel(((target % N) + N) % N);
-    animateEase(delta, 420, scheduleHold);
+    animateSnap(delta, duration, scheduleHold);
   }
 
   function handleTap(clientX, clientY) {
@@ -305,7 +442,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const i = panelEls.indexOf(panel);
     if (i === -1) return;
 
-    if (i === currentIndex) {
+    // Check the ACTUAL screen position, not the currentIndex variable —
+    // if that variable ever drifts out of sync with what's really
+    // centered, this comparison would silently take the "just
+    // re-center it" path on a panel that's already centered, which
+    // produces literally no visible change and looks exactly like the
+    // click did nothing at all.
+    const viewportCenterX = innerWidth / 2;
+    const rect = panel.getBoundingClientRect();
+    const panelCenterX = rect.left + rect.width / 2;
+    const isActuallyCentered = Math.abs(panelCenterX - viewportCenterX) < rect.width * 0.15;
+
+    if (isActuallyCentered) {
       thumpThenEnter(panelInner, slides[i].href);
     } else {
       jumpToIndex(i);
@@ -322,10 +470,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cinema.style.touchAction = 'none';
 
+  /* ---------- Custom hover cursor ----------
+     "View [Title]" on the active/centered slide, since that's the one
+     a click actually opens. "Select [Title]" on the side slides, since
+     clicking those just brings them to center rather than entering.
+     Desktop-only — there's no persistent hover state on touch. */
+  if (!isMobile) {
+    const studioCursor = document.createElement('div');
+    studioCursor.className = 'studio-cursor';
+    document.body.appendChild(studioCursor);
+
+    addEventListener('pointermove', (e) => {
+      studioCursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+    });
+
+    panelEls.forEach((panelEl, i) => {
+      panelEl.addEventListener('pointerenter', () => {
+        if (state === 'drag') return;
+        studioCursor.textContent = 'View';
+        studioCursor.classList.add('is-visible');
+        // Pause auto-advance while hovering — without this, reading
+        // "View" and then clicking (completely normal, and often takes
+        // more than a couple seconds) could silently land after the
+        // carousel had already auto-advanced away from 'hold' in the
+        // background, making the click do nothing with no indication why.
+        clearTimeout(holdTimer);
+      });
+      panelEl.addEventListener('pointerleave', () => {
+        studioCursor.classList.remove('is-visible');
+        if (state === 'hold') {
+          clearTimeout(holdTimer);
+          holdTimer = setTimeout(autoAdvance, HOLD_MS);
+        }
+      });
+    });
+
+    cinema.addEventListener('pointerdown', () => studioCursor.classList.remove('is-visible'));
+  }
+
   cinema.addEventListener('pointerdown', (e) => {
     if (exited) return;
     pointerActive = true;
     pointerMode = null;
+    dragOccurred = false;
     pointerId = e.pointerId;
     startX = e.clientX;
     startY = e.clientY;
@@ -341,7 +528,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (pointerMode === null) {
       if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return; // still could be a tap
-      pointerMode = Math.abs(dx) > Math.abs(dy) ? 'drag' : 'scroll';
+      // Biased toward drag on purpose: horizontal dragging is the
+      // primary gesture here, and real human movement is never
+      // perfectly axis-aligned at the very start of a gesture. A plain
+      // dx > dy tie-break meant tiny, essentially random diagonal noise
+      // could misclassify an intended drag as a scroll — which is
+      // exactly what "sometimes it works, sometimes it doesn't" was.
+      // Vertical now has to CLEARLY dominate to win that classification.
+      pointerMode = Math.abs(dy) > Math.abs(dx) * 1.4 ? 'scroll' : 'drag';
       if (pointerMode === 'drag') beginDrag();
     }
 
@@ -361,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pointerActive = false;
 
     if (pointerMode === 'drag') {
-      endDrag();
+      endDrag(e);
     } else if (pointerMode === null) {
       // No axis was ever locked in — this was a genuine tap/click, not a
       // drag. Handle it directly here rather than relying on a separate
@@ -376,6 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
   cinema.addEventListener('pointercancel', () => {
     pointerActive = false;
     pointerMode = null;
+    cancelAnimationFrame(dragRafId);
+    cinema.classList.remove('is-grabbing');
   });
 
 

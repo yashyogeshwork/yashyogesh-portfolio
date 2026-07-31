@@ -184,6 +184,31 @@ html, body {
 
 .studio-hint.is-visible { opacity: 0.65; }
 
+/* ---------- Custom hover cursor — "View" on the active slide (which is
+   the one clicking actually enters), "Select" on the others (clicking
+   just brings that one to center). Replaces the system cursor while
+   over the cinema so the affordance is unambiguous either way. ---------- */
+.studio-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: rgba(255,255,255,0.94);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 3px 9px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.studio-cursor.is-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
 @media (prefers-reduced-motion: reduce) {
   .studio-panel-inner, .studio-label { transition: none; }
 }
