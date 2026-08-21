@@ -19,8 +19,15 @@ export default async (req) => {
   const store = getStore("location");
   const data = await store.get("latest", { type: "json" });
   if (!data) return new Response("no location yet");
+
+  const istTime = new Date(data.time).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "medium",
+  });
+
   return new Response(
-    `Last seen: ${data.time}\nhttps://maps.google.com/?q=${data.lat},${data.lon}`
+    `Last seen: ${istTime} IST\nhttps://maps.google.com/?q=${data.lat},${data.lon}`
   );
 };
 
