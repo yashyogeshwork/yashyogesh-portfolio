@@ -1,0 +1,24 @@
+{
+  "name": "yashyogesh-portfolio",
+  "version": "1.0.0",
+  "description": "Your portfolio is a static site: HTML + CSS + JS, hosted on Netlify, deployed\r automatically from GitHub. **Anything committed to GitHub goes live in about a\r minute.** No servers, no database, nothing to maintain.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yashyogeshwork/yashyogesh-portfolio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yashyogeshwork/yashyogesh-portfolio/issues"
+  },
+  "homepage": "https://github.com/yashyogeshwork/yashyogesh-portfolio#readme",
+  "dependencies": {
+    "@netlify/blobs": "^11.0.1"
+  }
+}
