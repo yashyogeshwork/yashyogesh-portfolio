@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /companies.html
+Disallow: /playbook.html
+Disallow: /admin.html
+
+Sitemap: https://yashyogesh.com/sitemap.xml

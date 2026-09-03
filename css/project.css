@@ -93,6 +93,7 @@
   letter-spacing: var(--ls-heading);
   max-width: var(--content-max-width);
   margin-bottom: var(--space-3);
+  text-wrap: balance;
 }
 
 .cs-body {
@@ -104,6 +105,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   margin: var(--space-5) 0;
+  content-visibility: auto;
 }
 
 .cs-grid-2 {
@@ -115,6 +117,33 @@
 
 .cs-grid-2 .img-rounded {
   aspect-ratio: 4 / 5;
+}
+
+/* ---- Three-up grid and a text/image split — added when C1's case
+   study needed patterns Hive/TOAD didn't. Kept generic here (no
+   hardcoded aspect ratio), any page-specific sizing belongs inline on
+   that page, not baked into the shared system. ---- */
+.cs-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+
+.cs-split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.cs-split .cs-heading,
+.cs-split .cs-body {
+  max-width: none;
+}
+
+.cs-split-media {
+  width: 100%;
 }
 
 .cs-stat-row {
@@ -169,7 +198,41 @@
   .cs-grid-2 {
     grid-template-columns: 1fr;
   }
+  .cs-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .cs-split {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  .cs-split-media {
+    order: -1;
+  }
   .project-intro-title {
     font-size: 36px;
   }
+}
+
+/* ---- Scroll-or-click hint on the real next-project link — scrolling
+   past the end of the page carries you straight into the next
+   project, same as clicking. ---- */
+.cs-next-hint {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+
+.cs-next-hint::before {
+  content: '↓';
+  display: inline-block;
+  animation: nextHintBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes nextHintBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
 }

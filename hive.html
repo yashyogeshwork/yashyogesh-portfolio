@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2601X4DE6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-F2601X4DE6');
+  </script>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hive — Yash Yogesh</title>
-  <meta name="description" content="Hive — an autonomous pod system rethinking rural children's access to education.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Hive · Yash Yogesh</title>
+  <meta name="description" content="Hive. An autonomous pod system rethinking rural children's access to education.">
+<link rel="canonical" href="https://yashyogesh.com/hive.html">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yashyogesh.com/hive.html">
+  <meta property="og:title" content="Hive · Yash Yogesh">
+  <meta property="og:description" content="Hive. An autonomous pod system rethinking rural children's access to education.">
+  <meta property="og:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hive · Yash Yogesh">
+  <meta name="twitter:description" content="Hive. An autonomous pod system rethinking rural children's access to education.">
+  <meta name="twitter:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +39,26 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/project.css">
+  <link rel="stylesheet" href="css/hive-collage.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "name": "Hive",
+    "description": "Hive. An autonomous pod system rethinking rural children's access to education.",
+    "creator": {
+      "@type": "Person",
+      "name": "Yash Yogesh",
+      "url": "https://yashyogesh.com/"
+    },
+    "url": "https://yashyogesh.com/hive.html",
+    "image": "https://yashyogesh.com/images/hive/hero-pods.jpg"
+  }
+  </script>
 </head>
 <body data-page="project-hive">
+
+<a class="skip-link" href="#main">Skip to content</a>
 
   <nav class="site-nav is-hidden-home" id="siteNav">
     <div class="container nav-inner">
@@ -26,27 +69,27 @@
     </div>
   </nav>
 
-  <!-- Cinematic intro — real Hive video, autoplay/muted/looping hero background -->
-  <section class="project-intro gradient-overlay-bottom">
+  <!-- ============ HERO ============ -->
+  <section class="project-intro gradient-overlay-vignette" id="main">
     <div class="project-intro-media" style="background: linear-gradient(160deg, #E8E2D5 0%, #C9BFA8 45%, #8A9B7E 100%);">
-      <video autoplay muted loop playsinline style="width:100%; height:100%; object-fit:cover;">
+      <video autoplay muted playsinline preload="metadata" width="1920" height="1080" style="width:100%; height:100%; object-fit:cover;" poster="images/hive/hero-pods.jpg" id="hiveHeroVideo">
         <source src="videos/hive-hero.mp4" type="video/mp4">
       </video>
     </div>
     <div class="container project-intro-content">
-      <div class="project-intro-eyebrow" data-c="hive.eyebrow">Hyundai — Concept</div>
+      <div class="project-intro-eyebrow" data-c="hive.eyebrow">Hyundai · Concept</div>
       <h1 class="project-intro-title" data-c="hive.title">Hive</h1>
       <p class="project-intro-sub" data-c="hive.subtitle">What if the journey to school was the school?</p>
     </div>
     <div class="project-scroll-cue">Scroll</div>
   </section>
 
-  <!-- Problem -->
+  <!-- ============ PROBLEM ============ -->
   <section class="cs-section">
     <div class="container">
       <div class="cs-eyebrow">The problem</div>
-      <h2 class="cs-heading reveal" data-c="hive.problemHeading">Rural children lose hours every day just reaching school — and their parents lose just as much getting them there.</h2>
-      <p class="cs-body reveal" data-c="hive.problemBody">Centralized schools serve low-density regions inefficiently. A 7 to 14 year old in the countryside may travel long distances daily, and a parent often has to leave work to manage the trip. The commute itself becomes the barrier to education, not the curriculum.</p>
+      <h2 class="cs-heading reveal" data-c="hive.problemHeading">School is often far from home, costing a child's energy and a parent's work hours.</h2>
+
       <div class="cs-stat-row reveal">
         <div>
           <div class="cs-stat-value" data-c="hive.stat1Value">7–14</div>
@@ -54,52 +97,82 @@
         </div>
         <div>
           <div class="cs-stat-value" data-c="hive.stat2Value">Low-density</div>
-          <div class="cs-stat-label" data-c="hive.stat2Label">Rural & countryside regions</div>
+          <div class="cs-stat-label" data-c="hive.stat2Label">Rural &amp; countryside regions</div>
         </div>
       </div>
+
+      <div class="cs-problem-image reveal">
+        <img src="images/hive/p2-problem-collage-full.jpg" srcset="images/hive/p2-problem-collage-full-800w.jpg 800w, images/hive/p2-problem-collage-full.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Problem collage: rural roads and farmland showing low density regions, a father walking his son to catch the bus, a child looking out a bus window, and a parent seeing a child onto the school bus" loading="lazy">
+      </div>
+
+      <p class="cs-problem-statement reveal">How might we enable children aged 7 to 14 to access daily education independently in low density regions, where long commute times to centralized schools result in travel related fatigue.</p>
     </div>
   </section>
 
-  <!-- System -->
+  <!-- ============ SYSTEM / USER JOURNEY ============ -->
   <section class="cs-section cs-section-alt">
     <div class="container">
       <div class="cs-eyebrow">The system</div>
-      <h2 class="cs-heading reveal" data-c="hive.systemHeading">Hive isn't a redesigned bus. It's a personal pod that becomes a classroom.</h2>
-      <p class="cs-body reveal" data-c="hive.systemBody">A subscription-based Hyundai service. An autonomous pod picks a child up from home, travels to a local community docking station, and connects with other pods arriving from the same area — forming a temporary, shared learning space.</p>
-      <div class="cs-fullbleed img-rounded reveal" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94);"></div>
+      <h2 class="cs-heading reveal" data-c="hive.systemHeading">The commute is guided learning. The destination is a shared classroom.</h2>
+      <p class="cs-body reveal" data-c="hive.systemBody">Under parental oversight, a pod collects a child at home. During transit it runs calm, guided lessons instead of dead time. At a local community hub it docks with other pods arriving from nearby homes, forming a temporary group learning space.</p>
+
+      <div class="cs-board reveal">
+        <img src="images/hive/board-journey.jpg" srcset="images/hive/board-journey-800w.jpg 800w, images/hive/board-journey.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="User journey: departure from home, transit with guided learning, and collective learning once pods dock at a community hub" loading="lazy">
+      </div>
+      <p class="cs-body cs-board-statement reveal">Hive functions as a mobility system and a temporary community based learning space.</p>
     </div>
   </section>
 
-  <!-- Exterior -->
+  <!-- ============ EXTERIOR ============ -->
   <section class="cs-section">
     <div class="container">
       <div class="cs-eyebrow">Exterior</div>
-      <h2 class="cs-heading reveal" data-c="hive.exteriorHeading">Form inspired by tetrapods — load-distributing, tip-resistant, naturally interlocking.</h2>
-      <p class="cs-body reveal" data-c="hive.exteriorBody">The tripod leg structure lets pods sit stably alone and connect seamlessly when docked side by side, forming a continuous corridor children can move through freely.</p>
-      <div class="cs-grid-2">
-        <div class="img-rounded img-hover-enlarge reveal" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8);"></div>
-        <div class="img-rounded img-hover-enlarge reveal" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9);"></div>
+      <h2 class="cs-heading reveal" data-c="hive.exteriorHeading">Shaped like a tetrapod. Stable alone, built to interlock.</h2>
+      <div class="cs-board reveal">
+        <img src="images/hive/board-exterior-ideation.jpg" srcset="images/hive/board-exterior-ideation-800w.jpg 800w, images/hive/board-exterior-ideation.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Exterior ideation: rejected modular van concepts, tetrapod form inspiration, and pods connecting side by side" loading="lazy">
+      </div>
+      <div class="cs-board reveal" style="margin-top: calc(var(--space-5) - 6%);">
+        <img src="images/hive/board-exterior-final.jpg" srcset="images/hive/board-exterior-final-800w.jpg 800w, images/hive/board-exterior-final.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Final exterior: form evolution, grid based light for non verbal interaction, free movement between docked pods, and a door that retracts into the body" loading="lazy">
+      </div>
+      <div class="cs-board reveal">
+        <img src="images/hive/board-cmf-package.jpg" srcset="images/hive/board-cmf-package-800w.jpg 800w, images/hive/board-cmf-package.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="CMF materials: tactile, neutral, grounded, childsafe. Package drawing sized against an eleven year old, with two children posing at the front of the pod" loading="lazy">
+      </div>
+
+      <div class="cs-render reveal">
+        <img src="images/hive/p7-home-departure.jpg" srcset="images/hive/p7-home-departure-800w.jpg 800w, images/hive/p7-home-departure.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="A child stepping into a Hive pod parked outside a stone cottage, home departure" loading="lazy">
       </div>
     </div>
   </section>
 
-  <!-- Interior -->
+  <!-- ============ INTERIOR ============ -->
   <section class="cs-section cs-section-alt">
     <div class="container">
       <div class="cs-eyebrow">Interior</div>
-      <h2 class="cs-heading reveal" data-c="hive.interiorHeading">A sensory learning environment, not a transit cabin.</h2>
-      <p class="cs-body reveal" data-c="hive.interiorBody">Pressure-responsive panels, a ceiling projector, and a tactile floor turn the commute into engagement rather than dead time — calm enough not to overstimulate, interactive enough to hold a child's attention.</p>
-      <div class="cs-fullbleed img-rounded reveal" style="background: linear-gradient(135deg, #F0D9DE, #D9A8B5);"></div>
+      <h2 class="cs-heading reveal" data-c="hive.interiorHeading">Calm and tactile, built to be lived in for the length of a ride.</h2>
+      <p class="cs-body reveal" data-c="hive.interiorBody">Soft geometry, bench storage, and an interactive companion that travels with the child.</p>
+
+      <div class="cs-board reveal">
+        <img src="images/hive/board-interior.jpg" srcset="images/hive/board-interior-800w.jpg 800w, images/hive/board-interior.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Interior ideation: soft geometry, bench storage, seating studies, and an interactive companion" loading="lazy">
+      </div>
+      <div class="cs-board reveal">
+        <img src="images/hive/board-sensory.jpg" srcset="images/hive/board-sensory-800w.jpg 800w, images/hive/board-sensory.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Interactive sensory learning: projected learning space, pressure responsive sensory panels, and a tactile responsive floor" loading="lazy">
+      </div>
+
+      <div class="cs-board reveal">
+        <img src="images/hive/board-cmf-interior.jpg" srcset="images/hive/board-cmf-interior-800w.jpg 800w, images/hive/board-cmf-interior.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Interior material study: calm, tactile, inhabitable, child friendly, and a child reading inside the pod" loading="lazy">
+      </div>
+
     </div>
   </section>
 
-  <!-- Next project -->
+  <!-- ============ NEXT ============ -->
   <section class="cs-next">
     <div class="container">
-      <a href="toad.html" class="cs-next-link reveal">
+      <a href="toad.html" class="cs-next-link reveal" id="nextProjectLink">
         <div>
           <div class="cs-next-label" data-c="hive.nextLabel">Next project</div>
           <span class="cs-next-title accent-underline" data-c="hive.nextTitle">Toyota TOAD</span>
+          <div class="cs-next-hint">Scroll or click</div>
         </div>
       </a>
     </div>
@@ -117,5 +190,9 @@
   <script src="js/page-transition.js"></script>
   <script src="js/scroll-reveal.js"></script>
   <script src="js/project-nav.js"></script>
+  <script src="js/next-project.js"></script>
+  <script src="js/scroll-depth.js"></script>
+  <script src="js/video-data-aware.js"></script>
+  <script src="js/video-manual-loop.js"></script>
 </body>
 </html>

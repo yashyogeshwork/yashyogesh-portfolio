@@ -5,42 +5,86 @@
    ========================================================================== */
 
 body[data-page="project-c1"] .project-intro {
-  background:#3A3A3A;
-  background-image:radial-gradient(circle, #525252 1.2px, transparent 1.2px);
-  background-size:26px 26px;
+  background: var(--color-bg-section);
+}
+
+/* Shadow is used deliberately here, and only here on this page — these
+   cards need to read as physical objects floating above a flat
+   background, which is a real, different job from the rest of the
+   site's flat-fill surfaces. Not an oversight, a decision. */
+
+/* The shared project.css defaults this text to white, for the dark
+   photo/video heroes Hive and TOAD use. C1's hero is light now, so
+   this needs to be dark ink instead, or it would be invisible. */
+body[data-page="project-c1"] .project-intro-eyebrow,
+body[data-page="project-c1"] .project-intro-title,
+body[data-page="project-c1"] .project-intro-sub,
+body[data-page="project-c1"] .project-scroll-cue {
+  color: var(--color-text-primary);
 }
 
 body[data-page="project-c1"] .project-intro-content {
-  z-index:6; /* above the top/bottom underlays below, which don't exist on Hive/TOAD */
+  z-index: 6; /* above the photo field below */
 }
 
 body[data-page="project-c1"] .project-scroll-cue {
-  z-index:6;
-}
-
-.c1-top-underlay {
-  position:absolute; top:0; left:0; right:0; height:22%;
-  background:linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
-  pointer-events:none; z-index:5;
-}
-.c1-bottom-underlay {
-  position:absolute; bottom:0; left:0; right:0; height:22%;
-  background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
-  pointer-events:none; z-index:5;
+  z-index: 6;
 }
 
 .c1-card {
   position:absolute;
+  top:0; left:0;
+  /* Sharp-edged squares, no tilt — a thin white frame and soft shadow
+     so they still read as physical prints, just square-on rather than
+     rounded and rotated. */
   border-radius:0;
+  border:1px solid rgba(255,255,255,0.55);
   background-size:cover; background-position:center;
-  box-shadow:0 10px 22px -10px rgba(17,17,17,0.18);
+  box-shadow:0 2px 6px -2px rgba(17,17,17,0.14), 0 14px 30px -18px rgba(17,17,17,0.28);
   cursor:pointer;
+  will-change:transform;
+  transition:box-shadow 100ms ease-out;
+}
+
+.c1-card:active {
+  box-shadow:0 4px 10px -6px rgba(17,17,17,0.25);
+}
+
+/* Scroll-lock progress — a thin, honest "how much further" line so the
+   locked hero never reads as a stuck or broken page. Fades out the
+   moment the field unlocks. */
+.c1-field-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 6;
+  width: 120px;
+  height: 2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(17, 17, 17, 0.12);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.c1-field-progress.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.c1-field-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: rgba(17, 17, 17, 0.55);
+  transition: transform 80ms linear;
 }
 
 .c1-expand-veil {
   position:fixed; inset:0; z-index:100;
   background:rgba(17,17,17,0.85);
   backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
   display:flex; align-items:center; justify-content:center;
   opacity:0; pointer-events:none;
   transition:opacity 0.4s ease;
@@ -62,3 +106,189 @@ body[data-page="project-c1"] .project-scroll-cue {
   background:none; border:none; cursor:pointer; font-family:inherit;
 }
 .c1-expand-close.is-active { opacity:0.8; pointer-events:all; }
+
+/* Studio gallery scatter — a curated collage of studio renders at
+   their own native aspect ratios (real <img> elements, never
+   cropped), placed so several deliberately overlap in a tight,
+   balanced composition.
+
+   Two layered reactions, both driven by a single cursor:
+   1. A magnetic field across the whole canvas — as the cursor moves
+      near any photo, that photo leans and drifts a few px away from
+      it, like real prints being nudged aside by a hand passing over
+      a pile. Every photo feels the field continuously, not just the
+      one directly under the pointer.
+   2. Landing on a photo pulls it forward, lifts, grows, and tilts it
+      in true 3D toward the exact cursor position, while every other
+      photo eases back and dims.
+   Both are direct, 1:1, per-frame response — no overshoot/bounce
+   anywhere (site motion rule), settle is always critically damped.
+
+   Structure per photo (built by js/c1-gallery.js):
+     .c1-mosaic-item    — position in the scatter (top/left/width/z)
+       .c1-mosaic-field    — magnetic push/lean away from the cursor (JS)
+         .c1-mosaic-frame    — hover reaction: scale + lift + shadow
+           .c1-mosaic-tilt     — cursor-tracked 3D tilt (JS, per-frame)
+             .c1-mosaic-glow      — soft light that follows the cursor
+             .c1-mosaic-inner     — constant tilt-offset + idle drift
+               img
+   Each layer owns exactly one kind of motion so none of them fight
+   over the same transform. Purely a hover-reactive display piece —
+   no click-to-expand. */
+.c1-mosaic {
+  position: relative;
+  width: 100%;
+  height: clamp(460px, 46vw, 640px);
+}
+
+.c1-mosaic-item {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--w);
+  perspective: 900px;
+}
+
+.c1-mosaic-item.is-active {
+  z-index: 30 !important;
+}
+
+.c1-mosaic-field {
+  position: relative;
+  will-change: transform;
+}
+
+.c1-mosaic-frame {
+  border-radius: var(--radius-image);
+  /* clip-path instead of overflow:hidden — see base.css .img-rounded
+     for why (border-radius+overflow:hidden+transform produces black
+     corner artifacts in Chromium; clip-path doesn't hit the bug and
+     this frame animates transform on hover). */
+  clip-path: inset(0 round var(--radius-image));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 6px -2px rgba(17, 17, 17, 0.14),
+              0 14px 30px -18px rgba(17, 17, 17, 0.28);
+  transform: scale(1) translateY(0);
+  transform-origin: center center;
+  transition: transform 0.45s var(--ease-cinematic),
+              box-shadow 0.45s var(--ease-cinematic),
+              opacity 0.45s var(--ease-cinematic);
+}
+
+.c1-mosaic-item.is-active .c1-mosaic-frame {
+  transform: scale(1.18) translateY(-10px);
+  box-shadow: 0 4px 10px -2px rgba(17, 17, 17, 0.16),
+              0 36px 64px -20px rgba(17, 17, 17, 0.4);
+}
+
+.c1-mosaic-item.is-dim .c1-mosaic-frame {
+  transform: scale(0.9) translateY(0);
+  opacity: 0.76;
+}
+
+/* Tilt is driven every frame by JS (a hand-rolled critically-damped
+   filter toward the cursor's position — see c1-gallery.js), so it
+   intentionally has no CSS transition of its own: per Apple's
+   direct-manipulation guidance, a value under live pointer control
+   should track the input immediately, not lag behind a transition. */
+.c1-mosaic-tilt {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.c1-mosaic-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.32),
+    transparent 55%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.c1-mosaic-item.is-active .c1-mosaic-glow {
+  opacity: 1;
+}
+
+.c1-mosaic-inner {
+  position: relative;
+  transform: rotate(var(--rot, 0deg));
+  animation: c1MosaicDrift var(--dur, 6s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.c1-mosaic-item:hover .c1-mosaic-inner,
+.c1-mosaic-item.is-active .c1-mosaic-inner,
+.c1-mosaic-item.is-dim .c1-mosaic-inner {
+  animation-play-state: paused;
+}
+
+@keyframes c1MosaicDrift {
+  0%, 100% { transform: rotate(var(--rot, 0deg)) translateY(0); }
+  50% { transform: rotate(var(--rot, 0deg)) translateY(-7px); }
+}
+
+.c1-mosaic-inner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: filter 0.45s var(--ease-cinematic);
+}
+
+.c1-mosaic-item.is-dim .c1-mosaic-inner img {
+  filter: saturate(0.85) brightness(0.97);
+}
+
+@media (max-width: 700px) {
+  /* The layout switches to a simple grid on narrow screens (the
+     scattered absolute-positioned collage doesn't read well at this
+     width), but the tilt/field/glow interaction itself now works via
+     real touch (see c1-gallery.js), so nothing here should block
+     transform the way it used to. */
+  .c1-mosaic {
+    position: static;
+    height: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+  }
+  .c1-mosaic-item {
+    position: static;
+    width: auto !important;
+  }
+  .c1-mosaic-frame {
+    box-shadow: none;
+    border: none;
+  }
+  .c1-mosaic-inner {
+    animation: none !important;
+  }
+  .c1-mosaic-item.is-dim .c1-mosaic-frame {
+    opacity: 1;
+  }
+  .c1-mosaic-item.is-dim .c1-mosaic-inner img {
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The site-wide reduced-motion rule already zeroes CSS transition
+     and animation durations; this additionally stops the JS-driven
+     per-frame tilt loop from ever starting (see c1-gallery.js), since
+     that's a manual style write the CSS override can't reach. */
+  .c1-mosaic-tilt {
+    transform: none !important;
+  }
+  .c1-mosaic-field {
+    transform: none !important;
+  }
+  .c1-mosaic-glow {
+    display: none;
+  }
+}

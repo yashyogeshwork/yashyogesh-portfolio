@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2601X4DE6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-F2601X4DE6');
+  </script>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOAD — Yash Yogesh</title>
-  <meta name="description" content="Toyota TOAD — a farming companion vehicle for the neo-rural generation.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TOAD · Yash Yogesh</title>
+  <meta name="description" content="Toyota TOAD. A farming companion vehicle for the neo-rural generation.">
+<link rel="canonical" href="https://yashyogesh.com/toad.html">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yashyogesh.com/toad.html">
+  <meta property="og:title" content="TOAD · Yash Yogesh">
+  <meta property="og:description" content="Toyota TOAD. A farming companion vehicle for the neo-rural generation.">
+  <meta property="og:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TOAD · Yash Yogesh">
+  <meta name="twitter:description" content="Toyota TOAD. A farming companion vehicle for the neo-rural generation.">
+  <meta name="twitter:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +39,25 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/project.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "name": "TOAD",
+    "description": "Toyota TOAD. A farming companion vehicle for the neo-rural generation.",
+    "creator": {
+      "@type": "Person",
+      "name": "Yash Yogesh",
+      "url": "https://yashyogesh.com/"
+    },
+    "url": "https://yashyogesh.com/toad.html",
+    "image": "https://yashyogesh.com/images/toad/persona.jpg"
+  }
+  </script>
 </head>
 <body data-page="project-toad">
+
+<a class="skip-link" href="#main">Skip to content</a>
 
   <nav class="site-nav is-hidden-home" id="siteNav">
     <div class="container nav-inner">
@@ -27,16 +69,16 @@
   </nav>
 
   <!-- Cinematic intro — real TOAD video, autoplay/muted/looping hero background -->
-  <section class="project-intro gradient-overlay-bottom">
+  <section class="project-intro gradient-overlay-vignette" id="main">
     <div class="project-intro-media" style="background: linear-gradient(160deg, #DCE5D2 0%, #AEC49A 45%, #6E8A5E 100%);">
-      <video autoplay muted loop playsinline style="width:100%; height:100%; object-fit:cover;">
-        <source src="videos/toad-hero.mp4" type="video/mp4">
+      <video autoplay muted playsinline preload="metadata" width="1920" height="1080" style="width:100%; height:100%; object-fit:cover;" poster="images/toad/exterior-1-concept.jpg" id="toadHeroVideo">
+        <source data-c-src="toad.heroVideo" src="videos/toad-hero.mp4" type="video/mp4">
       </video>
     </div>
     <div class="container project-intro-content">
-      <div class="project-intro-eyebrow" data-c="toad.eyebrow">Toyota — Concept</div>
+      <div class="project-intro-eyebrow" data-c="toad.eyebrow">Toyota · Concept</div>
       <h1 class="project-intro-title" data-c="toad.title">TOAD</h1>
-      <p class="project-intro-sub" data-c="toad.subtitle">What if the journey to school was the school?</p>
+      <p class="project-intro-sub" data-c="toad.subtitle">A farming companion for people who never learned to farm.</p>
     </div>
     <div class="project-scroll-cue">Scroll</div>
   </section>
@@ -45,28 +87,47 @@
   <section class="cs-section">
     <div class="container">
       <div class="cs-eyebrow">The problem</div>
-      <h2 class="cs-heading reveal" data-c="toad.problemHeading">Rural children lose hours every day just reaching school — and their parents lose just as much getting them there.</h2>
-      <p class="cs-body reveal" data-c="toad.problemBody">Centralized schools serve low-density regions inefficiently. A 7 to 14 year old in the countryside may travel long distances daily, and a parent often has to leave work to manage the trip. The commute itself becomes the barrier to education, not the curriculum.</p>
+      <h2 class="cs-heading reveal" data-c="toad.problemHeading">Newly rural. Zero farming experience.</h2>
       <div class="cs-stat-row reveal">
         <div>
-          <div class="cs-stat-value" data-c="toad.stat1Value">7–14</div>
-          <div class="cs-stat-label" data-c="toad.stat1Label">Target age group</div>
+          <div class="cs-stat-value" data-c="toad.stat1Value">Neo-rural</div>
+          <div class="cs-stat-label" data-c="toad.stat1Label">Target generation</div>
         </div>
         <div>
-          <div class="cs-stat-value" data-c="toad.stat2Value">Low-density</div>
-          <div class="cs-stat-label" data-c="toad.stat2Label">Rural & countryside regions</div>
+          <div class="cs-stat-value" data-c="toad.stat2Value">Small-plot</div>
+          <div class="cs-stat-label" data-c="toad.stat2Label">Hobby &amp; subsistence farming</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- System -->
+  <!-- Who it's for -->
   <section class="cs-section cs-section-alt">
     <div class="container">
+      <div class="cs-eyebrow">The user</div>
+      <h2 class="cs-heading reveal" data-c="toad.personaHeading">Digital work by day, farms by choice.</h2>
+      <p class="cs-body reveal" data-c="toad.personaBody">They moved for space, not to become farmers. TOAD is built for someone with no agricultural background who still wants real results from their land.</p>
+      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.personaImage" role="img" aria-label="A neo-rural remote worker, someone with no farming background who moved to the countryside for a slower life" style="background: linear-gradient(135deg, #E5E0D2, #C7BFA5); aspect-ratio: 2632 / 1274;"></div>
+    </div>
+  </section>
+
+  <!-- System -->
+  <section class="cs-section">
+    <div class="container">
       <div class="cs-eyebrow">The system</div>
-      <h2 class="cs-heading reveal" data-c="toad.systemHeading">Hive isn't a redesigned bus. It's a personal pod that becomes a classroom.</h2>
-      <p class="cs-body reveal" data-c="toad.systemBody">A subscription-based Hyundai service. An autonomous pod picks a child up from home, travels to a local community docking station, and connects with other pods arriving from the same area — forming a temporary, shared learning space.</p>
-      <div class="cs-fullbleed img-rounded reveal" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94);"></div>
+      <h2 class="cs-heading reveal" data-c="toad.systemHeading">Learns your land. Does the heavy work.</h2>
+      <p class="cs-body reveal" data-c="toad.systemBody">It studies the soil, the seasons, and the crops, then does the physical work itself, guiding its owner through decisions instead of expecting them to already know.</p>
+      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.systemImage" role="img" aria-label="TOAD studying soil, seasons, and crops to guide its owner through farm work" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94); aspect-ratio: 2880 / 1560;"></div>
+    </div>
+  </section>
+
+  <!-- Form inspiration -->
+  <section class="cs-section cs-section-alt">
+    <div class="container">
+      <div class="cs-eyebrow">Form</div>
+      <h2 class="cs-heading reveal" data-c="toad.formHeading">Shaped like a toad. Low and grounded.</h2>
+      <p class="cs-body reveal" data-c="toad.formBody">A low, wide stance and a soft, rounded body, an animal-inspired form built to feel grounded and approachable, not industrial.</p>
+      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.formImage" role="img" aria-label="Form inspiration study, a low wide toad-like stance" style="background: linear-gradient(135deg, #EDE3EF, #D6C2DB); aspect-ratio: 2880 / 1514;"></div>
     </div>
   </section>
 
@@ -74,11 +135,13 @@
   <section class="cs-section">
     <div class="container">
       <div class="cs-eyebrow">Exterior</div>
-      <h2 class="cs-heading reveal" data-c="toad.exteriorHeading">Form inspired by tetrapods — load-distributing, tip-resistant, naturally interlocking.</h2>
-      <p class="cs-body reveal" data-c="toad.exteriorBody">The tripod leg structure lets pods sit stably alone and connect seamlessly when docked side by side, forming a continuous corridor children can move through freely.</p>
-      <div class="cs-grid-2">
-        <div class="img-rounded img-hover-enlarge reveal" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8);"></div>
-        <div class="img-rounded img-hover-enlarge reveal" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9);"></div>
+      <h2 class="cs-heading reveal" data-c="toad.exteriorHeading">Built low, wide, and calm.</h2>
+      <p class="cs-body reveal" data-c="toad.exteriorBody">Every surface reads as calm and close to the ground, built to move through a field without looking like it belongs on a construction site.</p>
+      <div class="cs-image-stack">
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage1" role="img" aria-label="TOAD exterior concept sketch" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8); aspect-ratio: 2880 / 1681;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage2" role="img" aria-label="TOAD exterior functional layout study" style="background: linear-gradient(135deg, #DAD5CE, #B7AFA2); aspect-ratio: 2880 / 1562;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage3" role="img" aria-label="TOAD exterior packaging study" style="background: linear-gradient(135deg, #E7D9E3, #D4B8CB); aspect-ratio: 2880 / 1634;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage4" role="img" aria-label="TOAD exterior color, material, and finish study" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9); aspect-ratio: 2880 / 1560;"></div>
       </div>
     </div>
   </section>
@@ -87,19 +150,23 @@
   <section class="cs-section cs-section-alt">
     <div class="container">
       <div class="cs-eyebrow">Interior</div>
-      <h2 class="cs-heading reveal" data-c="toad.interiorHeading">A sensory learning environment, not a transit cabin.</h2>
-      <p class="cs-body reveal" data-c="toad.interiorBody">Pressure-responsive panels, a ceiling projector, and a tactile floor turn the commute into engagement rather than dead time — calm enough not to overstimulate, interactive enough to hold a child's attention.</p>
-      <div class="cs-fullbleed img-rounded reveal" style="background: linear-gradient(135deg, #F0D9DE, #D9A8B5);"></div>
+      <h2 class="cs-heading reveal" data-c="toad.interiorHeading">No cockpit. Just the field.</h2>
+      <p class="cs-body reveal" data-c="toad.interiorBody">There's no cabin to sit in. TOAD is guided through a simple companion app and on-body signals, the interaction happens in the field itself, not behind a windshield.</p>
+      <div class="cs-image-stack">
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.interiorImage1" role="img" aria-label="TOAD interior and interface sketches" style="background: linear-gradient(135deg, #F0D9DE, #D9A8B5); aspect-ratio: 2880 / 1621;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.interiorImage2" role="img" aria-label="TOAD interior color, material, and finish study" style="background: linear-gradient(135deg, #EDE6DA, #CFC2A8); aspect-ratio: 2880 / 1560;"></div>
+      </div>
     </div>
   </section>
 
   <!-- Next project -->
   <section class="cs-next">
     <div class="container">
-      <a href="surface-c1.html" class="cs-next-link reveal">
+      <a href="surface-c1.html" class="cs-next-link reveal" id="nextProjectLink">
         <div>
           <div class="cs-next-label" data-c="toad.nextLabel">Next project</div>
-          <span class="cs-next-title accent-underline" data-c="toad.nextTitle">Toyota TOAD</span>
+          <span class="cs-next-title accent-underline" data-c="toad.nextTitle">Surface C1</span>
+          <div class="cs-next-hint">Scroll or click</div>
         </div>
       </a>
     </div>
@@ -114,8 +181,13 @@
 
   <script src="js/content.js"></script>
   <script src="js/apply-content.js"></script>
+  <script src="js/responsive-bg-images.js"></script>
   <script src="js/page-transition.js"></script>
   <script src="js/scroll-reveal.js"></script>
   <script src="js/project-nav.js"></script>
+  <script src="js/next-project.js"></script>
+  <script src="js/scroll-depth.js"></script>
+  <script src="js/video-data-aware.js"></script>
+  <script src="js/video-manual-loop.js"></script>
 </body>
 </html>

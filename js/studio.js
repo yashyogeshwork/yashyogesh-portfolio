@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!cinema || !track) return; // guard: only runs on the homepage
 
-  const isMobile = matchMedia('(max-width: 768px)').matches;
+  let isMobile = matchMedia('(max-width: 768px)').matches;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* Real project pages — driven by js/content.js when present. */
   const defaultSlides = [
@@ -37,11 +38,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let vw = innerWidth, panelW, gap, unit;
   function computeGeom() {
     vw = innerWidth;
+    // Re-measured on every call, not just once at load — otherwise a
+    // window that starts narrow (e.g. a preview iframe) and is then
+    // resized wider keeps using mobile numbers forever.
+    isMobile = matchMedia('(max-width: 768px)').matches;
     panelW = isMobile ? vw * 0.80 : Math.min(vw * 0.58, 860);
     // ~10% of viewport — measured from the Figma reference — gives real
     // visible breathing room between the center panel and the peek.
     gap = isMobile ? vw * 0.05 : vw * 0.10;
     unit = panelW + gap;
+    // Stage height comes from panelW at a fixed 3:2 ratio, matching the
+    // real images exactly — no crop, no letterbox. If that would make
+    // the stage taller than the available viewport, panelW is scaled
+    // down to fit instead of letting the stage overflow the window.
+    const maxH = Math.min(innerHeight * 0.72, 700);
+    let h = panelW / 1.5;
+    if (h > maxH) {
+      h = maxH;
+      panelW = h * 1.5;
+      gap = isMobile ? vw * 0.05 : vw * 0.10;
+      unit = panelW + gap;
+    }
+    cinema.style.height = h + 'px';
   }
 
   /* ---------- State ----------
@@ -233,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentIndex = Math.round(pos) % N;
     render();
     clearTimeout(holdTimer);
+    if (reducedMotion) return; // never auto-advance — user-initiated drag/click still works fine
     holdTimer = setTimeout(autoAdvance, HOLD_MS);
   }
 
@@ -474,8 +493,10 @@ document.addEventListener('DOMContentLoaded', () => {
      "View [Title]" on the active/centered slide, since that's the one
      a click actually opens. "Select [Title]" on the side slides, since
      clicking those just brings them to center rather than entering.
-     Desktop-only — there's no persistent hover state on touch. */
-  if (!isMobile) {
+     Gated on actual touch capability, not viewport width — isMobile is
+     a layout concern (panel sizing), but a narrow desktop window still
+     has a real mouse and should still get hover behavior. */
+  if (!matchMedia('(pointer: coarse)').matches) {
     const studioCursor = document.createElement('div');
     studioCursor.className = 'studio-cursor';
     document.body.appendChild(studioCursor);
@@ -498,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       panelEl.addEventListener('pointerleave', () => {
         studioCursor.classList.remove('is-visible');
-        if (state === 'hold') {
+        if (state === 'hold' && !reducedMotion) {
           clearTimeout(holdTimer);
           holdTimer = setTimeout(autoAdvance, HOLD_MS);
         }
@@ -600,11 +621,18 @@ document.addEventListener('DOMContentLoaded', () => {
   computeGeom();
   applySizes();
   commitLabel(0);
-  pos = -ENTRANCE_SWEEP;
-  render();
-  state = 'entrance';
-  animateLinearDecel(ENTRANCE_SWEEP, ENTRANCE_MS, () => {
+  if (reducedMotion) {
+    pos = 0;
+    render();
     scheduleHold();
-    setTimeout(() => hint.classList.add('is-visible'), 900);
-  });
+    hint.classList.add('is-visible');
+  } else {
+    pos = -ENTRANCE_SWEEP;
+    render();
+    state = 'entrance';
+    animateLinearDecel(ENTRANCE_SWEEP, ENTRANCE_MS, () => {
+      scheduleHold();
+      setTimeout(() => hint.classList.add('is-visible'), 900);
+    });
+  }
 });

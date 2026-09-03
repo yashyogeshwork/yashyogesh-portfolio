@@ -1,0 +1,65 @@
+/* ==========================================================================
+   COLLAGE + BOARD LAYOUTS — Hive case study
+   Built on the locked tokens in variables.css. No new colours, no new
+   type families, no new spacing values.
+   ========================================================================== */
+
+/* ---- Problem section: single composited collage image, exported
+   directly from Figma at 2x, rather than recreated in CSS. Simpler
+   and more reliable than a coded collage, and it's the real design. ---- */
+
+.cs-problem-image {
+  width: 100%;
+  margin: var(--space-5) 0 0 0;
+  border-radius: var(--radius-image);
+  overflow: hidden;
+}
+.cs-problem-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cs-problem-statement {
+  max-width: 900px;
+  margin: var(--space-5) auto 0;
+  text-align: center;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+}
+
+/* ---- Full-width board (a complete presentation board kept intact,
+   because its arrows and leader lines connect the elements) — used by
+   System, Exterior, and Interior sections. ---- */
+
+.cs-board {
+  width: 100%;
+  margin: var(--space-5) 0 0 0;
+  border-radius: var(--radius-image);
+  overflow: hidden;
+}
+
+.cs-board img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---- Cinematic render, edge to edge inside the container ---- */
+
+.cs-render {
+  width: 100%;
+  margin: var(--space-5) 0 0 0;
+  border-radius: var(--radius-image);
+  overflow: hidden;
+}
+
+.cs-render img { width: 100%; height: auto; display: block; }
+
+.cs-board-statement {
+  text-align: center;
+  max-width: 700px;
+  margin: var(--space-5) auto 0;
+  color: var(--color-text-primary);
+}

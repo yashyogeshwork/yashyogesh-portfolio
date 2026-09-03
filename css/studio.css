@@ -24,19 +24,14 @@ html, body {
 }
 
 .studio-mark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
   letter-spacing: 0.01em;
   color: var(--color-text-primary);
   text-decoration: none;
-}
-
-@media (min-width: 769px) {
-  .studio-mark {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
 }
 
 .studio-frame-links {
@@ -85,6 +80,10 @@ html, body {
 .studio-cinema {
   position: relative;
   width: 100vw;
+  /* Height is set from JS (computeGeom), derived from panelW at a fixed
+     3:2 ratio so the curved frame always matches the image's own shape —
+     no crop, no letterbox. This is a fallback only, used for the first
+     paint before JS runs and if JS fails to load. */
   height: min(66vh, 700px);
   clip-path: url(#studioBow);
   overflow: hidden;
@@ -98,10 +97,6 @@ html, body {
 }
 
 .studio-cinema.is-grabbing { cursor: grabbing; }
-
-@media (max-width: 768px) {
-  .studio-cinema { height: 48vh; }
-}
 
 .studio-track {
   position: absolute;
@@ -135,6 +130,7 @@ html, body {
 .studio-label-bar {
   position: fixed;
   bottom: 7vh;
+  bottom: 7dvh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
@@ -164,12 +160,13 @@ html, body {
 
 @media (max-width: 768px) {
   .studio-label { font-size: 10px; }
-  .studio-label-bar { gap: var(--space-3); bottom: 8.5vh; }
+  .studio-label-bar { gap: var(--space-3); bottom: 8.5vh; bottom: 8.5dvh; }
 }
 
 .studio-hint {
   position: fixed;
   bottom: 3vh;
+  bottom: 3dvh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
@@ -191,7 +188,7 @@ html, body {
 .studio-cursor {
   position: fixed;
   top: 0; left: 0;
-  z-index: 60;
+  z-index: 10000;
   pointer-events: none;
   background: rgba(255,255,255,0.94);
   color: var(--color-text-primary);

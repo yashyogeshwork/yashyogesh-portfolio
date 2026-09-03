@@ -10,7 +10,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #FFFFFF;
+  background: var(--color-bg);
   /* Stops Safari/mobile browsers from intercepting a horizontal swipe as
      their own back/forward navigation gesture — without this, a drag
      starting anywhere near the screen edge can get swallowed by the OS
@@ -42,6 +42,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   overscroll-behavior-x: none;
+}
+
+input, textarea, select {
+  cursor: auto;
 }
 
 img, video {
@@ -140,13 +144,23 @@ p {
    IMAGE TREATMENT — locked: rounded corners, hover-enlarge
    ========================================================================== */
 
+/* Chromium renders solid black wedges at rounded corners when an
+   element clips a background-image via border-radius + overflow:
+   hidden AND has ever run a CSS transition (confirmed by direct
+   testing in the C1 chat — a mask-image did NOT fix it, nor did
+   backface-visibility/contain/outline/border tricks; only replacing
+   the clip mechanism did). clip-path uses a different rasterization
+   path in Chromium that doesn't hit this bug, and produces the
+   identical rounded-corner result. Shared token file — this affects
+   every .img-rounded image site-wide (Hive, TOAD, C1), the correct
+   scope, the bug isn't page-specific. */
 .img-rounded {
   border-radius: var(--radius-image);
-  overflow: hidden;
+  clip-path: inset(0 round var(--radius-image));
 }
 
 .img-hover-enlarge {
-  overflow: hidden;
+  clip-path: inset(0 round var(--radius-image));
   border-radius: var(--radius-image);
 }
 
@@ -162,36 +176,19 @@ p {
 }
 
 /* Dark gradient overlay — for text over video/image, anchored bottom by default */
-.gradient-overlay-top {
+.gradient-overlay-vignette {
   position: relative;
 }
 
-.gradient-overlay-top::before {
+.gradient-overlay-vignette::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+  inset: 0;
   pointer-events: none;
   z-index: 1;
-}
-
-.gradient-overlay-bottom {
-  position: relative;
-}
-
-.gradient-overlay-bottom::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 55%;
-  background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
-  pointer-events: none;
-  z-index: 1;
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,0.22) 0%, transparent 18%, transparent 78%, rgba(0,0,0,0.28) 100%),
+    linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.15) 100%);
 }
 
 /* ==========================================================================
@@ -215,4 +212,42 @@ p {
 
 .accent-underline:hover::after {
   width: 100%;
+}
+
+/* Visually hidden but real for screen readers and search engines —
+   for content that needs to exist semantically (an H1, for instance)
+   without a visual home in a mostly image/animation-driven layout. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A real skip-link — hidden off-screen until keyboard focus brings it
+   into view, then lets a keyboard user jump straight past the nav to
+   the actual page content. A genuine accessibility win, added
+   site-wide rather than on one page only. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 10001;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  padding: 12px 20px;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  top: 16px;
 }

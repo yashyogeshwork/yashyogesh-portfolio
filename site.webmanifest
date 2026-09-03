@@ -1,0 +1,20 @@
+{
+  "name": "Yash Yogesh — Transportation Designer",
+  "short_name": "Yash Yogesh",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

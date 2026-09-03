@@ -34,4 +34,28 @@
       el.setAttribute('href', val.includes('@') ? 'mailto:' + val : val);
     }
   });
+
+  /* data-c-bg="path.to.key" — swaps an element's background-image to a
+     real photo once one is set, otherwise leaves whatever's already
+     there (the gradient placeholder), so nothing breaks before real
+     images exist. */
+  document.querySelectorAll('[data-c-bg]').forEach((el) => {
+    const val = get(el.getAttribute('data-c-bg'));
+    if (typeof val === 'string' && val.length) {
+      el.style.backgroundImage = `url('${val}')`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+    }
+  });
+
+  /* data-c-src="path.to.key" — for <source> elements inside hero
+     videos, same idea as data-c-bg but for actual video files. */
+  document.querySelectorAll('[data-c-src]').forEach((el) => {
+    const val = get(el.getAttribute('data-c-src'));
+    if (typeof val === 'string' && val.length) {
+      el.setAttribute('src', val);
+      const video = el.closest('video');
+      if (video) video.load();
+    }
+  });
 })();
