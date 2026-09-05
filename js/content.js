@@ -61,7 +61,7 @@ window.CONTENT = {
 
   /* ---- TOAD case study ---- */
   toad: {
-    heroVideo: 'videos/toad-hero.mp4',
+    heroVideo: '', // unused — hero now uses a YouTube embed (see js/youtube-hero.js), not a local file
     personaImage: 'images/toad/persona.jpg',
     systemImage: 'images/toad/system-journey.jpg',
     formImage: 'images/toad/form-inspiration.jpg',

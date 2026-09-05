@@ -106,6 +106,7 @@
   aspect-ratio: 16 / 9;
   margin: var(--space-5) 0;
   content-visibility: auto;
+  background-color: var(--color-bg-section);
 }
 
 .cs-grid-2 {

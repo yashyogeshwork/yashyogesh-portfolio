@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="preload" as="image" href="images/toad/exterior-1-concept.jpg" fetchpriority="high">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2601X4DE6"></script>
   <script>
@@ -70,10 +71,9 @@
 
   <!-- Cinematic intro — real TOAD video, autoplay/muted/looping hero background -->
   <section class="project-intro gradient-overlay-vignette" id="main">
-    <div class="project-intro-media" style="background: linear-gradient(160deg, #DCE5D2 0%, #AEC49A 45%, #6E8A5E 100%);">
-      <video autoplay muted playsinline preload="metadata" width="1920" height="1080" style="width:100%; height:100%; object-fit:cover;" poster="images/toad/exterior-1-concept.jpg" id="toadHeroVideo">
-        <source data-c-src="toad.heroVideo" src="videos/toad-hero.mp4" type="video/mp4">
-      </video>
+    <div class="project-intro-media" id="toadHeroMedia" style="background: linear-gradient(160deg, #DCE5D2 0%, #AEC49A 45%, #6E8A5E 100%);">
+      <div style="position:absolute; inset:0; background-image:url('images/toad/exterior-1-concept.jpg'); background-size:cover; background-position:center;"></div>
+      <div id="toadHeroEmbed" style="position:absolute; inset:0; overflow:hidden;"></div>
     </div>
     <div class="container project-intro-content">
       <div class="project-intro-eyebrow" data-c="toad.eyebrow">Toyota · Concept</div>
@@ -187,7 +187,6 @@
   <script src="js/project-nav.js"></script>
   <script src="js/next-project.js"></script>
   <script src="js/scroll-depth.js"></script>
-  <script src="js/video-data-aware.js"></script>
-  <script src="js/video-manual-loop.js"></script>
+  <script src="js/youtube-hero.js"></script>
 </body>
 </html>

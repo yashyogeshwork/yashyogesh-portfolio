@@ -20,7 +20,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 42px var(--side-padding-desktop) 30px;
+  padding: 64px var(--side-padding-desktop) 30px;
 }
 
 .studio-mark {

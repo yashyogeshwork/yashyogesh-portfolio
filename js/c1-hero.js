@@ -21,10 +21,16 @@
 
   function rand(a, b) { return a + Math.random() * (b - a); }
 
+  let cachedDims = null;
   function getDims() {
+    if (cachedDims) return cachedDims;
     const rect = fieldWrap.getBoundingClientRect();
-    return { w: rect.width, h: rect.height };
+    cachedDims = { w: rect.width, h: rect.height };
+    return cachedDims;
   }
+  function invalidateDims() { cachedDims = null; }
+  addEventListener('resize', invalidateDims);
+  addEventListener('orientationchange', invalidateDims);
 
   // Stratified initial depth: pure per-card randomness could, purely by
   // chance, leave one or two images buried far deeper than the rest —
