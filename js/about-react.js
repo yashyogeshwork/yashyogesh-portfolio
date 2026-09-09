@@ -3,40 +3,60 @@
   if (!form) return;
 
   const stickers = document.querySelectorAll('.react-sticker');
-  const reactionInput = document.getElementById('reactionInput');
   const submitBtn = document.getElementById('reactSubmitBtn');
 
+  function submitToNetlify(fields) {
+    const body = new URLSearchParams({ 'form-name': 'portfolio-react', ...fields });
+    return fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+  }
+
+  // Each sticker is now its own instant, standalone reaction — tapping
+  // it sends immediately, no separate Send click required. The message
+  // box below is a completely independent, optional second action.
   stickers.forEach((btn) => {
     btn.addEventListener('click', () => {
-      stickers.forEach((b) => b.classList.remove('is-selected'));
-      btn.classList.add('is-selected');
-      reactionInput.value = btn.dataset.value;
+      if (btn.classList.contains('is-sent')) return; // already sent, don't double-submit
+
+      const originalContent = btn.innerHTML;
+      submitToNetlify({ reaction: btn.dataset.value, message: '', name: '' })
+        .then(() => {
+          btn.classList.add('is-sent');
+          btn.innerHTML = '<span>Got it, thanks</span>';
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'reaction_submit', { reaction_value: btn.dataset.value });
+          }
+        })
+        .catch(() => {
+          btn.innerHTML = '<span>Try again</span>';
+          setTimeout(() => { btn.innerHTML = originalContent; }, 1500);
+        });
     });
   });
 
+  // The message/about-you box is its own separate submission, works
+  // whether or not someone also tapped a reaction sticker above.
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // Require at least a reaction OR a message — an empty submit does
-    // nothing rather than sending a blank entry.
     const message = document.getElementById('reactMessage').value.trim();
-    if (!reactionInput.value && !message) return;
+    const name = document.getElementById('reactName').value.trim();
+    if (!message && !name) return; // nothing to send
 
-    const data = new FormData(form);
-    fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(data).toString(),
-    })
+    submitToNetlify({ reaction: '', message, name })
       .then(() => {
-        // The button itself transforms — no separate message, no form
-        // disappearing out from under the person.
         submitBtn.textContent = 'Thank you so much!';
         submitBtn.disabled = true;
         submitBtn.classList.add('is-sent');
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'contact_form_submit');
+        }
       })
       .catch(() => {
-        submitBtn.textContent = 'Something went wrong — try again';
+        submitBtn.textContent = 'Something went wrong, try again';
       });
   });
 })();

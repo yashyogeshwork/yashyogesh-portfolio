@@ -2,10 +2,6 @@
    ABOUT PAGE
    ========================================================================== */
 
-body[data-page="about"] .nav-inner {
-  padding: 0 var(--space-2);
-}
-
 .about-hero {
   display: flex;
   align-items: center;
@@ -91,6 +87,7 @@ body[data-page="about"] .nav-inner {
   font-weight: var(--fw-medium);
   line-height: 1.35;
   letter-spacing: var(--ls-heading);
+  text-wrap: pretty;
 }
 
 .about-body {
@@ -100,7 +97,7 @@ body[data-page="about"] .nav-inner {
 
 .about-body-grid {
   display: grid;
-  grid-template-columns: 200px 1fr 320px;
+  grid-template-columns: 200px 1fr;
   gap: var(--space-6);
   align-items: start;
 }
@@ -144,6 +141,7 @@ body[data-page="about"] .nav-inner {
   color: var(--color-text-secondary);
   margin-top: 2px;
   min-height: 16px;
+  font-variant-numeric: tabular-nums;
 }
 
 .about-cv {
@@ -167,6 +165,95 @@ body[data-page="about"] .nav-inner {
   opacity: 0.82;
 }
 
+/* Apple HI guidance: respond on press, not just hover — hover alone never
+   fires on touch, so without this the site's primary CTA gave zero
+   feedback to anyone tapping it on a phone. */
+.about-cv:active {
+  transform: scale(0.97);
+  transition-duration: 90ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Swap the scale for an opacity dim — still real feedback, just not motion. */
+  .about-cv:active { transform: none; opacity: 0.7; }
+}
+
+/* ---- A small, real bubble wrap patch — fills the empty space below
+   the CV button, matches the playful register already established on
+   this page (the greeting, the eyes, the live weather). ---- */
+.about-bubblewrap {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: var(--space-4);
+  max-width: 160px;
+  touch-action: none;
+}
+
+.about-bubble {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  /* Raised silicone dome: a tight contact shadow that grounds it, a
+     soft ambient shadow for height, and an inner rim light where real
+     silicone would actually catch light - not just a single flat
+     radial fill. */
+  background: radial-gradient(circle at 32% 26%, #f1f1ef 0%, #dcdcd8 45%, #c6c6c0 78%, #b8b8b1 100%);
+  border: 1px solid var(--color-border);
+  box-shadow:
+    0 1px 1px rgba(0,0,0,0.09),
+    0 2px 4px rgba(0,0,0,0.07),
+    inset 0 1px 1.5px rgba(255,255,255,0.65),
+    inset 0 -1px 1.5px rgba(0,0,0,0.06);
+  cursor: pointer;
+  /* Respond the instant a pointer lands, ease back out just as
+     quickly - a snappy curve reads as firm material, not mush. */
+  transition: transform 90ms cubic-bezier(0.33, 0, 0.2, 1), box-shadow 90ms ease-out;
+}
+
+@media (hover: hover) {
+  /* Hover reads as "touchable" through shadow only, no size change -
+     real silicone doesn't inflate when a cursor gets near it. */
+  .about-bubble:not(.is-popped):hover {
+    box-shadow:
+      0 2px 3px rgba(0,0,0,0.12),
+      0 3px 6px rgba(0,0,0,0.08),
+      inset 0 1px 1.5px rgba(255,255,255,0.75),
+      inset 0 -1px 1.5px rgba(0,0,0,0.06);
+  }
+}
+
+.about-bubble.is-popped {
+  cursor: default;
+  /* Pushed-through: flush with the mat, sitting in a slight concave
+     socket instead of standing proud of it. A quick squash on the way
+     in, but it settles flush rather than overshooting past full size -
+     ballooning bigger than rest right as it's supposed to be caving in
+     fights the shape of the motion. */
+  background: radial-gradient(circle at 50% 42%, #e2e2de 0%, var(--color-bg-section) 70%);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.20),
+    inset 0 -1px 1px rgba(255,255,255,0.55),
+    inset 0 0 0 1px rgba(0,0,0,0.03);
+  animation: bubblePop 220ms cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+@keyframes bubblePop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+.about-bubble:active:not(.is-popped) {
+  transform: scale(0.86);
+  transition-duration: 60ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-bubble { transition: background 120ms ease, box-shadow 120ms ease; }
+  .about-bubble:active:not(.is-popped) { transform: none; }
+  .about-bubble.is-popped { animation: none; }
+}
+
 /* ---- Intro contact — visible immediately, not buried after the story ---- */
 .about-intro-contact {
   display: flex;
@@ -183,17 +270,13 @@ body[data-page="about"] .nav-inner {
   max-width: 480px;
 }
 
-.about-status-group {
-  white-space: nowrap;
-}
-
 .about-status-dot {
   position: relative;
   display: inline-block;
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #2ECC71;
+  background: var(--color-status-live);
   vertical-align: middle;
   margin: 0 6px 2px 1px;
 }
@@ -203,7 +286,7 @@ body[data-page="about"] .nav-inner {
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: #2ECC71;
+  background: var(--color-status-live);
   opacity: 0.4;
   animation: statusPulse 2s ease-out infinite;
 }
@@ -219,19 +302,28 @@ body[data-page="about"] .nav-inner {
   width: fit-content;
 }
 
-/* ---- Reference sidebar — Experience, Recognition, Skills stacked with
-   real breathing room between each block. This is what fills the space
-   that used to sit empty on the right. ---- */
-.about-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+/* ---- Credentials band — Education, Experience, Recognition, and
+   Skills below the intro row, instead of one narrow column stacked to
+   ~4x the height of the story text beside it. First pass used four
+   even columns, but at ~180px wide every multi-word title (a job
+   title, a patent name) wrapped three or four lines, so the whole
+   band read as a dense wall of broken text. Two wider columns give
+   each title roughly double the room to lay out on one or two lines,
+   and a hairline divider between entries gives the eye a place to
+   land instead of one continuous run of text. ---- */
+.about-credentials-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: var(--space-7);
+  row-gap: var(--space-6);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
 }
 
 .about-recognition {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }
 
 .about-recognition-label {
@@ -239,18 +331,30 @@ body[data-page="about"] .nav-inner {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
 }
 
 .about-recognition-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.about-recognition-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.about-recognition-item:last-child {
+  padding-bottom: 0;
 }
 
 .about-recognition-title {
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
+  line-height: 1.35;
 }
 
 .about-recognition-sub {
@@ -262,6 +366,7 @@ body[data-page="about"] .nav-inner {
   font-size: var(--fs-body);
   color: var(--color-text-secondary);
   line-height: var(--lh-body);
+  max-width: 480px;
 }
 
 @media (max-width: 768px) {
@@ -269,37 +374,26 @@ body[data-page="about"] .nav-inner {
   .about-body-grid {
     grid-template-columns: 1fr;
   }
+  .about-credentials-grid {
+    column-gap: var(--space-5);
+    row-gap: var(--space-5);
+  }
   .about-statement {
     font-size: 24px;
   }
+  /* The portrait's 240px fixed width was sized for sitting next to a
+     0.7fr desktop column. Stacked full-width on a phone, 240px reads
+     oversized against the rest of the content — scale it down instead
+     of carrying the desktop size straight over. */
+  .about-portrait {
+    width: 160px;
+  }
 }
 
-/* ---- Write me a note — the one deliberate invitation on this page.
-   No form, no widget, just a real email opening. This is intentionally
-   the quietest possible version of "give feedback" — matching the
-   site's restraint rather than adding a gimmick. ---- */
-.about-note {
-  padding: 100px 0;
-  border-top: 1px solid var(--color-border);
-  text-align: center;
-}
-
-.about-note-link {
-  display: inline-block;
-  font-size: clamp(24px, 3vw, 36px);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--ls-heading);
-  color: var(--color-text-primary);
-  text-decoration: none;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 8px;
-  transition: border-color var(--duration-hover) var(--ease-cinematic),
-              opacity var(--duration-hover) var(--ease-cinematic);
-}
-
-.about-note-link:hover {
-  border-color: var(--color-text-primary);
-  opacity: 0.75;
+@media (max-width: 480px) {
+  .about-credentials-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---- Anonymous reaction + note ---- */
@@ -338,7 +432,8 @@ body[data-page="about"] .nav-inner {
   cursor: pointer;
   transition: border-color var(--duration-hover) var(--ease-cinematic),
               background var(--duration-hover) var(--ease-cinematic),
-              color var(--duration-hover) var(--ease-cinematic);
+              color var(--duration-hover) var(--ease-cinematic),
+              opacity var(--duration-hover) var(--ease-cinematic);
 }
 
 .react-sticker svg {
@@ -356,6 +451,17 @@ body[data-page="about"] .nav-inner {
   background: var(--color-text-primary);
   border-color: var(--color-text-primary);
   color: var(--color-bg);
+}
+
+/* Same respond-on-press gap as .about-cv: these are tapped, not hovered,
+   on the devices most people will actually use to react. */
+.react-sticker:active {
+  transform: scale(0.94);
+  transition-duration: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-sticker:active { transform: none; opacity: 0.7; }
 }
 
 .about-react-note-row {
@@ -400,9 +506,268 @@ body[data-page="about"] .nav-inner {
   opacity: 0.82;
 }
 
+.about-react-submit:active:not(.is-sent) {
+  transform: scale(0.96);
+  transition-duration: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-react-submit:active:not(.is-sent) { transform: none; opacity: 0.7; }
+}
+
 .about-react-submit.is-sent {
   background: var(--color-bg-section);
   color: var(--color-text-secondary);
   cursor: default;
   opacity: 1;
+}
+
+/* ---- The pop-it in the footer — a small, quiet moment before the
+   contact line, not a wrapped "gift" to unwrap. Earlier version hid
+   this behind a peelable foil wrapper; removed because the drag
+   mechanic added a whole extra interaction (grab, drag, threshold,
+   fall animation) in front of a footer whose actual job is getting
+   someone to email or click LinkedIn — the wrapper was competing with
+   the CTA for attention, not supporting it. What's left is the
+   easter egg itself: pop it if you notice it, ignore it if you don't,
+   either way it doesn't block the footer's real content below it. ----
+   */
+.about-popit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.about-popit-label {
+  font-size: var(--fs-caption);
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  user-select: none;
+}
+
+/* The footer shape sits inside a fixed-size stage, same idea as the
+   gallery cards below. Different vehicles have very different
+   row/column counts (a wide flat scooter vs. a tall narrow tank), so
+   letting the patch's own height follow its aspect-ratio meant every
+   shape rendered at a different height — which pushed "Let's talk
+   about..." up or down every time Next/Reset picked a new shape. The
+   stage is one fixed box; the shape is measured and fit inside it
+   (js/about-bubblewrap.js, fitPatchToStage), so the footer's total
+   height — and everything below it — never moves when the shape
+   changes, only when the gallery opens/closes. */
+.about-popit-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 560px);
+  height: 260px;
+  overflow: hidden;
+}
+
+.about-bubblewrap-footer {
+  gap: 4px;
+  width: auto;
+  height: auto;
+  margin-top: 0; /* .about-bubblewrap's base margin-top is meant for the
+    CV-button patch; here spacing already comes from .about-popit's own
+    flex gap, so this stops the two from stacking. */
+  max-width: none; /* .about-bubblewrap's base max-width: 160px is also
+    sized for that small CV-button patch — left in place here it was
+    silently capping this at 160px no matter what width value was set
+    above, which is the actual reason every pass at "bigger bubbles"
+    never visibly changed anything. */
+}
+
+.about-popit-controls {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.about-popit-btn {
+  padding: 7px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-hover) var(--ease-cinematic),
+              color var(--duration-hover) var(--ease-cinematic),
+              background var(--duration-hover) var(--ease-cinematic),
+              opacity var(--duration-hover) var(--ease-cinematic);
+}
+
+.about-popit-btn:hover {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+.about-popit-btn:active {
+  transform: scale(0.95);
+  transition-duration: 60ms;
+}
+
+/* ---- "Pop all" gallery — expands in place right under the popit's
+   own controls, above "Let's talk about mobility...". Opening it does
+   push the contact line down (there's more content above it now), but
+   it's the same push every time and it's undone exactly on collapse —
+   not the overlay this replaced, which floated a whole second surface
+   on top of the page instead of growing it. ---- */
+.about-popit-gallery {
+  display: none;
+  width: 100%;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.about-popit-gallery.is-open {
+  display: grid;
+}
+
+/* No name label, no card border — just the shapes themselves, side by
+   side, nothing boxing them in. */
+.about-popit-gallery-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* A fixed-size stage every card shares, so the gallery grid stays
+   even regardless of which shape is in which card. The patch inside
+   it needs BOTH axes bounded here — the stage has a fixed height AND
+   a fixed-ish width (the card's own column width) — so pinning one
+   axis to a definite value (e.g. height:100%) and letting the other
+   go "auto, capped by max-width" doesn't work like it does for the
+   footer's single wide-open patch: whichever axis hits its cap first
+   wins, and the shape's real aspect-ratio gets silently overridden,
+   which is what read as every shape looking "stretched" once several
+   different shapes' natural proportions collided with the same fixed
+   card width. Leaving BOTH width and height auto, each capped by
+   max-width/max-height, lets aspect-ratio (set inline per shape in
+   renderShape) pick whichever axis binds first and derive the other
+   from it — a real "contain" fit, so every shape keeps its true
+   proportions no matter how it compares to the card's shape. */
+.about-popit-gallery-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+}
+
+.about-popit-gallery-patch {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  margin-top: 0; /* overrides .about-bubblewrap's margin-top: var(--space-4),
+    meant for the CV-button patch this class was originally built for —
+    left in place here it pushed every card's shape down inside its
+    fixed-height stage, which is what the stage's overflow:hidden was
+    then clipping off the bottom. */
+  gap: 3px;
+}
+
+@media (max-width: 600px) {
+  .about-popit-stage {
+    height: 200px;
+  }
+  .about-popit-gallery {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+  .about-popit-gallery-stage {
+    height: 200px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-popit-label { opacity: 1; }
+  /* Swap the scale for an opacity dim rather than dropping press feedback
+     entirely — reduced motion should be gentler, not silent. */
+  .about-popit-btn:active { transform: none; opacity: 0.7; }
+}
+
+/* ==========================================================================
+   NAV VEHICLE POP-IT HINT — we're already on the About page, so the nav
+   "About" link was pure redundancy. In its place: tiny vehicle-shaped
+   bubbles (same silicone-bubble look as the footer pop-it) that pop
+   themselves one at a time in random order, cycle through 5 silhouettes,
+   and — together with the bobbing arrow beside them — link straight down
+   to the real pop-it section in the footer.
+   ========================================================================== */
+
+body[data-page="about"] .nav-link-here {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+}
+
+body[data-page="about"] .nav-link-here:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* The smooth scroll to the footer takes a moment to get there — without
+   this the click/tap itself felt like it did nothing until motion caught
+   up. Instant press feedback closes that gap. */
+body[data-page="about"] .nav-link-here {
+  transition: opacity 90ms ease-out;
+}
+
+body[data-page="about"] .nav-link-here:active {
+  opacity: 0.6;
+}
+/* Deliberately not suppressed under prefers-reduced-motion: it's a plain
+   opacity/state change, not a slide/spring/parallax — exactly the kind of
+   feedback Apple's reduced-motion guidance says to keep. */
+
+.nav-vehicle-shape {
+  display: grid;
+  gap: 3px;
+}
+
+/* Reuses .about-bubble's silicone-dome look and .is-popped state/animation
+   (defined above) exactly — just pinned to a much smaller fixed size than
+   the footer's grid-driven sizing. */
+.nav-vehicle-bubble {
+  width: 7px;
+  height: 7px;
+  cursor: inherit;
+}
+
+.nav-vehicle-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  animation: navVehicleArrowBob 1.5s ease-in-out infinite;
+}
+
+.nav-vehicle-arrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes navVehicleArrowBob {
+  0%, 100% { transform: translateY(0); opacity: 0.55; }
+  50% { transform: translateY(3px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-vehicle-arrow { animation: none; opacity: 0.7; }
 }

@@ -15,7 +15,13 @@ html, body {
 .wall-frame-top {
   position: fixed;
   top: 0; left: 0; right: 0;
-  z-index: 30;
+  /* Cards get a rising z-index every time they're hovered, dragged, or
+     rescattered (topZ climbs with no ceiling), and already passes 30
+     after the initial 25-card load. A real, confirmed bug: a card can
+     end up physically on top of the nav or the rescatter button,
+     silently eating clicks meant for them. Fixed UI chrome needs a
+     z-index that stays above that climb for the life of the page. */
+  z-index: 9000;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,6 +37,14 @@ html, body {
   letter-spacing: 0.01em;
   color: var(--color-text-primary);
   text-decoration: none;
+  /* Vertical-only padding + matching negative margin: grows the tap
+     height toward 44px without touching the text's horizontal box —
+     that matters here specifically because the desktop rule below
+     centers this link with left:50% + translateX(-50%), which only
+     stays exact if the box's width (and therefore its horizontal
+     margin) is left alone. */
+  padding: 9px 0;
+  margin: -9px 0;
 }
 
 @media (min-width: 769px) {
@@ -56,6 +70,9 @@ html, body {
   text-decoration: none;
   opacity: 0.8;
   transition: opacity var(--duration-hover) ease;
+  /* Same vertical-only tap-height fix as .wall-mark. */
+  padding: 12px 0;
+  margin: -12px 0;
 }
 
 .wall-frame-link:hover { opacity: 1; }
@@ -73,6 +90,17 @@ html, body {
   z-index: 5;
   text-align: center;
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* While a sketch is open full-size the headline sat behind the veil at a
+   low z-index with nothing opaque covering it, so it showed straight
+   through above the enlarged image instead of the name/About row being
+   the only thing up top. Fade it out with the same open/close move,
+   leaving .wall-frame-top (name + About, z-index 9000) untouched. */
+.wall-is-expanded .wall-headline-wrap {
+  opacity: 0;
 }
 
 .wall-headline {
@@ -81,6 +109,9 @@ html, body {
   letter-spacing: var(--ls-heading);
   line-height: 1.15;
   color: var(--color-text-primary);
+  /* Balances the wrap on narrow screens instead of leaving one or two
+     stray words on their own line. */
+  text-wrap: balance;
 }
 
 .wall-headline .muted { color: var(--color-text-secondary); }
@@ -88,6 +119,7 @@ html, body {
 .wall-hint {
   position: fixed;
   bottom: 4vh;
+  bottom: 4dvh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
@@ -109,81 +141,14 @@ html, body {
   inset: 0;
 }
 
-.wall-sketch {
-  position: absolute;
-  left: 0;
-  top: 0;
-  will-change: transform;
-  cursor: pointer;
-  border-radius: 6px;
-  box-shadow: 0 6px 20px -8px rgba(17,17,17,0.18);
-  transition: box-shadow 0.25s ease;
-  background-size: cover;
-  background-position: center;
-  /* Rotation pivots at the pin's mounting point (top-center), not the
-     element's own center — so swiveling reads as a real pinned object
-     swinging on its pin, not a card spinning around its own middle. */
-  transform-origin: 50% 0%;
-}
-
-/* Pin — a small physical detail mounting each sketch to the wall, like a
-   real corkboard pushpin. Kept purely metallic/monochrome (no color) to
-   stay inside the locked palette. It counter-rotates in JS so it always
-   reads as upright, the way a real pin would, regardless of how much
-   the sketch itself is tilted. */
-.wall-sketch-pin {
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fdfdfd, #b8b8b8 55%, #85817c 100%);
-  box-shadow: 0 2px 3px rgba(17,17,17,0.32), inset 0 -1px 1px rgba(0,0,0,0.22);
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* Shine — a faint, soft pass of light when you hover, not a bright bar
-   sweeping through. Restrained on purpose: premium reads as quiet, not
-   loud. Angle/duration/intensity vary per sketch (set via CSS custom
-   properties from JS) so it never feels like the same mechanical effect
-   firing identically everywhere — real light doesn't behave identically
-   twice, and that small imperfection is what keeps it from feeling fake. */
-.wall-sketch-shine {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.wall-sketch-shine::before {
-  content: '';
-  position: absolute;
-  top: -60%;
-  left: -70%;
-  width: 38%;
-  height: 220%;
-  background: linear-gradient(var(--shine-angle, 78deg),
-    transparent 0%,
-    rgba(255,255,255,var(--shine-op, 0.24)) 50%,
-    transparent 100%);
-  filter: blur(2px);
-  opacity: 0;
-}
-
-.wall-sketch.is-shining .wall-sketch-shine::before {
-  animation: sketch-shine-sweep var(--shine-dur, 1.3s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes sketch-shine-sweep {
-  0%   { left: -70%; opacity: 0; }
-  22%  { opacity: 1; }
-  78%  { opacity: 1; }
-  100% { left: 140%; opacity: 0; }
-}
+/* Note: this page used to pin sketches to the wall with a .wall-sketch
+   card + a metal pin + a shine hover sweep. That markup was replaced by
+   the scatter-card physics gallery below. The old rules lived on here
+   unused for a while (dead CSS, never referenced by anything in the
+   current markup or JS) — removed outright rather than left dormant,
+   since the shine effect specifically must never come back on this
+   page and a leftover rule is exactly the kind of thing that gets
+   accidentally reactivated later. */
 
 /* ---------- Expanded view ---------- */
 
@@ -191,12 +156,17 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* No full-page dim/blur here anymore — that used to wash out every
+     sketch parted into the side margins along with the center one,
+     when only the center image actually needs separation from what's
+     behind it. This layer is now just an invisible click-catcher (for
+     click-outside-to-close) and a flex container to center the card;
+     .wall-expand-backdrop below is what actually provides contrast,
+     and only right behind the enlarged image itself. */
+  background: transparent;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.35s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -205,6 +175,12 @@ html, body {
 }
 
 .wall-expand-veil.is-active { opacity: 1; pointer-events: all; }
+
+/* Removed the separate backdrop panel — sized well past the card, it
+   read as a big extra white border sitting around the actual sketch
+   instead of the sketch just floating on its own. The card's own
+   box-shadow below (already there) gives it plenty of separation from
+   what's behind it without adding a second visible shape. */
 
 .wall-expand-card {
   width: min(72vw, 560px);
@@ -215,6 +191,8 @@ html, body {
   background-position: center;
   background-repeat: no-repeat;
   background-color: var(--color-bg);
+  outline: 1px solid rgba(17,17,17,0.08);
+  outline-offset: -1px;
   transform: scale(0.92);
   transition: transform 0.4s var(--ease-cinematic);
 }
@@ -232,23 +210,59 @@ html, body {
   position: fixed;
   top: 30px; right: 40px;
   z-index: 101;
+  /* Padding turns the click target from just the "Close ✕" glyphs
+     (well under 44px) into a real, comfortably-sized tap area, without
+     changing where the text itself sits on screen — the text was
+     already inset from the true corner, this just makes the invisible
+     area around it clickable too. */
+  padding: 16px 20px;
+  margin: -16px -20px;
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  /* --color-text-secondary (#888 on white) measures 3.54:1, under the
+     4.5:1 WCAG AA floor for 12px text — and this is the only visible
+     way to close the expand view, not a decorative caption. Mixing
+     text-primary down to 60% keeps the same muted feel without a new
+     hex value outside the locked palette, and clears AA at ~4.9:1. */
+  color: color-mix(in srgb, var(--color-text-primary) 60%, white);
   background: none;
   border: none;
   font-family: inherit;
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, color 0.2s ease, transform 0.15s ease;
 }
 
 .wall-expand-close.is-active { opacity: 1; pointer-events: all; }
+/* Hover/press feedback — the button previously had a focus ring but
+   nothing acknowledged a mouse hover or an actual click, the only
+   other interactive element on this page without either. */
+.wall-expand-close:hover { color: var(--color-text-primary); }
+.wall-expand-close:active { transform: scale(0.94); }
 
+/* Reduced motion: the physics-driven scatter, throw and rescatter
+   animation is handled in JS (it checks the same media query and
+   substitutes an instant cut for the automatic large motion — the
+   entrance stagger and the rescatter burst). What's left for CSS to
+   handle is the smaller, decorative eased transitions still in use
+   across the page (hover scale, expand/close fades, button states) —
+   those are dropped here so nothing on this page moves further than
+   the user's system setting allows. */
 @media (prefers-reduced-motion: reduce) {
-  .wall-sketch { transition: none !important; }
+  .scatter-card,
+  .wall-expand-veil,
+  .wall-expand-card,
+  .wall-expand-close,
+  .wall-headline-wrap,
+  .rescatter-btn,
+  .rescatter-btn svg,
+  .drag-cursor,
+  .below a {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* ==========================================================================
@@ -270,30 +284,77 @@ html, body {
     position:absolute;
     left:0; top:0;
     border-radius:0;
-    background-size:cover; background-position:center;
+    /* contain, not cover — the whole sketch stays visible, nothing gets
+       cropped off the edges. Trade-off: a sketch whose aspect ratio
+       doesn't match the card shows a plain white margin on two sides
+       instead of filling edge-to-edge. That's the deliberate choice here. */
+    background-size:contain; background-position:center; background-repeat:no-repeat;
+    background-color:var(--color-bg);
     box-shadow:0 10px 24px -10px rgba(17,17,17,0.22);
+    /* A hairline inset edge so a sketch with a white or near-white
+       margin doesn't blend straight into the page background — every
+       card gets a defined edge, not just the ones with dark content. */
+    outline: 1px solid rgba(17,17,17,0.08);
+    outline-offset: -1px;
     will-change:transform;
     touch-action:none;
     opacity:0;
     transform:scale(0.3);
+    /* A native cursor icon answers "can I drag this?" before any custom
+       pill/label does — universally understood, and it responds the
+       instant the pointer goes down (Response: feedback on press, not
+       on release). Meaningless on touch, harmless there too — there's
+       no cursor to show it on. */
+    cursor: grab;
   }
   .scatter-card.is-dragging {
     box-shadow:0 30px 60px -18px rgba(17,17,17,0.38);
+    cursor: grabbing;
+  }
+  /* Cards are keyboard-focusable (see sketchwall.js) so this needs a
+     real visible ring, not the browser default lost against a photo
+     background. Only shows for keyboard focus, not a mouse click. */
+  .scatter-card:focus-visible {
+    outline: 2px solid var(--color-text-primary);
+    outline-offset: 3px;
   }
 
-  .scatter-shine {
-    position:absolute; inset:0;
-    opacity:0;
-    pointer-events:none;
-    mix-blend-mode:screen;
-    transition:opacity 0.3s ease;
+  @media (hover: none), (pointer: coarse) {
+    .drag-cursor { display: none !important; }
   }
-  .scatter-card:hover .scatter-shine { opacity:1; }
+
+  /* One-time hint for touch devices — the hover-driven "Click to view" /
+     "Drag" pill has no equivalent on touch (no hover state), so without
+     this a touch visitor has zero indication either gesture exists.
+     Static (doesn't follow the finger), shown once per browser via
+     localStorage, then gone for good — see sketchwall.js. */
+  .wall-touch-hint {
+    position: fixed;
+    left: 50%;
+    top: max(78px, env(safe-area-inset-top, 0px) + 62px);
+    transform: translateX(-50%);
+    z-index: 60;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: var(--fs-caption);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .wall-touch-hint.is-visible { opacity: 1; }
+
+  @media (hover: none), (pointer: coarse) {
+    .drag-cursor { display: none !important; }
+  }
 
   .below {
     position:fixed;
-    bottom:3.5vh; left:50%; transform:translateX(-50%);
-    z-index:5; text-align:center;
+    bottom:3.5vh; bottom:3.5dvh; left:50%; transform:translateX(-50%);
+    z-index:9000; text-align:center; /* see .wall-frame-top note above */
   }
   .below a {
     font-size:14px;
@@ -306,6 +367,12 @@ html, body {
     align-items:center;
     gap:5px;
     transition:color 0.3s cubic-bezier(0.16,1,0.3,1);
+    /* Vertical-only tap-height fix, same reasoning as .wall-mark — the
+       parent .below div is itself centered with left:50% +
+       translateX(-50%), so horizontal padding here would need the same
+       care; vertical-only sidesteps it entirely. */
+    padding: 11px 0;
+    margin: -11px 0;
   }
   .below a::after {
     content:'↗';
@@ -317,8 +384,10 @@ html, body {
 
   .rescatter-btn {
     position:fixed;
-    bottom:7.2vh; left:50%; transform:translateX(-50%);
-    z-index:5;
+    bottom:9vh; bottom:9dvh; left:50%; transform:translateX(-50%);
+    z-index:9000; /* see .wall-frame-top note above — this is the actual
+       cause of "rescatter doesn't work": a card could sit on top of the
+       button and silently eat the click */
     display:flex;
     align-items:center;
     gap:7px;
@@ -326,6 +395,11 @@ html, body {
     border:1px solid var(--color-border);
     border-radius:20px;
     padding:8px 16px 8px 13px;
+    /* The pill's own padding put its real tap height around 28-32px on
+       desktop and closer to 24px on mobile, under the ~44px a thumb
+       needs. min-height keeps the same visual padding and label size
+       while giving it a properly sized invisible tap area. */
+    min-height:44px;
     font-family:var(--font-primary);
     font-size:12px;
     font-weight:500;
@@ -343,12 +417,26 @@ html, body {
   .rescatter-btn:hover svg { transform:rotate(180deg); }
   .rescatter-btn:active { transform:translateX(-50%) scale(0.96); }
   .rescatter-btn:disabled { opacity:0.4; cursor:default; }
-  @media (max-width:768px){ .rescatter-btn { bottom:7vh; padding:7px 13px 7px 11px; font-size:10px; } }
+  .rescatter-btn:focus-visible, .wall-expand-close:focus-visible {
+    outline: 2px solid var(--color-text-primary);
+    outline-offset: 2px;
+  }
+  @media (max-width:768px){ .rescatter-btn { bottom:8.8vh; bottom:8.8dvh; padding:7px 13px 7px 11px; font-size:10px; min-height:40px; } }
+
+  /* Sitting at z-index 9000 (needed so cards can never bury it — see the
+     note above), it was rendering right over the bottom edge of the
+     enlarged sketch while one was open, and could still be clicked from
+     there. Hide it for the same span the headline hides — close the
+     sketch first, then rescatter. */
+  .wall-is-expanded .rescatter-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
 
   .drag-cursor {
     position:fixed;
     top:0; left:0;
-    z-index:999;
+    z-index:10000;
     pointer-events:none;
     background:rgba(255,255,255,0.9);
     color:var(--color-text-secondary);

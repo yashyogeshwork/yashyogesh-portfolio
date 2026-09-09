@@ -10,8 +10,9 @@
   --color-bg-section: #F5F5F3;
   --color-border: #E8E8E5;
   --color-text-primary: #111111;
-  --color-text-secondary: #888888;
+  --color-text-secondary: #707070; /* was #888888 — measured 3.54:1 on white, fails WCAG AA's 4.5:1 minimum for normal text. #707070 clears it on both backgrounds this site uses (4.95:1 on white, 4.54:1 on the section background) */
   --color-accent: #111111; /* monochrome — accent now means "emphasis," not a hue */
+  --color-status-live: #2ECC71; /* the one deliberate exception to monochrome — a semantic "currently available" signal, not decoration */
 
   /* ---- Typography ---- */
   --font-primary: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;

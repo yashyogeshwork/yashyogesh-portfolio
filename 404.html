@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found · Yash Yogesh</title>
+  <meta name="description" content="This page doesn't exist. Find your way back to the real site.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .notfound-wrap {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-4);
+    }
+    .notfound-wrap .eyebrow {
+      font-size: var(--fs-caption);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-2);
+    }
+    .notfound-wrap h1 {
+      font-size: var(--fs-section);
+      font-weight: var(--fw-medium);
+      margin-bottom: var(--space-3);
+    }
+    .notfound-links {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .notfound-links a {
+      color: var(--color-text-primary);
+      font-weight: var(--fw-medium);
+    }
+  </style>
+</head>
+<body data-page="404">
+
+<nav class="site-nav is-scrolled" id="siteNav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">Yash Yogesh</a>
+    <div class="nav-links">
+      <a href="about.html" class="nav-link">About</a>
+    </div>
+  </div>
+</nav>
+
+<main class="notfound-wrap">
+  <div class="eyebrow">404</div>
+  <h1>This page doesn't exist.</h1>
+  <div class="notfound-links">
+    <a href="index.html">Back to the studio</a>
+    <a href="about.html">About</a>
+    <a href="sketches.html">Sketches</a>
+  </div>
+</main>
+
+</body>
+</html>

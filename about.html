@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2601X4DE6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-F2601X4DE6');
+  </script>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About — Yash Yogesh</title>
-  <meta name="description" content="Yash Yogesh — Transportation Designer. MFA Transportation Design, Umeå Institute of Design.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>About · Yash Yogesh</title>
+  <meta name="description" content="About Yash Yogesh. Background, experience, and how to get in touch.">
+<link rel="canonical" href="https://yashyogesh.com/about.html">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yashyogesh.com/about.html">
+  <meta property="og:title" content="About · Yash Yogesh">
+  <meta property="og:description" content="About Yash Yogesh. Background, experience, and how to get in touch.">
+  <meta property="og:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About · Yash Yogesh">
+  <meta name="twitter:description" content="About Yash Yogesh. Background, experience, and how to get in touch.">
+  <meta name="twitter:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,19 +39,50 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/about.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Yash Yogesh",
+    "url": "https://yashyogesh.com/",
+    "jobTitle": "Transportation Designer",
+    "description": "Transportation Designer. MFA Transportation Design, Umeå Institute of Design.",
+    "image": "https://yashyogesh.com/images/yash-portrait.jpg",
+    "email": "mailto:yashyogesh.work@gmail.com",
+    "sameAs": [
+      "https://www.linkedin.com/in/yashyogesh/",
+      "https://www.instagram.com/yash.yogesh_/",
+      "https://www.behance.net/yashyogesh"
+    ],
+    "alumniOf": {
+      "@type": "CollegeOrUniversity",
+      "name": "Umeå Institute of Design",
+      "url": "https://www.umu.se/en/umea-institute-of-design/"
+    },
+    "knowsAbout": ["Transportation Design", "Industrial Design", "Automotive Concept Design", "Mobility Systems"]
+  }
+  </script>
 </head>
 <body data-page="about" data-scroll-back="index.html">
+
+<a class="skip-link" href="#main">Skip to content</a>
 
   <nav class="site-nav is-scrolled" id="siteNav">
     <div class="container nav-inner">
       <a href="index.html" class="nav-logo" data-c="site.name">Yash Yogesh</a>
       <div class="nav-links">
-        <a href="about.html" class="nav-link is-active">About</a>
+        <a href="#popitStage" class="nav-link nav-link-here" aria-label="Jump to the pop-it easter egg at the bottom of the page">
+          <span class="sr-only">Jump to the pop-it easter egg at the bottom of the page</span>
+          <span class="nav-vehicle-shape" id="navVehicleShape" aria-hidden="true"></span>
+          <span class="nav-vehicle-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+          </span>
+        </a>
       </div>
     </div>
   </nav>
 
-  <section class="about-hero">
+  <section class="about-hero" id="main">
     <div class="container about-hero-grid">
       <div class="about-portrait-col">
         <div class="about-greeting-row">
@@ -36,14 +92,15 @@
           </div>
           <div class="about-greeting-wrap"><div class="about-greeting" id="aboutGreeting">Hello</div></div>
         </div>
-        <div class="about-portrait img-rounded" style="background-image:url('images/yash-portrait.jpg'); background-size:cover; background-position:center;"></div>
+        <div class="about-portrait img-rounded" role="img" aria-label="Portrait of Yash Yogesh" style="background-image:url('images/yash-portrait.jpg'); background-size:cover; background-position:center;"></div>
       </div>
       <div class="about-intro">
-        <p class="about-statement" data-c="about.statement">I'm a transportation designer. Some of what I design solves a real problem — some of it just needs to look like nothing else on the road. I care about both.</p>
+        <h1 class="about-statement" data-c="about.statement">I'm a transportation designer. Some of what I design solves a real problem. Some of it just needs to look different from everything else on the road. I care about both.</h1>
         <!-- Immediate, visible contact — a recruiter shouldn't have to
              scroll past the whole story just to grab an email. -->
         <div class="about-intro-contact">
-          <p class="about-intro-line"><span data-c="about.introPart1">Transportation Designer. MFA at Umeå Institute of Design.</span> <span class="about-status-group"><span class="about-status-dot"></span> <span data-c="about.introPart2">Open to freelance and internship opportunities.</span></span></p>
+          <p class="about-intro-line" data-c="about.introPart1">MFA at Umeå Institute of Design.</p>
+          <p class="about-intro-line"><span class="about-status-dot"></span>&nbsp;<span data-c="about.introPart2">Open to freelance and internship opportunities.</span></p>
           <a href="mailto:yashyogesh.work@gmail.com" class="about-email accent-underline" data-c="about.email" data-c-href="about.email">yashyogesh.work@gmail.com</a>
         </div>
 
@@ -51,9 +108,12 @@
              submission, no mailto, nothing reveals who sent it unless
              they choose to add their name themselves. -->
         <div class="about-react">
-          <div class="about-react-label">Seen the work? React — anonymously, unless you want to say who you are.</div>
-          <form name="portfolio-react" method="POST" data-netlify="true" id="reactForm">
+          <div class="about-react-label">Seen the work? React, anonymously, unless you want to say who you are.</div>
+          <form name="portfolio-react" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" id="reactForm">
             <input type="hidden" name="form-name" value="portfolio-react">
+            <p style="position:absolute; left:-9999px;" aria-hidden="true">
+              <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
+            </p>
             <div class="about-react-stickers" id="reactStickers">
               <button type="button" class="react-sticker" data-value="Loved this">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-4.5-9.5-9C.7 8 2 4 6 4c2 0 3.5 1.2 4 2.5C10.5 5.2 12 4 14 4c4 0 5.3 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
@@ -74,8 +134,8 @@
             </div>
             <input type="hidden" name="reaction" id="reactionInput">
             <div class="about-react-note-row" id="reactNoteRow">
-              <textarea name="message" id="reactMessage" class="about-react-textarea" placeholder="Want to say something? (optional)" maxlength="220"></textarea>
-              <input type="text" name="name" id="reactName" class="about-react-name" placeholder="Your name (totally optional)">
+              <textarea name="message" id="reactMessage" class="about-react-textarea" placeholder="Got feedback for me? Tell me what you think." aria-label="Your feedback" maxlength="220"></textarea>
+              <input type="text" name="name" id="reactName" class="about-react-name" placeholder="Tell me a bit about you, if you'd like" aria-label="Your name or a bit about you (optional)">
               <button type="submit" class="about-react-submit" id="reactSubmitBtn">Send</button>
             </div>
           </form>
@@ -104,101 +164,120 @@
       </div>
 
       <div class="about-story">
-        <p class="reveal" data-c="about.para1">Transportation designer with a strong foundation in problem-solving and user-centered design. Experienced in collaborative projects across industrial design — vehicles, toys, consumer products — with a focus on translating ideas into functional, visually considered solutions.</p>
-        <p class="reveal" data-c="about.para2">At Surface Moto, I took their first electric bike from concept to a road-ready prototype.</p>
-        <p class="reveal" data-c="about.para3">Now at Umeå Institute of Design, sharpening how I think about mobility, systems, and the problems worth solving — working across companies and disciplines to get sharper at the part that actually matters: knowing the problem before I reach for a shape.</p>
+        <p class="reveal" data-c="about.para1">Grounded in problem-solving and user-centered design, with experience across vehicles, toys, and consumer products. The focus stays the same across all of it: translating ideas into functional, visually considered solutions.</p>
+        <p class="reveal" data-c="about.para2">At Surface Moto, I took their first electric bike from research through to a road-ready prototype, working inside real engineering and manufacturing constraints.</p>
+        <p class="reveal" data-c="about.para3">Now at Umeå Institute of Design, sharpening how I think about mobility, systems, and the problems worth solving. Working across companies and disciplines to get sharper at the part that actually matters, knowing the problem before I reach for a shape.</p>
+      </div>
+    </div>
+
+    <!-- Credentials band — Education, Experience, Recognition, and Skills
+         side by side across the full width instead of stacked in one
+         narrow column. Stacked in a column this ran to ~1250px tall next
+         to a ~320px story column, leaving a huge dead gap under the
+         story before the footer. Side by side, each list stays short and
+         the row's height roughly matches the row above it. -->
+    <div class="container about-credentials-grid">
+      <div class="about-recognition reveal">
+        <h2 class="about-recognition-label" data-c="about.educationLabel">Education</h2>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.edu1Degree">MFA Transportation Design (current)</span>
+          <span class="about-recognition-sub" data-c="about.edu1School">Umeå Institute of Design</span>
+        </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.edu3Degree">Bachelor of Design</span>
+          <span class="about-recognition-sub" data-c="about.edu3School">IIITDM Jabalpur</span>
+        </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.edu2Degree">Offsite Certification, Advanced Design</span>
+          <span class="about-recognition-sub" data-c="about.edu2School">Chicago</span>
+        </div>
+      </div>
+      <div class="about-recognition reveal">
+        <h2 class="about-recognition-label" data-c="about.experienceLabel">Experience</h2>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.exp1Role">Industrial Designer, Contour (self-employed)</span>
+        </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.exp2Role">Industrial Designer, Surface Moto</span>
+        </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.exp3Role">Design Consultant, Indkal Technologies (Acer India)</span>
+        </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.exp4Role">Industrial Design Intern, SKM Design</span>
+        </div>
       </div>
 
-      <!-- Reference sidebar — this is what actually fills the space
-           that used to sit empty on the right. Experience, Recognition,
-           and Skills, quick to scan without competing with the story
-           column for the same narrow width. -->
-      <div class="about-sidebar">
-        <div class="about-recognition reveal">
-          <div class="about-recognition-label" data-c="about.educationLabel">Education</div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.edu1Degree">MFA Transportation Design</span>
-            <span class="about-recognition-sub" data-c="about.edu1School">Umeå Institute of Design</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.edu3Degree">Bachelor's of Design</span>
-            <span class="about-recognition-sub" data-c="about.edu3School">IIITDM Jabalpur</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.edu2Degree">Offsite Certification, Advanced Design</span>
-            <span class="about-recognition-sub" data-c="about.edu2School">Chicago</span>
-          </div>
+      <div class="about-recognition reveal">
+        <h2 class="about-recognition-label" data-c="about.recognitionLabel">Recognition</h2>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.recognition1Title">Real-Time Water Pollutant Monitoring System</span>
+          <span class="about-recognition-sub" data-c="about.recognition1Sub">Patent published, IN 361772001</span>
         </div>
-        <div class="about-recognition reveal">
-          <div class="about-recognition-label" data-c="about.experienceLabel">Experience</div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.exp1Role">Industrial Designer, Contour (self-employed)</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.exp2Role">Industrial Designer, Surface Moto</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.exp3Role">Design Consultant, Indkal Technologies (Acer India)</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.exp4Role">Industrial Design Intern, SKM Design</span>
-          </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.recognition2Title">Croctus, Handheld Toy</span>
+          <span class="about-recognition-sub" data-c="about.recognition2Sub">Design patent application filed</span>
         </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.recognition3Title">XP Pen D'kalp Design Challenge</span>
+          <span class="about-recognition-sub" data-c="about.recognition3Sub">National winner, 2021</span>
+        </div>
+        <div class="about-recognition-item">
+          <span class="about-recognition-title" data-c="about.recognition4Title">Gravity Sketch Certified Professional & Designer</span>
+          <span class="about-recognition-sub" data-c="about.recognition4Sub">Licenses & certifications</span>
+        </div>
+      </div>
 
-        <div class="about-recognition reveal">
-          <div class="about-recognition-label" data-c="about.recognitionLabel">Recognition</div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.recognition1Title">Real-Time Water Pollutant Monitoring System</span>
-            <span class="about-recognition-sub" data-c="about.recognition1Sub">Patent published — IN 361772001</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.recognition2Title">Croctus — Handheld Toy</span>
-            <span class="about-recognition-sub" data-c="about.recognition2Sub">Design patent application filed</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.recognition3Title">XP Pen D'kalp Design Challenge</span>
-            <span class="about-recognition-sub" data-c="about.recognition3Sub">National winner, 2021</span>
-          </div>
-          <div class="about-recognition-item">
-            <span class="about-recognition-title" data-c="about.recognition4Title">Gravity Sketch Certified Professional & Designer</span>
-            <span class="about-recognition-sub" data-c="about.recognition4Sub">Licenses & certifications</span>
-          </div>
-        </div>
-
-        <div class="about-recognition reveal">
-          <div class="about-recognition-label" data-c="about.skillsLabel">Tools & skills</div>
-          <p class="about-skills-list" data-c="about.skills">Rhino 3D, Keyshot, Blender, Adobe CC, Figma, Gravity Sketch, Procreate, Sketching, Prototyping, User Research</p>
-        </div>
+      <div class="about-recognition reveal">
+        <h2 class="about-recognition-label" data-c="about.skillsLabel">Tools & skills</h2>
+        <p class="about-skills-list" data-c="about.skills">Rhino 3D, Keyshot, Blender, Adobe CC, Figma, Gravity Sketch, Procreate, Sketching, Prototyping, User Research</p>
       </div>
     </div>
   </section>
 
   <footer class="site-footer">
     <div class="container footer-inner">
+      <div class="about-popit">
+        <div class="about-popit-stage" id="popitStage">
+          <div class="about-bubblewrap about-bubblewrap-footer" data-shape-pool></div>
+        </div>
+        <div class="about-popit-label">fun</div>
+        <div class="about-popit-controls">
+          <button type="button" class="about-popit-btn" id="popitResetBtn">Reset</button>
+          <button type="button" class="about-popit-btn" id="popitNextBtn">Next</button>
+          <button type="button" class="about-popit-btn" id="popitMoreBtn" aria-expanded="false">More fun</button>
+        </div>
+        <!-- Expands right here, between the popit and the contact line
+             below — "More fun" grows the extra shapes in below itself,
+             not off somewhere else in the footer. -->
+        <div class="about-popit-gallery" id="popitGallery"></div>
+      </div>
       <div class="footer-top">
-        <div class="footer-statement" data-c="about.footerStatement">Let's talk about mobility, design, or Umeå.</div>
+        <h2 class="footer-statement" data-c="about.footerStatement">Let's talk about mobility, design, or Umeå.</h2>
         <div class="footer-links">
           <a href="mailto:yashyogesh.work@gmail.com" class="footer-link" data-c="about.email" data-c-href="about.email">yashyogesh.work@gmail.com</a>
-          <a href="#" class="footer-link" data-c-href="about.linkedin">LinkedIn</a>
-          <a href="#" class="footer-link" data-c-href="about.instagram">Instagram</a>
-          <a href="#" class="footer-link" data-c-href="about.behance">Behance</a>
+          <a href="https://www.linkedin.com/in/yashyogesh/" class="footer-link" target="_blank" rel="noopener" data-c-href="about.linkedin">LinkedIn</a>
+          <a href="https://www.instagram.com/yash.yogesh_/" class="footer-link" target="_blank" rel="noopener" data-c-href="about.instagram">Instagram</a>
+          <a href="https://www.behance.net/yashyogesh" class="footer-link" target="_blank" rel="noopener" data-c-href="about.behance">Behance</a>
         </div>
       </div>
       <div class="footer-bottom">
         <span class="caption">Yash Yogesh © 2026</span>
         <span class="caption">Designed & built in Umeå</span>
+        <a href="privacy.html" class="caption">Privacy</a>
       </div>
     </div>
   </footer>
-</div>
 
   <script src="js/content.js"></script>
   <script src="js/apply-content.js"></script>
-  <script src="js/page-transition.js"></script>
-  <script src="js/scroll-back.js"></script>
   <script src="js/scroll-reveal.js"></script>
   <script src="js/umea-live.js"></script>
   <script src="js/about-greeting.js"></script>
   <script src="js/about-react.js"></script>
+  <script src="js/vehicle-shapes-data.js"></script>
+  <script src="js/about-bubblewrap.js"></script>
+  <script src="js/about-nav-vehicle.js"></script>
+  <script src="js/analytics-events.js"></script>
 </body>
 </html>
