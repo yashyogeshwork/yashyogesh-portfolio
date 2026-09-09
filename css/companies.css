@@ -1,0 +1,530 @@
+/* ==========================================================================
+   Tokens — mirrored from yashyogesh.com's css/variables.css.
+   ========================================================================== */
+:root {
+  --color-bg:              #FFFFFF;
+  --color-bg-section:      #F5F5F3;
+  --color-border:          #E8E8E5;
+  --color-text-primary:    #111111;
+  --color-text-secondary:  #707070; /* darkened from the site's #888888 — #888 on this bg fails WCAG AA at the small sizes used here (facet counts, captions); #707070 clears 4.5:1 on both --color-bg and --color-bg-section */
+  --color-accent:          #111111;
+
+  --font-primary: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --fs-hero:     64px;
+  --fs-section:  36px;
+  --fs-body:     17px;
+  --fs-caption:  13px;
+  --lh-heading:  1.15;
+  --lh-body:     1.6;
+  --ls-heading:  -0.02em;
+  --fw-light:    300;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+  --space-6: 96px;
+
+  --site-max-width:       1440px;
+  --side-padding-desktop: 64px;
+
+  --ease-cinematic:    cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-standard: 0.6s;
+  --duration-hover:    0.3s;
+
+  --radius-image: 12px;
+  --radius-pill:  999px;
+  --radius-small: 6px;
+}
+@media (max-width: 768px) {
+  :root {
+    --fs-hero: 40px;
+    --side-padding-desktop: 20px;
+    --fs-body: 16px;
+  }
+}
+@media (min-width: 769px) and (max-width: 1100px) {
+  :root { --fs-hero: 52px; --side-padding-desktop: 36px; }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-primary);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-weight: var(--fw-medium); line-height: var(--lh-heading); letter-spacing: var(--ls-heading); margin: 0; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+button { font-family: inherit; cursor: pointer; }
+.muted { color: var(--color-text-secondary); }
+.eyebrow { font-size: var(--fs-caption); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); font-weight: var(--fw-medium); }
+
+.pg-shell { max-width: var(--site-max-width); margin: 0 auto; padding: 0 var(--side-padding-desktop); }
+
+/* ---- Header: plain, static, no nav chrome needed for a single-purpose page ---- */
+.pg-header {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) 0 var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.pg-header h1 { font-size: var(--fs-hero); margin-top: var(--space-1); }
+.pg-header .sub { margin-top: var(--space-2); color: var(--color-text-secondary); max-width: 760px; }
+.pg-header .sub strong { color: var(--color-text-primary); font-weight: var(--fw-semibold); }
+
+main.pg-shell { padding-bottom: var(--space-6); }
+
+.reveal { opacity: 1; }
+
+
+/* ---- Sticky controls: tier toggles + search/filter bar move and stick together,
+   so the table's own sticky thead (below) can offset by their combined height
+   instead of the two sticky layers fighting over the same top edge. This only
+   holds up on desktop, where the block is a couple of short rows. On a phone,
+   6 facet chips plus the tier pills wrap across 4-5 lines, and pinning all of
+   that means it eats roughly half the viewport on every scroll, permanently,
+   which is worse than just letting it scroll away like normal content. So
+   below 640px it isn't sticky at all: it scrolls with the page, the table
+   gets the screen back, and the facets are still one scroll-up away. ---- */
+.sticky-controls {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 20;
+  background: var(--color-bg);
+  padding-top: 2px;
+}
+@media (max-width: 640px) {
+  .sticky-controls { position: static; }
+}
+
+/* ---- Tier toggle (always-visible pills, not a popover facet) ---- */
+.tier-toggle-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-2); }
+.tier-toggle {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 40px; padding: 6px 14px 6px 6px;
+  font-family: inherit; font-size: var(--fs-caption); font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition-property: color, border-color, background-color, transform;
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-cinematic);
+}
+.tier-toggle-label { white-space: nowrap; }
+.tier-toggle:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
+.tier-toggle:active { transform: scale(0.97); }
+.tier-toggle:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+.tier-toggle.is-active { color: var(--color-text-primary); border-color: var(--color-text-primary); background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-text-primary); }
+.tier-toggle-count { font-variant-numeric: tabular-nums; color: var(--color-text-secondary); font-size: 11px; }
+
+.table-note { font-size: var(--fs-caption); margin-top: var(--space-1); }
+
+/* ---- Filter bar ---- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+  padding: var(--space-2);
+  background: var(--color-bg-section);
+  border-radius: var(--radius-image);
+  margin-bottom: var(--space-2);
+}
+.filter-search { position: relative; flex: 1; min-width: 180px; display: flex; align-items: center; }
+.filter-search-icon { position: absolute; left: 12px; color: var(--color-text-secondary); pointer-events: none; }
+.filter-bar input[type="search"] {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  transition-property: border-color;
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-cinematic);
+}
+.filter-bar input[type="search"]:focus { outline: none; border-color: var(--color-text-primary); }
+/* iOS Safari auto-zooms the whole page on focus if an input's font-size is
+   under 16px. The search field inherits --fs-caption (13px) on desktop,
+   which is fine there, but on a phone that zoom-on-tap reads as the page
+   "breaking" every time you search. 16px is the floor, not a design choice.
+   (Placed after the base rule above, not inside the earlier token media
+   query, so it actually wins the cascade at equal specificity.) */
+@media (max-width: 768px) {
+  .filter-bar input[type="search"] { font-size: 16px; }
+}
+.filter-count { font-size: var(--fs-caption); color: var(--color-text-secondary); margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.facet-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.facet { position: relative; }
+.facet-btn {
+  display: flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 8px 12px;
+  font-family: inherit; font-size: var(--fs-caption); font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition-property: border-color, color, background-color, transform;
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-cinematic);
+}
+.facet-btn:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
+.facet-btn:active { transform: scale(0.97); }
+.facet-btn:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+.facet.is-open .facet-btn, .facet-btn.has-selection { color: var(--color-text-primary); border-color: var(--color-text-primary); background: var(--color-bg-section); }
+.facet-btn-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 17px; height: 17px; padding: 0 5px; border-radius: var(--radius-pill);
+  background: var(--color-text-primary); color: var(--color-bg);
+  font-size: 10.5px; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums;
+}
+.facet-btn-count[hidden] { display: none; }
+.facet-btn-caret { transition: transform var(--duration-hover) var(--ease-cinematic); color: var(--color-text-secondary); }
+.facet.is-open .facet-btn-caret { transform: rotate(180deg); }
+
+.facet-panel {
+  display: none; position: absolute; top: calc(100% + 8px); left: 0;
+  min-width: 220px; max-height: 320px; overflow-y: auto;
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-image);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.14); padding: 6px; z-index: 30;
+}
+.facet.is-open .facet-panel, .facet.is-closing .facet-panel { display: block; transform-origin: top left; }
+.facet.is-open .facet-panel { animation: facet-in 180ms var(--ease-cinematic); }
+.facet.is-closing .facet-panel { animation: facet-out 160ms var(--ease-cinematic) forwards; pointer-events: none; }
+@keyframes facet-in { from { opacity: 0; transform: scale(0.97) translateY(-4px); filter: blur(4px); } to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } }
+@keyframes facet-out { from { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } to { opacity: 0; transform: scale(0.97) translateY(-4px); filter: blur(4px); } }
+.facet-panel-actions { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 8px; border-bottom: 1px solid var(--color-border); margin-bottom: 4px; }
+.facet-panel-actions button { font-family: inherit; font-size: 11.5px; font-weight: var(--fw-medium); color: var(--color-text-secondary); background: none; border: none; cursor: pointer; padding: 4px; transition: color var(--duration-hover) var(--ease-cinematic); }
+.facet-panel-actions button:hover { color: var(--color-text-primary); }
+.facet-option { display: flex; align-items: flex-start; gap: 9px; padding: 7px 8px; min-height: 32px; border-radius: var(--radius-small); font-size: 13px; color: var(--color-text-primary); cursor: pointer; transition: background-color var(--duration-hover) var(--ease-cinematic); }
+.facet-option:hover { background: var(--color-bg-section); }
+.facet-option input[type="checkbox"] { width: 15px; height: 15px; margin-top: 2px; accent-color: var(--color-text-primary); cursor: pointer; flex-shrink: 0; }
+.facet-option-label { flex: 1; min-width: 0; text-wrap: pretty; padding-top: 1px; }
+.facet-option-count { flex-shrink: 0; padding-top: 1px; font-size: 11px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.facet-panel-empty { padding: 10px 8px; font-size: 12.5px; color: var(--color-text-secondary); }
+.facet-panel-note { padding: 6px 8px 4px; font-size: 11px; color: var(--color-text-secondary); }
+@media (max-width: 560px) {
+  .facet { position: static; }
+  .facet-panel { position: absolute; left: 0; right: 0; top: 100%; margin-top: 6px; width: auto; min-width: 0; max-height: 50vh; }
+}
+
+.clear-filters-btn[hidden] { display: none; }
+.clear-filters-btn {
+  display: flex; align-items: center; gap: 5px; min-height: 36px; padding: 8px 14px;
+  font-family: inherit; font-size: var(--fs-caption); font-weight: var(--fw-medium);
+  color: var(--color-text-secondary); background: none; border: 1px dashed var(--color-border); border-radius: var(--radius-pill);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition-property: border-color, color, transform;
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-cinematic);
+}
+.clear-filters-btn:hover { color: var(--color-text-primary); border-color: var(--color-text-primary); }
+.clear-filters-btn:active { transform: scale(0.97); }
+
+.active-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-2); }
+.active-chips:empty { display: none; margin-bottom: 0; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; border-radius: var(--radius-pill);
+  background: var(--color-text-primary); color: var(--color-bg); font-size: 12px; font-weight: var(--fw-medium);
+  animation: chip-in 220ms var(--ease-cinematic);
+}
+@keyframes chip-in { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+.chip-facet-label { opacity: 0.65; }
+.chip-remove {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.16);
+  border: none; color: inherit; cursor: pointer;
+  transition-property: background-color, transform;
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-cinematic);
+}
+/* Visual circle stays 22px so the chip doesn't bloat, but the actual tap target
+   is ~40px via an invisible pseudo-element, so it isn't a miss target on touch. */
+.chip-remove::before { content: ""; position: absolute; inset: -9px; }
+.chip-remove:hover { background: rgba(255,255,255,0.32); }
+.chip-remove:active { transform: scale(0.88); }
+.chip-remove:focus-visible { outline: 2px solid var(--color-bg); outline-offset: 2px; }
+.chip-remove svg { width: 9px; height: 9px; }
+
+/* ---- Badges (shared vocabulary with the private file) ---- */
+.tier-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border-radius: var(--radius-small); font-size: 11px; font-weight: var(--fw-semibold); }
+.tier-A { background: var(--color-text-primary); color: #fff; }
+.tier-B { background: var(--color-bg-section); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+.tier-C { background: transparent; color: var(--color-text-secondary); border: 1px dashed var(--color-border); }
+.momentum-badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 11px; font-weight: var(--fw-medium); letter-spacing: 0.01em; white-space: nowrap; }
+.momentum-new         { background: var(--color-text-primary); color: #fff; }
+.momentum-growing     { background: var(--color-bg-section); color: var(--color-text-primary); border: 1px solid var(--color-text-primary); }
+.momentum-stable      { background: transparent; color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+.momentum-contracting { background: transparent; color: var(--color-text-secondary); border: 1px dashed var(--color-text-secondary); }
+.momentum-unclear     { background: transparent; color: var(--color-text-secondary); border: 1px dotted var(--color-border); }
+
+/* ==========================================================================
+   The table itself
+   ========================================================================== */
+/* overflow-x: auto is needed so the table can scroll horizontally on narrow
+   screens, but per spec that silently forces overflow-y to a real scroll
+   container too (a mismatched visible/auto pair resolves to auto on both
+   axes) — which becomes the containing block for any sticky descendant.
+   Rather than fight that, we lean into it deliberately: cap the panel's own
+   height and let the header stick within its own scrollbox. That's also
+   what actually made "position: sticky; top: 0" on the header cells work at
+   all — without an explicit max-height here, the box never scrolls
+   internally (it just grows to fit all 217 rows), so the header had nothing
+   to stick within and rendered at a fixed offset instead of tracking scroll. */
+.table-scroll { overflow: auto; max-height: 70vh; border: 1px solid var(--color-border); border-radius: var(--radius-image); }
+.comp-table { width: 100%; min-width: 540px; border-collapse: separate; border-spacing: 0; font-size: 14.5px; }
+.comp-table thead th {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--color-bg-section);
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 12px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.comp-table thead th:first-child { cursor: default; width: 36px; }
+.comp-table thead th:hover:not(:first-child) { color: var(--color-text-primary); }
+.comp-table thead th .sort-arrow { display: inline-block; margin-left: 4px; opacity: 0; transition: opacity var(--duration-hover) var(--ease-cinematic), transform var(--duration-hover) var(--ease-cinematic); }
+.comp-table thead th.is-sorted .sort-arrow { opacity: 1; }
+.comp-table thead th.is-sorted-desc .sort-arrow { transform: rotate(180deg); }
+.comp-table tbody tr.comp-row {
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color var(--duration-hover) var(--ease-cinematic);
+}
+.comp-table tbody tr.comp-row:hover { background: var(--color-bg-section); }
+.comp-table tbody tr.comp-row.is-open { background: var(--color-bg-section); }
+.comp-table tbody tr.comp-row:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: -2px; }
+.comp-table td { padding: 11px 14px; vertical-align: middle; }
+.comp-table td.col-name { font-weight: var(--fw-medium); }
+.comp-table td.col-name .row-chevron {
+  display: inline-block; margin-right: 8px; color: var(--color-text-secondary);
+  transition: transform var(--duration-standard) var(--ease-cinematic);
+}
+.comp-row.is-open .row-chevron { transform: rotate(90deg); color: var(--color-text-primary); }
+.comp-table td.col-loc { color: var(--color-text-secondary); font-size: 13.5px; }
+.col-name-meta { display: none; }
+
+/* ---- Phone layout: below 640px the four-column table no longer fits without
+   forcing a second, horizontal scroll axis nested inside the page's vertical
+   one, which is exactly the kind of thing that reads as "broken" on a phone
+   (you drag to scroll and half the row is still off-screen). Rather than
+   shrink text until it's unreadable, drop Location and Type as their own
+   columns and fold that same information into a second line under the
+   company name instead. No data is lost, nothing needs to be expanded to see
+   it, and the table finally fits the viewport it's actually rendered in. ---- */
+@media (max-width: 640px) {
+  .comp-table { min-width: 0; }
+  .comp-table thead th:nth-child(3), .comp-table thead th:nth-child(4),
+  .comp-table td.col-loc, .comp-table td.col-type { display: none; }
+  .col-name-meta { display: block; margin-top: 2px; font-size: 12px; font-weight: var(--fw-regular); color: var(--color-text-secondary); text-wrap: pretty; }
+}
+.comp-table tr.detail-row td { padding: 0; border-bottom: 1px solid var(--color-border); }
+.detail-row-inner {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-standard) var(--ease-cinematic);
+  background: var(--color-bg-section);
+}
+.comp-row.is-open + .detail-row .detail-row-inner { grid-template-rows: 1fr; }
+.detail-row-content {
+  overflow: hidden; min-height: 0; padding: 0 var(--space-3);
+  transition-property: padding-top, padding-bottom;
+  transition-duration: var(--duration-standard);
+  transition-timing-function: var(--ease-cinematic);
+}
+.comp-row.is-open + .detail-row .detail-row-content { padding: var(--space-3); }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-2) var(--space-3); font-size: var(--fs-caption); }
+.detail-grid dt { color: var(--color-text-secondary); }
+.detail-grid dt .dt-hint { font-weight: var(--fw-regular); font-size: 10px; opacity: .75; }
+.detail-grid dt .dt-hint::before { content: "\00b7 "; }
+.detail-grid dd { margin: 2px 0 0; }
+.detail-full { grid-column: 1 / -1; }
+.detail-full .strategy-block { margin-top: var(--space-1); padding-top: var(--space-1); border-top: 1px dashed var(--color-border); }
+
+.table-empty { padding: var(--space-6) var(--space-3); text-align: center; color: var(--color-text-secondary); }
+.table-empty p:first-child { color: var(--color-text-primary); font-weight: var(--fw-medium); margin-bottom: 6px; }
+.table-empty button {
+  margin-top: var(--space-2); font-family: inherit; font-size: var(--fs-caption); font-weight: var(--fw-medium);
+  color: var(--color-bg); background: var(--color-text-primary); border: none; border-radius: var(--radius-pill);
+  padding: 9px 18px; cursor: pointer; transition: transform var(--duration-hover) var(--ease-cinematic);
+}
+.table-empty button:active { transform: scale(0.96); }
+
+.pg-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-3) var(--side-padding-desktop) var(--space-5);
+  max-width: var(--site-max-width);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Live job postings, per company (see companies.js: jobsSectionHtml). No
+   accounts, no review gate: this is a shared, always-open panel, so it's kept
+   visually quieter than the research fields above it. */
+.jobs-section {
+  grid-column: 1 / -1;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+.jobs-section-head {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+.jobs-list { list-style: none; margin: 0 0 var(--space-2); padding: 0; }
+.jobs-item {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--color-border);
+  display: flex;
+}
+.jobs-item:last-child { border-bottom: none; }
+.jobs-item-main { display: flex; flex-direction: column; gap: 2px; }
+.jobs-item-role {
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+a.jobs-item-role:hover { text-decoration: underline; }
+.jobs-item-meta { font-size: var(--fs-caption); color: var(--color-text-secondary); }
+.jobs-empty { margin: 0 0 var(--space-2); font-size: var(--fs-caption); }
+
+.jobs-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.jobs-input {
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-bg-section);
+  color: var(--color-text-primary);
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.jobs-input.jobs-name { flex: 0 1 140px; }
+.jobs-input:focus { outline: none; border-color: var(--color-text-primary); }
+.jobs-add-btn {
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--color-bg);
+  background: var(--color-text-primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 9px 18px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: transform var(--duration-hover) var(--ease-cinematic);
+}
+.jobs-add-btn:active { transform: scale(0.96); }
+.jobs-add-btn:disabled { opacity: 0.6; cursor: default; }
+.jobs-add-status { font-size: var(--fs-caption); flex: 0 0 100%; }
+
+@media (max-width: 640px) {
+  .jobs-input, .jobs-input.jobs-name { flex: 1 1 100%; }
+  .jobs-add-btn { flex: 1 1 100%; }
+}
+
+/* ---- "Where else to look": flat, site-wide list of external job sources
+   (companies.js: SOURCES_SEED / renderSources / initSources). A calmer,
+   more spaced-out section than the dense table above it, since this is
+   meant to be skimmed once, not filtered. */
+.sources-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.sources-heading { font-size: var(--fs-section); margin: 0 0 var(--space-1); }
+.sources-sub { margin: 0 0 var(--space-3); max-width: 60ch; }
+.sources-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+.source-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.source-item:first-child { padding-top: 0; }
+.source-item-name {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+.source-item-name:hover { text-decoration: underline; }
+.source-item-note { font-size: var(--fs-caption); color: var(--color-text-secondary); }
+.source-item-meta { font-size: 11px; color: var(--color-text-secondary); opacity: 0.8; }
+
+.sources-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--color-bg-section);
+  border-radius: var(--radius-image);
+}
+.sources-add-form .jobs-input { flex: 1 1 200px; }
+.sources-add-form .source-by { flex: 0 1 160px; }
+
+@media (max-width: 640px) {
+  .sources-add-form .jobs-input,
+  .sources-add-form .source-by,
+  .sources-add-form .jobs-add-btn {
+    flex: 1 1 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip { animation: none !important; }
+  .facet.is-open .facet-panel, .facet.is-closing .facet-panel { animation: none !important; }
+  .tier-toggle, .facet-btn, .clear-filters-btn, .chip-remove,
+  .row-chevron, .comp-table thead th .sort-arrow, .table-empty button,
+  .detail-row-inner, .detail-row-content, .filter-bar input[type="search"],
+  .facet-btn-caret, .facet-option, .facet-panel-actions button {
+    transition: none !important;
+  }
+  .tier-toggle:active, .facet-btn:active, .clear-filters-btn:active,
+  .chip-remove:active, .table-empty button:active {
+    transform: none !important;
+  }
+  * { scroll-behavior: auto !important; }
+}
