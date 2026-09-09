@@ -7,11 +7,16 @@ import { getStore } from "@netlify/blobs";
 //
 // Storage shape: one Netlify Blobs store ("company-jobs"), one key per
 // company id, value = JSON array of postings for that company:
-//   [{ id, role, link, postedBy, postedAt }, ...]
+//   [{ id, role, type, location, employerDate, link, postedBy, postedAt }, ...]
+// type is "Internship" or "Full-time" (or "" if not given — older postings
+// predate this field). location is free text, e.g. "Torrance, United States".
+// employerDate is the date the employer's own listing says it was posted
+// (yyyy-mm-dd, optional — most postings won't have this), distinct from
+// postedAt, which is when it was added to this page.
 //
 // GET  /api/jobs                     -> { companies: { [companyId]: [...] } }  (everything, for the page's initial load)
 // GET  /api/jobs?companyId=eu-1      -> [...]  (postings for just that company)
-// POST /api/jobs  { companyId, role, link, postedBy }  -> creates a posting, returns it
+// POST /api/jobs  { companyId, role, type, location, employerDate, link, postedBy }  -> creates a posting, returns it
 // DELETE /api/jobs  { companyId, id }  -> removes a single posting (lets someone undo their own mistaken entry)
 
 function json(data, status = 200) {
@@ -57,6 +62,9 @@ export default async (req) => {
     }
     const companyId = (body.companyId || "").trim();
     const role = (body.role || "").trim();
+    const type = (body.type || "").trim();
+    const location = (body.location || "").trim();
+    const employerDate = (body.employerDate || "").trim();
     const link = (body.link || "").trim();
     const postedBy = (body.postedBy || "").trim();
 
@@ -64,12 +72,18 @@ export default async (req) => {
     if (!role) return badRequest("role is required");
     if (!postedBy) return badRequest("your name is required");
     if (role.length > 200) return badRequest("role is too long");
+    if (type && type !== "Internship" && type !== "Full-time") return badRequest("type must be Internship or Full-time");
+    if (location.length > 120) return badRequest("location is too long");
+    if (employerDate && !/^\d{4}-\d{2}-\d{2}$/.test(employerDate)) return badRequest("employerDate must be yyyy-mm-dd");
     if (link.length > 500) return badRequest("link is too long");
     if (postedBy.length > 80) return badRequest("name is too long");
 
     const posting = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       role,
+      type,
+      location,
+      employerDate,
       link,
       postedBy,
       postedAt: new Date().toISOString(),

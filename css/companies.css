@@ -424,6 +424,264 @@ a.jobs-item-role:hover { text-decoration: underline; }
 .jobs-item-meta { font-size: var(--fs-caption); color: var(--color-text-secondary); }
 .jobs-empty { margin: 0 0 var(--space-2); font-size: var(--fs-caption); }
 
+/* Type/location pills on a posting: same quiet pill treatment used
+   elsewhere on the page (community-tag, feed-item-company), no new color. */
+.job-type-tag,
+.job-location-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+  margin-right: 6px;
+  line-height: 1.6;
+}
+.job-type-tag { color: var(--color-text-primary); font-weight: var(--fw-medium); }
+.job-date-tag { font-style: italic; }
+
+/* Counts/filter bar above the Job Postings feed */
+.jobs-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--space-3); }
+.job-filter-pill {
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  min-height: 32px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
+}
+.job-filter-pill:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
+.job-filter-pill:active { transform: scale(0.97); }
+.job-filter-pill.is-active { color: #fff; background: var(--color-text-primary); border-color: var(--color-text-primary); }
+.job-filter-pill-count { font-variant-numeric: tabular-nums; }
+.job-filter-pill.is-active .job-filter-pill-count { opacity: 0.85; }
+
+/* ---- Folded in from the tab-redesign preview pass ---- */
+.preview-flag {
+  margin-left: 10px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8a5a00;
+  background: #fff3d6;
+  border: 1px solid #f0d9a0;
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  vertical-align: middle;
+}
+
+.view-tabs {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  margin: var(--space-4) 0 var(--space-5);
+  background: var(--color-bg-section);
+  border-radius: var(--radius-image);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.view-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-small);
+  padding: 15px 20px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.view-tab:hover:not(.is-active) { color: var(--color-text-primary); }
+.view-tab.is-active { color: var(--color-text-primary); font-weight: var(--fw-semibold); }
+.view-tab:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 3px; }
+.view-tab:active { transform: scale(0.99); transition: transform 0.1s ease-out; }
+.view-tab-count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
+}
+.view-tab.is-active .view-tab-count { color: var(--color-text-primary); border-color: var(--color-border); background: var(--color-bg); }
+.view-tab-indicator {
+  position: absolute;
+  z-index: 0;
+  top: 6px; bottom: 6px; left: 6px;
+  width: 0;
+  background: var(--color-bg);
+  border-radius: var(--radius-small);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 640px) {
+  .view-tab { font-size: var(--fs-caption); padding: 12px 10px; gap: 6px; }
+}
+
+.view-panel { animation: viewPanelIn 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes viewPanelIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .view-panel { animation: none; }
+  .view-tab-indicator { transition: none; }
+}
+
+.panel-first-section { margin-top: 0; padding-top: 0; border-top: none; }
+#panelJobs .sources-section { margin-top: var(--space-4); }
+.site-footer .footer-top { justify-content: flex-end; }
+.pg-header { padding-top: var(--space-5); }
+
+.panel-top-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.panel-top-note { margin: 0; }
+.add-toplevel-btn {
+  flex: 0 0 auto;
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: #fff;
+  background: var(--color-text-primary);
+  border: 1px solid var(--color-text-primary);
+  border-radius: var(--radius-pill);
+  padding: 10px 18px;
+  min-height: 40px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, transform 0.12s ease-out;
+}
+.add-toplevel-btn:hover { background: #2b2b2b; }
+.add-toplevel-btn:active { transform: scale(0.97); }
+.add-toplevel-btn:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 3px; }
+
+.add-studio-form {
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-image);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.add-studio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.add-studio-note { width: 100%; resize: vertical; margin-bottom: 8px; }
+.add-studio-actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.add-studio-hint { font-size: 12.5px; max-width: 52ch; }
+
+.col-name .remove-control { display: inline-flex; vertical-align: middle; margin-left: 6px; }
+.col-name .remove-confirm { vertical-align: middle; }
+
+.community-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.add-posting-section {
+  margin: var(--space-5) 0 var(--space-4);
+  padding: var(--space-3);
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-image);
+}
+.add-posting-form { margin-bottom: 8px; }
+.recent-postings-list { max-height: none; }
+
+.comps-list { list-style: none; margin: 0 0 var(--space-2); padding: 0; }
+.comp-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  margin: 0 calc(var(--space-2) * -1);
+  border-radius: var(--radius-small);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.15s ease-out;
+}
+.comp-card:hover { background: var(--color-bg-section); }
+.comp-card:last-child { border-bottom: none; }
+.comp-card-deadline {
+  flex: 0 0 84px;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: var(--radius-small);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+.comp-card-deadline .dl-num { display: block; font-size: 20px; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; line-height: 1; }
+.comp-card-deadline .dl-label { display: block; font-size: 10.5px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 3px; }
+.comp-card-deadline.is-open { background: rgba(46, 204, 113, 0.12); border-color: transparent; }
+.comp-card-deadline.is-open .dl-num { color: #1f8b4d; }
+.comp-card-deadline.is-soon { background: #fff3d6; border-color: transparent; }
+.comp-card-deadline.is-soon .dl-num { color: #8a5a00; }
+.comp-card-deadline.is-closed { opacity: 0.55; }
+.comp-card-main { flex: 1 1 auto; min-width: 0; }
+.comp-card-host { font-size: var(--fs-caption); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
+.comp-card-name { font-size: var(--fs-body); font-weight: var(--fw-medium); margin: 2px 0; text-wrap: pretty; }
+.comp-card-name a { color: inherit; text-decoration: none; }
+.comp-card-name a:hover { text-decoration: underline; }
+.comp-card-meta { font-size: var(--fs-caption); color: var(--color-text-secondary); }
+
+/* Skeleton rows shown while the feed's first fetch is in flight, sized to
+   match a real .jobs-item so nothing shifts once the real content swaps
+   in. A slow shimmer rather than a flat pulse, since a pulse on several
+   stacked bars reads as more anxious than a single light sweep. */
+.jobs-skeleton { pointer-events: none; }
+.skeleton-bar {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--color-bg-section);
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-bar-title { width: 42%; height: 15px; margin-bottom: 7px; }
+.skeleton-bar-meta { width: 28%; }
+.skeleton-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: translateX(-100%);
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+@keyframes skeletonShimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skeleton-bar::after { animation: none; } }
+
 /* One-click remove: a real 40x40 hit area even though the visible glyph is
    small, so it's easy to tap without expanding the row's actual footprint.
    Responds on press (:active) rather than waiting for the click to resolve,
@@ -445,6 +703,38 @@ a.jobs-item-role:hover { text-decoration: underline; }
 .jobs-item-remove:hover { background: var(--color-bg); color: var(--color-text-primary); }
 .jobs-item-remove:active { transform: scale(0.88); }
 .jobs-item-remove:disabled { opacity: 0.4; cursor: default; }
+
+/* Remove-with-confirmation: since anyone can remove anything with no login,
+   a single accidental tap shouldn't be able to delete something someone
+   else added. The × arms a small inline "Remove this? Yes / No" prompt
+   instead of removing right away; it reverts on its own after a few
+   seconds, or on a click anywhere else, so nothing gets stuck asking. */
+.remove-control { flex: 0 0 auto; display: flex; align-items: center; }
+.remove-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  animation: removeConfirmIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes removeConfirmIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: translateY(0); } }
+.remove-confirm-yes, .remove-confirm-no {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: var(--fw-medium);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, transform 0.12s ease-out;
+}
+.remove-confirm-yes { background: var(--color-text-primary); color: #fff; border: 1px solid var(--color-text-primary); }
+.remove-confirm-yes:hover { background: #2b2b2b; }
+.remove-confirm-no { background: transparent; color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+.remove-confirm-no:hover { background: var(--color-bg-section); color: var(--color-text-primary); }
+.remove-confirm-yes:active, .remove-confirm-no:active { transform: scale(0.95); }
+@media (prefers-reduced-motion: reduce) { .remove-confirm { animation: none; } }
 
 /* ---- Latest job postings: a feed pulled from every company, shown before
    the company table so the freshest activity is the first thing anyone
@@ -544,12 +834,13 @@ a.jobs-item-role:hover { text-decoration: underline; }
 .sources-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
 .source-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: var(--space-2);
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-border);
 }
 .source-item:first-child { padding-top: 0; }
+.source-item-main { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
 .source-item-name {
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
@@ -559,6 +850,9 @@ a.jobs-item-role:hover { text-decoration: underline; }
 .source-item-name:hover { text-decoration: underline; }
 .source-item-note { font-size: var(--fs-caption); color: var(--color-text-secondary); }
 .source-item-meta { font-size: 11px; color: var(--color-text-secondary); opacity: 0.8; }
+/* Only live/community-added sources carry an id and get a remove control;
+   the researched seed list (Car Design News, FromFolio, etc.) has none. */
+.source-item .remove-control { margin-top: 2px; }
 
 .sources-add-form {
   display: flex;

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Studios & Openings — Yash Yogesh</title>
-<meta name="description" content="Every transportation design studio from the research, one table, with live job postings and competitions from the batch.">
+<meta name="description" content="Every transportation design studio from the research, plus live job postings, design competitions, and resources worth passing on.">
 <meta name="robots" content="noindex, nofollow, noarchive">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,70 +31,169 @@
   <div class="pg-shell">
     <p class="eyebrow">Compiled Aug 2026 · shared for reference</p>
     <h1>Studios & Openings</h1>
-    <p class="sub">Every transportation design studio from the research, one table. Add a job posting, a studio, or a competition if you spot one, no account needed.</p>
+    <p class="sub">Every transportation design studio from the research, plus live job postings, design competitions, and resources worth passing on.</p>
   </div>
 </header>
 
 <main class="pg-shell">
-  <section class="recent-postings reveal" id="recentPostings">
-    <div class="recent-postings-head">
-      <h2 class="recent-postings-heading">Latest job postings</h2>
-      <span class="recent-postings-updated" id="recentPostingsUpdated"></span>
-    </div>
-    <ul class="jobs-list recent-postings-list" id="recentPostingsList">
-      <li class="jobs-empty muted">Loading…</li>
-    </ul>
-  </section>
-
-  <div id="allView">
-    <div class="sticky-controls" id="stickyControls">
-      <div class="tier-toggle-row" id="tierToggleRow"></div>
-      <div class="filter-bar reveal">
-        <div class="filter-search">
-          <svg class="filter-search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          <input type="search" id="compSearch" placeholder="Search company name…">
-        </div>
-        <div class="facet-row" id="facetRow"></div>
-        <button type="button" class="clear-filters-btn" id="clearFiltersBtn" hidden>Clear filters</button>
-        <span class="filter-count" id="compCount"></span>
-      </div>
-    </div>
-    <div class="active-chips" id="activeChips"></div>
-    <div class="table-scroll">
-      <table class="comp-table" id="compTable">
-        <thead>
-          <tr>
-            <th data-sort="tier">Tier</th>
-            <th data-sort="name">Name</th>
-            <th data-sort="location">Location</th>
-            <th data-sort="type">Type</th>
-          </tr>
-        </thead>
-        <tbody id="compTableBody"></tbody>
-      </table>
-    </div>
-    <p class="table-note muted">Click a row, or focus it and press Enter, for full detail including momentum, confidence tags, and job postings.</p>
+  <div class="view-tabs" id="viewTabs" role="tablist">
+    <button type="button" class="view-tab is-active" data-view="studios" role="tab" aria-selected="true">
+      <span class="view-tab-label">Studios</span><span class="view-tab-count" id="tabCountStudios"></span>
+    </button>
+    <button type="button" class="view-tab" data-view="jobs" role="tab" aria-selected="false">
+      <span class="view-tab-label">Job Postings</span><span class="view-tab-count" id="tabCountJobs"></span>
+    </button>
+    <button type="button" class="view-tab" data-view="competitions" role="tab" aria-selected="false">
+      <span class="view-tab-label">Competitions</span><span class="view-tab-count" id="tabCountCompetitions"></span>
+    </button>
+    <button type="button" class="view-tab" data-view="resources" role="tab" aria-selected="false">
+      <span class="view-tab-label">Resources</span><span class="view-tab-count" id="tabCountResources"></span>
+    </button>
+    <span class="view-tab-indicator" id="viewTabIndicator" aria-hidden="true"></span>
   </div>
 
-  <section class="sources-section reveal">
-    <h2 class="sources-heading">Where else to look</h2>
-    <p class="sources-sub muted">Job boards, forums, an Instagram page someone finds, anywhere else worth checking. Add one below, it goes live right away, no account needed.</p>
-    <ul class="sources-list" id="sourcesList"></ul>
-    <form class="sources-add-form" id="sourceAddForm">
-      <input type="text" class="jobs-input source-name" placeholder="Name, e.g. Car Design News" maxlength="120" required>
-      <input type="url" class="jobs-input source-url" placeholder="Link" maxlength="500" required>
-      <input type="text" class="jobs-input source-note" placeholder="Why it's worth checking (optional)" maxlength="300">
-      <input type="text" class="jobs-input source-by" placeholder="Your name (optional)" maxlength="80">
-      <button type="submit" class="jobs-add-btn source-add-btn">Add source</button>
-      <span class="jobs-add-status source-add-status muted" hidden></span>
+  <!-- ================= STUDIOS ================= -->
+  <div id="panelStudios" class="view-panel">
+    <div class="panel-top-row">
+      <p class="table-note muted panel-top-note">Click a row, or focus it and press Enter, for full detail including momentum, confidence tags, and job postings.</p>
+      <button type="button" class="add-toplevel-btn" id="addStudioBtn">+ Add a studio</button>
+    </div>
+
+    <form class="add-studio-form" id="addStudioForm" hidden>
+      <div class="add-studio-grid">
+        <input type="text" class="jobs-input" id="newStudioName" placeholder="Studio name" maxlength="120" required>
+        <input type="text" class="jobs-input" id="newStudioLocation" placeholder="Location, e.g. Turin, Italy" maxlength="120">
+        <input type="text" class="jobs-input" id="newStudioType" placeholder="Type, e.g. OEM, Consultancy" maxlength="80">
+        <input type="text" class="jobs-input" id="newStudioBy" placeholder="Your name (optional)" maxlength="80">
+      </div>
+      <textarea class="jobs-input add-studio-note" id="newStudioNote" placeholder="Anything you know about them (optional)" maxlength="400" rows="2"></textarea>
+      <div class="add-studio-actions">
+        <button type="submit" class="jobs-add-btn">Add studio</button>
+        <span class="muted add-studio-hint">Goes live right away, tagged "added by the community" so it's never confused with the researched entries.</span>
+      </div>
     </form>
-  </section>
+
+    <div id="allView">
+      <div class="sticky-controls" id="stickyControls">
+        <div class="tier-toggle-row" id="tierToggleRow"></div>
+        <div class="filter-bar reveal">
+          <div class="filter-search">
+            <svg class="filter-search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <input type="search" id="compSearch" placeholder="Search company name…">
+          </div>
+          <div class="facet-row" id="facetRow"></div>
+          <button type="button" class="clear-filters-btn" id="clearFiltersBtn" hidden>Clear filters</button>
+          <span class="filter-count" id="compCount"></span>
+        </div>
+      </div>
+      <div class="active-chips" id="activeChips"></div>
+      <div class="table-scroll">
+        <table class="comp-table" id="compTable">
+          <thead>
+            <tr>
+              <th data-sort="tier">Tier</th>
+              <th data-sort="name">Name</th>
+              <th data-sort="location">Location</th>
+              <th data-sort="type">Type</th>
+            </tr>
+          </thead>
+          <tbody id="compTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JOB POSTINGS ================= -->
+  <div id="panelJobs" class="view-panel" hidden>
+    <section class="recent-postings reveal panel-first-section" id="recentPostings">
+      <div class="recent-postings-head">
+        <h2 class="recent-postings-heading">All postings</h2>
+        <span class="recent-postings-updated" id="recentPostingsUpdated"></span>
+      </div>
+      <div class="jobs-filter-bar" id="jobsFilterBar"></div>
+      <ul class="jobs-list recent-postings-list" id="recentPostingsList">
+        <li class="jobs-item jobs-skeleton" aria-hidden="true"><div class="jobs-item-main"><span class="skeleton-bar skeleton-bar-title"></span><span class="skeleton-bar skeleton-bar-meta"></span></div></li>
+        <li class="jobs-item jobs-skeleton" aria-hidden="true"><div class="jobs-item-main"><span class="skeleton-bar skeleton-bar-title"></span><span class="skeleton-bar skeleton-bar-meta"></span></div></li>
+        <li class="jobs-item jobs-skeleton" aria-hidden="true"><div class="jobs-item-main"><span class="skeleton-bar skeleton-bar-title"></span><span class="skeleton-bar skeleton-bar-meta"></span></div></li>
+      </ul>
+    </section>
+
+    <section class="add-posting-section">
+      <h3 class="jobs-section-head">Add a posting</h3>
+      <form class="add-posting-form" id="topLevelJobForm">
+        <input type="text" class="jobs-input" id="topJobCompany" list="studioNameList" placeholder="Studio — start typing to pick one" maxlength="120" required>
+        <datalist id="studioNameList"></datalist>
+        <input type="text" class="jobs-input" id="topJobRole" placeholder="Role, e.g. Junior Exterior Designer" maxlength="200" required>
+        <select class="jobs-input" id="topJobType"><option value="">Type (optional)</option><option value="Internship">Internship</option><option value="Full-time">Full-time</option></select>
+        <input type="text" class="jobs-input" id="topJobLocation" placeholder="Location (optional)" maxlength="120">
+        <input type="date" class="jobs-input" id="topJobEmployerDate" title="Date the employer posted it (optional)">
+        <input type="url" class="jobs-input" id="topJobLink" placeholder="Link (optional)" maxlength="500">
+        <input type="text" class="jobs-input" id="topJobBy" placeholder="Your name" maxlength="80" required>
+        <button type="submit" class="jobs-add-btn">Add</button>
+        <span class="jobs-add-status muted" id="topJobStatus" hidden></span>
+      </form>
+      <p class="muted add-studio-hint">The studio has to already be in the list (researched or community-added). If it isn't yet, add it as a studio above first.</p>
+    </section>
+
+    <section class="sources-section reveal">
+      <h2 class="sources-heading">Where else to look</h2>
+      <p class="sources-sub muted">Job boards, forums, an Instagram page someone finds, anywhere else worth checking for openings. Add one below, it goes live right away, no account needed.</p>
+      <ul class="sources-list" id="sourcesList"></ul>
+      <form class="sources-add-form" id="sourceAddForm">
+        <input type="text" class="jobs-input source-name" placeholder="Name, e.g. Car Design News" maxlength="120" required>
+        <input type="url" class="jobs-input source-url" placeholder="Link" maxlength="500" required>
+        <input type="text" class="jobs-input source-note" placeholder="Why it's worth checking (optional)" maxlength="300">
+        <input type="text" class="jobs-input source-by" placeholder="Your name (optional)" maxlength="80">
+        <button type="submit" class="jobs-add-btn source-add-btn">Add source</button>
+        <span class="jobs-add-status source-add-status muted" hidden></span>
+      </form>
+    </section>
+  </div>
+
+  <!-- ================= COMPETITIONS ================= -->
+  <div id="panelCompetitions" class="view-panel" hidden>
+    <section class="comps-section panel-first-section">
+      <div class="recent-postings-head">
+        <h2 class="recent-postings-heading">Open competitions</h2>
+        <span class="recent-postings-updated">Soonest deadline first</span>
+      </div>
+      <ul class="comps-list" id="compsList"></ul>
+    </section>
+
+    <section class="add-posting-section">
+      <h3 class="jobs-section-head">Add a competition</h3>
+      <form class="add-posting-form" id="compAddForm">
+        <input type="text" class="jobs-input" id="compHost" placeholder="Host, e.g. BYD, SAIC Design" maxlength="120" required>
+        <input type="text" class="jobs-input" id="compName" placeholder="Competition name" maxlength="160" required>
+        <input type="date" class="jobs-input" id="compDeadline" placeholder="Deadline">
+        <input type="url" class="jobs-input" id="compLink" placeholder="Source link" maxlength="500" required>
+        <input type="text" class="jobs-input" id="compBy" placeholder="Your name (optional)" maxlength="80">
+        <button type="submit" class="jobs-add-btn">Add competition</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- ================= RESOURCES ================= -->
+  <div id="panelResources" class="view-panel" hidden>
+    <section class="sources-section reveal panel-first-section">
+      <h2 class="sources-heading">Resources</h2>
+      <p class="sources-sub muted">Anything worth passing on that isn't a job listing itself: a portfolio tip, a piece of software, a good YouTube channel, an article. Add it below, it goes live right away, no account needed.</p>
+      <ul class="sources-list" id="resourcesList"></ul>
+      <form class="sources-add-form" id="resourceAddForm">
+        <input type="text" class="jobs-input source-name" placeholder="Name, e.g. a tool or channel" maxlength="120" required>
+        <input type="url" class="jobs-input source-url" placeholder="Link" maxlength="500" required>
+        <input type="text" class="jobs-input source-note" placeholder="Why it's worth checking (optional)" maxlength="300">
+        <input type="text" class="jobs-input source-by" placeholder="Your name (optional)" maxlength="80">
+        <button type="submit" class="jobs-add-btn source-add-btn">Add resource</button>
+        <span class="jobs-add-status source-add-status muted" hidden></span>
+      </form>
+    </section>
+  </div>
 </main>
 
 <footer class="site-footer">
   <div class="container footer-inner">
     <div class="footer-top">
-      <div class="footer-statement">Batchmates: add what you find, it goes live right away.</div>
       <div class="footer-links">
         <span class="footer-link" id="footerMeta"></span>
       </div>
@@ -110,5 +209,6 @@
 <script src="js/scroll-reveal.js"></script>
 <script src="js/page-transition.js"></script>
 <script src="js/companies.js"></script>
+<script src="js/companies-tabs.js"></script>
 </body>
 </html>

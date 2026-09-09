@@ -93,16 +93,43 @@
     });
   }
 
+  function removeControlHtml(kind, label) {
+    return (
+      '<span class="remove-control" data-remove-kind="' + esc(kind) + '" data-remove-label="' + esc(label) + '">' +
+        '<button type="button" class="jobs-item-remove remove-trigger" aria-label="Remove ' + esc(label) + '" title="Remove">×</button>' +
+      "</span>"
+    );
+  }
+
+  function fmtEmployerDate(iso) {
+    if (!iso) return "";
+    try {
+      var d = new Date(iso + "T00:00:00");
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function jobTagsHtml(p) {
+    var tags = "";
+    if (p.type) tags += '<span class="job-type-tag">' + esc(p.type) + "</span>";
+    if (p.location) tags += '<span class="job-location-tag">' + esc(p.location) + "</span>";
+    if (p.employerDate) tags += '<span class="job-date-tag" title="Posted by the employer">Posted ' + esc(fmtEmployerDate(p.employerDate)) + "</span>";
+    return tags;
+  }
+
   function jobItemHtml(p, companyId) {
     return (
-      '<li class="jobs-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(companyId) + '">' +
+      '<li class="jobs-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(companyId) + '" data-job-type="' + esc(p.type || "") + '">' +
         '<div class="jobs-item-main">' +
           (p.link
             ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
             : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
+          jobTagsHtml(p) +
           '<span class="jobs-item-meta">posted by ' + esc(p.postedBy) + " · " + esc(fmtPostedAt(p.postedAt)) + "</span>" +
         "</div>" +
-        '<button type="button" class="jobs-item-remove" aria-label="Remove this posting" title="Remove">×</button>' +
+        removeControlHtml("job", "this posting") +
       "</li>"
     );
   }
@@ -119,6 +146,9 @@
         listHtml +
         '<form class="jobs-add-form" data-company-id="' + esc(companyId) + '">' +
           '<input type="text" class="jobs-input jobs-role" placeholder="Role, e.g. Junior Exterior Designer" maxlength="200" required>' +
+          '<select class="jobs-input jobs-type"><option value="">Type (optional)</option><option value="Internship">Internship</option><option value="Full-time">Full-time</option></select>' +
+          '<input type="text" class="jobs-input jobs-location" placeholder="Location (optional)" maxlength="120">' +
+          '<input type="date" class="jobs-input jobs-employer-date" title="Date the employer posted it (optional)">' +
           '<input type="url" class="jobs-input jobs-link" placeholder="Link (optional)" maxlength="500">' +
           '<input type="text" class="jobs-input jobs-name" placeholder="Your name" maxlength="80" required>' +
           '<button type="submit" class="jobs-add-btn">Add</button>' +
@@ -145,30 +175,78 @@
   function feedItemHtml(entry) {
     var p = entry.posting, cid = entry.companyId;
     return (
-      '<li class="jobs-item feed-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(cid) + '">' +
+      '<li class="jobs-item feed-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(cid) + '" data-job-type="' + esc(p.type || "") + '">' +
         '<div class="jobs-item-main">' +
           (p.link
             ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
             : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
+          jobTagsHtml(p) +
           '<button type="button" class="feed-item-company" data-goto="' + esc(cid) + '">at ' + esc(companyName(cid)) + "</button>" +
           '<span class="jobs-item-meta">posted by ' + esc(p.postedBy) + " · " + esc(fmtPostedAt(p.postedAt)) + "</span>" +
         "</div>" +
-        '<button type="button" class="jobs-item-remove" aria-label="Remove this posting" title="Remove">×</button>' +
+        removeControlHtml("job", "this posting") +
       "</li>"
     );
   }
+
+  var jobTypeFilter = "";
+
+  function renderJobFilterBar() {
+    var bar = document.getElementById("jobsFilterBar");
+    if (!bar) return;
+    var all = allPostingsFlat();
+    var counts = { Internship: 0, "Full-time": 0, Other: 0 };
+    all.forEach(function (entry) {
+      var t = entry.posting.type;
+      if (t === "Internship" || t === "Full-time") counts[t]++;
+      else counts.Other++;
+    });
+    var pills = [
+      { key: "", label: "All", count: all.length },
+      { key: "Internship", label: "Internship", count: counts.Internship },
+      { key: "Full-time", label: "Full-time", count: counts["Full-time"] },
+    ];
+    if (counts.Other) pills.push({ key: "Other", label: "Other", count: counts.Other });
+    bar.innerHTML = pills.map(function (p) {
+      var active = jobTypeFilter === p.key;
+      return (
+        '<button type="button" class="job-filter-pill' + (active ? " is-active" : "") + '" data-job-filter="' + esc(p.key) + '">' +
+          esc(p.label) + ' <span class="job-filter-pill-count">' + p.count + "</span>" +
+        "</button>"
+      );
+    }).join("");
+  }
+  window.refreshJobFilterBar = renderJobFilterBar;
+
+  document.addEventListener("click", function (e) {
+    var pill = e.target.closest ? e.target.closest(".job-filter-pill") : null;
+    if (!pill) return;
+    jobTypeFilter = pill.dataset.jobFilter || "";
+    renderJobFilterBar();
+    renderRecentPostings();
+  });
 
   function renderRecentPostings() {
     var list = document.getElementById("recentPostingsList");
     var updatedEl = document.getElementById("recentPostingsUpdated");
     if (!list) return;
+    renderJobFilterBar();
     var all = allPostingsFlat();
-    if (!all.length) {
-      list.innerHTML = '<li class="jobs-empty muted">No postings yet anywhere. Open any company below and be the first to add one.</li>';
+    var filtered = !jobTypeFilter
+      ? all
+      : all.filter(function (entry) {
+          var t = entry.posting.type;
+          if (jobTypeFilter === "Other") return t !== "Internship" && t !== "Full-time";
+          return t === jobTypeFilter;
+        });
+    if (!filtered.length) {
+      list.innerHTML = all.length
+        ? '<li class="jobs-empty muted">No ' + esc(jobTypeFilter.toLowerCase()) + ' postings right now.</li>'
+        : '<li class="jobs-empty muted">Nothing posted yet. Be the first, add one below.</li>';
       if (updatedEl) updatedEl.textContent = "";
       return;
     }
-    list.innerHTML = all.slice(0, 12).map(feedItemHtml).join("");
+    list.innerHTML = filtered.slice(0, 12).map(feedItemHtml).join("");
     if (updatedEl) updatedEl.textContent = "Last updated " + fmtPostedAt(all[0].posting.postedAt);
   }
 
@@ -194,6 +272,12 @@
     e.preventDefault();
     var companyId = form.dataset.companyId;
     var role = form.querySelector(".jobs-role").value.trim();
+    var typeEl = form.querySelector(".jobs-type");
+    var type = typeEl ? typeEl.value.trim() : "";
+    var locationEl = form.querySelector(".jobs-location");
+    var location = locationEl ? locationEl.value.trim() : "";
+    var employerDateEl = form.querySelector(".jobs-employer-date");
+    var employerDate = employerDateEl ? employerDateEl.value.trim() : "";
     var link = form.querySelector(".jobs-link").value.trim();
     var postedBy = form.querySelector(".jobs-name").value.trim();
     var statusEl = form.querySelector(".jobs-add-status");
@@ -207,7 +291,7 @@
     fetch("/api/jobs", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ companyId: companyId, role: role, link: link, postedBy: postedBy }),
+      body: JSON.stringify({ companyId: companyId, role: role, type: type, location: location, employerDate: employerDate, link: link, postedBy: postedBy }),
     })
       .then(function (r) { if (!r.ok) throw new Error("failed"); return r.json(); })
       .then(function (posting) {
@@ -237,34 +321,116 @@
       });
   });
 
-  document.addEventListener("click", function (e) {
-    var removeBtn = e.target.closest ? e.target.closest(".jobs-item-remove") : null;
-    if (removeBtn) {
-      var item = removeBtn.closest(".jobs-item");
-      if (!item) return;
-      var companyId = item.dataset.companyId, jobId = item.dataset.jobId;
-      if (!companyId || !jobId) return;
-      removeBtn.disabled = true;
-      var duplicates = Array.prototype.slice.call(document.querySelectorAll('.jobs-item[data-job-id="' + jobId + '"]'));
-      var pending = duplicates.length;
-      var afterAllGone = function () {
-        var section = document.querySelector('.jobs-section[data-company-id="' + companyId + '"]');
-        if (section && !section.querySelector(".jobs-list li")) {
-          var list = section.querySelector(".jobs-list");
-          if (list) {
-            var empty = document.createElement("p");
-            empty.className = "jobs-empty muted";
-            empty.textContent = "No postings yet for this one. Be the first if you see something open.";
-            list.parentNode.insertBefore(empty, list);
-            list.remove();
-          }
+  /* ---- Remove-with-confirmation: shared by job postings and sources (and,
+     visually, by anything else that grows a .remove-control later). Anyone
+     can remove anything with no login, so a single misclick shouldn't be
+     able to delete something someone else added — the × arms a small
+     inline "Remove? Yes / No" prompt instead of acting immediately. It
+     reverts on its own after a few seconds, or on a click anywhere else. */
+  function armRemoveConfirm(control) {
+    if (!control || control.classList.contains("is-confirming")) return;
+    document.querySelectorAll(".remove-control.is-confirming").forEach(function (c) {
+      if (c !== control) revertRemoveControl(c);
+    });
+    control.dataset.originalHtml = control.innerHTML;
+    control.classList.add("is-confirming");
+    var label = control.dataset.removeLabel || "this";
+    control.innerHTML =
+      '<span class="remove-confirm">Remove ' + esc(label) + "?" +
+        '<button type="button" class="remove-confirm-yes">Yes</button>' +
+        '<button type="button" class="remove-confirm-no">No</button>' +
+      "</span>";
+    clearTimeout(control._revertTimer);
+    control._revertTimer = setTimeout(function () { revertRemoveControl(control); }, 6000);
+  }
+  function revertRemoveControl(control) {
+    if (!control) return;
+    clearTimeout(control._revertTimer);
+    control.classList.remove("is-confirming");
+    if (control.dataset.originalHtml) control.innerHTML = control.dataset.originalHtml;
+  }
+
+  function performJobRemoval(item) {
+    var companyId = item.dataset.companyId, jobId = item.dataset.jobId;
+    if (!companyId || !jobId) return;
+    var duplicates = Array.prototype.slice.call(document.querySelectorAll('.jobs-item[data-job-id="' + jobId + '"]'));
+    var pending = duplicates.length;
+    var afterAllGone = function () {
+      var section = document.querySelector('.jobs-section[data-company-id="' + companyId + '"]');
+      if (section && !section.querySelector(".jobs-list li")) {
+        var list = section.querySelector(".jobs-list");
+        if (list) {
+          var empty = document.createElement("p");
+          empty.className = "jobs-empty muted";
+          empty.textContent = "No postings yet for this one. Be the first if you see something open.";
+          list.parentNode.insertBefore(empty, list);
+          list.remove();
         }
-        renderRecentPostings();
-      };
-      duplicates.forEach(function (dup) {
-        animateItemOut(dup, function () { pending--; if (pending <= 0) afterAllGone(); });
-      });
-      removeJobEverywhere(companyId, jobId);
+      }
+      renderRecentPostings();
+    };
+    duplicates.forEach(function (dup) {
+      animateItemOut(dup, function () { pending--; if (pending <= 0) afterAllGone(); });
+    });
+    removeJobEverywhere(companyId, jobId);
+  }
+
+  function performSourceRemoval(sourceEl) {
+    var id = sourceEl.dataset.sourceId;
+    if (!id) return;
+    animateItemOut(sourceEl, function () {
+      LIVE_SOURCES = LIVE_SOURCES.filter(function (s) { return s.id !== id; });
+    });
+    fetch("/api/sources", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id: id }),
+    }).catch(function () { /* best-effort: a refresh will show the true state if this failed */ });
+  }
+
+  /* Pluggable by kind, so other sections (Competitions, crowd-added
+     Studios, a future Resources tab) can register their own removal
+     without this file needing to know about them. */
+  var removeHandlers = {
+    job: function (control) {
+      var item = control.closest(".jobs-item");
+      if (item) performJobRemoval(item);
+    },
+    source: function (control) {
+      var el = control.closest(".source-item");
+      if (el) performSourceRemoval(el);
+    },
+  };
+  window.registerRemoveHandler = function (kind, fn) { removeHandlers[kind] = fn; };
+
+  /* Lets other scripts (companies-tabs.js's top-level "Add a posting" form)
+     register a posting that just went live, without needing to reach into
+     this closure's private JOBS/renderRecentPostings. */
+  window.addJobPostingLocal = function (companyId, posting) {
+    if (!JOBS[companyId]) JOBS[companyId] = [];
+    JOBS[companyId].unshift(posting);
+    renderRecentPostings();
+  };
+
+  document.addEventListener("click", function (e) {
+    var trigger = e.target.closest ? e.target.closest(".remove-trigger") : null;
+    if (trigger) {
+      armRemoveConfirm(trigger.closest(".remove-control"));
+      return;
+    }
+
+    var yesBtn = e.target.closest ? e.target.closest(".remove-confirm-yes") : null;
+    if (yesBtn) {
+      var control = yesBtn.closest(".remove-control");
+      if (!control) return;
+      var handler = removeHandlers[control.dataset.removeKind];
+      if (handler) handler(control);
+      return;
+    }
+
+    var noBtn = e.target.closest ? e.target.closest(".remove-confirm-no") : null;
+    if (noBtn) {
+      revertRemoveControl(noBtn.closest(".remove-control"));
       return;
     }
 
@@ -276,7 +442,13 @@
       if (!row) return;
       if (!row.classList.contains("is-open")) row.click();
       row.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
+
+    // click anywhere else closes any open "Remove?" prompt
+    document.querySelectorAll(".remove-control.is-confirming").forEach(function (c) {
+      if (!c.contains(e.target)) revertRemoveControl(c);
+    });
   });
 
   /* ---- "Where else to look": a flat, site-wide list of job boards, design
@@ -313,11 +485,17 @@
   function sourceItemHtml(s) {
     var byline = s.addedBy ? "added by " + esc(s.addedBy) : "added anonymously";
     var when = s.addedAt ? " · " + esc(fmtAddedAt(s.addedAt)) : "";
+    // Only entries that came through the live form carry an id — the
+    // researched seed list (Car Design News, FromFolio, etc.) doesn't, so
+    // it never grows a remove control.
     return (
-      '<li class="source-item">' +
-        '<a class="source-item-name" href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.name) + "</a>" +
-        (s.note ? '<span class="source-item-note">' + esc(s.note) + "</span>" : "") +
-        (s.addedAt ? '<span class="source-item-meta">' + byline + when + "</span>" : "") +
+      '<li class="source-item"' + (s.id ? ' data-source-id="' + esc(s.id) + '"' : "") + ">" +
+        '<div class="source-item-main">' +
+          '<a class="source-item-name" href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.name) + "</a>" +
+          (s.note ? '<span class="source-item-note">' + esc(s.note) + "</span>" : "") +
+          (s.addedAt ? '<span class="source-item-meta">' + byline + when + "</span>" : "") +
+        "</div>" +
+        (s.id ? removeControlHtml("source", "this resource") : "") +
       "</li>"
     );
   }
