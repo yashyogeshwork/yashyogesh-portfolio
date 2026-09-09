@@ -291,7 +291,9 @@
           "</div>" +
           '<div class="comp-card-main">' +
             '<div class="comp-card-host">' + esc(c.host) + "</div>" +
-            '<div class="comp-card-name"><a href="' + esc(c.link) + '" target="_blank" rel="noopener noreferrer">' + esc(c.name) + "</a></div>" +
+            '<div class="comp-card-name">' + (c.link
+              ? '<a href="' + esc(c.link) + '" target="_blank" rel="noopener noreferrer">' + esc(c.name) + "</a>"
+              : esc(c.name)) + "</div>" +
             '<div class="comp-card-meta">added by ' + esc(c.addedBy || "anonymous") + "</div>" +
           "</div>" +
           removeControlHtml("competition", "this competition") +
@@ -323,7 +325,7 @@
       var deadline = document.getElementById("compDeadline").value;
       var link = document.getElementById("compLink").value.trim();
       var by = document.getElementById("compBy").value.trim();
-      if (!host || !name || !link) return;
+      if (!host || !name) return;
       var btn = compAddForm.querySelector(".jobs-add-btn");
       btn.disabled = true;
       fetch("/api/competitions", {

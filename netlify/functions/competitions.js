@@ -8,10 +8,10 @@ import { getStore } from "@netlify/blobs";
 // Storage: one Netlify Blobs store ("competitions"), one key ("all")
 // holding the full JSON array:
 //   [{ id, host, name, deadline, link, addedBy, addedAt }, ...]
-// deadline is an ISO date string (yyyy-mm-dd) or empty.
+// deadline is an ISO date string (yyyy-mm-dd) or empty. link is optional.
 //
 // GET  /api/competitions                                          -> [...]
-// POST /api/competitions  { host, name, deadline, link, addedBy }  -> creates one, returns it
+// POST /api/competitions  { host, name, deadline, link, addedBy }  -> creates one, returns it (link optional)
 // DELETE /api/competitions  { id }                                  -> removes one
 
 function json(data, status = 200) {
@@ -48,17 +48,18 @@ export default async (req) => {
 
     if (!host) return badRequest("host is required");
     if (!name) return badRequest("name is required");
-    if (!link) return badRequest("link is required");
     if (host.length > 120) return badRequest("host is too long");
     if (name.length > 160) return badRequest("name is too long");
     if (link.length > 500) return badRequest("link is too long");
     if (addedBy.length > 80) return badRequest("name is too long");
     if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) return badRequest("deadline must be yyyy-mm-dd");
-    try {
-      // eslint-disable-next-line no-new
-      new URL(link);
-    } catch {
-      return badRequest("that doesn't look like a valid URL");
+    if (link) {
+      try {
+        // eslint-disable-next-line no-new
+        new URL(link);
+      } catch {
+        return badRequest("that doesn't look like a valid URL");
+      }
     }
 
     const entry = {
