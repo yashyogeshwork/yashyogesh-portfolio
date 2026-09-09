@@ -409,9 +409,11 @@ main.pg-shell { padding-bottom: var(--space-6); }
   padding: 8px 0;
   border-bottom: 1px dashed var(--color-border);
   display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 .jobs-item:last-child { border-bottom: none; }
-.jobs-item-main { display: flex; flex-direction: column; gap: 2px; }
+.jobs-item-main { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
 .jobs-item-role {
   font-size: var(--fs-body);
   color: var(--color-text-primary);
@@ -421,6 +423,71 @@ main.pg-shell { padding-bottom: var(--space-6); }
 a.jobs-item-role:hover { text-decoration: underline; }
 .jobs-item-meta { font-size: var(--fs-caption); color: var(--color-text-secondary); }
 .jobs-empty { margin: 0 0 var(--space-2); font-size: var(--fs-caption); }
+
+/* One-click remove: a real 40x40 hit area even though the visible glyph is
+   small, so it's easy to tap without expanding the row's actual footprint.
+   Responds on press (:active) rather than waiting for the click to resolve,
+   per apple-design's "respond on pointer-down" rule; the row itself removes
+   itself with animateItemOut (companies.js) once the click is handled. */
+.jobs-item-remove {
+  flex: 0 0 auto;
+  width: 28px; height: 28px;
+  margin: -4px -4px 0 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; line-height: 1;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.12s ease-out, background-color 0.15s ease-out, color 0.15s ease-out;
+}
+.jobs-item-remove:hover { background: var(--color-bg); color: var(--color-text-primary); }
+.jobs-item-remove:active { transform: scale(0.88); }
+.jobs-item-remove:disabled { opacity: 0.4; cursor: default; }
+
+/* ---- Latest job postings: a feed pulled from every company, shown before
+   the company table so the freshest activity is the first thing anyone
+   sees, per the "job postings first" request. Each row names its company;
+   clicking that name opens and scrolls to the matching row below. */
+.recent-postings {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.recent-postings-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.recent-postings-heading { font-size: var(--fs-section); margin: 0; }
+.recent-postings-updated {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.recent-postings-list {
+  max-height: 380px;
+  overflow-y: auto;
+  margin: 0;
+}
+.recent-postings-list .jobs-item-main { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 8px; row-gap: 2px; }
+.feed-item-company {
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-section);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+}
+.feed-item-company:hover { background: var(--color-border); color: var(--color-text-primary); }
+.recent-postings-list .jobs-item-meta { flex-basis: 100%; }
 
 .jobs-add-form {
   display: flex;

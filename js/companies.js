@@ -30,8 +30,12 @@
     try {
       var d = new Date(iso);
       var diffMs = Date.now() - d.getTime();
-      var diffDays = Math.floor(diffMs / 86400000);
-      if (diffDays <= 0) return "today";
+      var diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "just now";
+      if (diffMin < 60) return diffMin + (diffMin === 1 ? " minute ago" : " minutes ago");
+      var diffHrs = Math.floor(diffMin / 60);
+      if (diffHrs < 24) return diffHrs + (diffHrs === 1 ? " hour ago" : " hours ago");
+      var diffDays = Math.floor(diffHrs / 24);
       if (diffDays === 1) return "yesterday";
       if (diffDays < 7) return diffDays + " days ago";
       return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -40,27 +44,77 @@
     }
   }
 
+  /* ---- Apple-design motion: critically damped only, no overshoot/bounce
+     (matches this site's own locked motion rule). A list item that appears
+     fades + rises in; one that's removed shrinks its own box to zero before
+     leaving the DOM, so the layout around it settles instead of jumping. */
+  var EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+  function animateItemIn(el) {
+    if (!el) return;
+    el.style.opacity = "0";
+    el.style.transform = "translateY(-6px)";
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.style.transition = "opacity 0.32s " + EASE + ", transform 0.32s " + EASE;
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+      });
+    });
+    setTimeout(function () { el.style.transition = ""; el.style.transform = ""; }, 380);
+  }
+  function animateItemOut(el, done) {
+    if (!el || !el.parentNode) { if (done) done(); return; }
+    var rect = el.getBoundingClientRect();
+    el.style.height = rect.height + "px";
+    el.style.overflow = "hidden";
+    void el.offsetHeight; // force reflow so the transition below actually animates
+    el.style.transition = [
+      "height 0.28s " + EASE, "opacity 0.22s " + EASE, "transform 0.28s " + EASE,
+      "margin 0.28s " + EASE, "padding 0.28s " + EASE, "border-color 0.28s " + EASE,
+    ].join(", ");
+    el.style.opacity = "0";
+    el.style.transform = "translateX(-8px)";
+    var settled = false;
+    function finish() {
+      if (settled) return;
+      settled = true;
+      if (el.parentNode) el.parentNode.removeChild(el);
+      if (done) done();
+    }
+    el.addEventListener("transitionend", finish, { once: true });
+    setTimeout(finish, 400); // safety net if transitionend doesn't fire
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.style.height = "0px";
+        el.style.marginTop = "0px"; el.style.marginBottom = "0px";
+        el.style.paddingTop = "0px"; el.style.paddingBottom = "0px";
+        el.style.borderTopWidth = "0px"; el.style.borderBottomWidth = "0px";
+      });
+    });
+  }
+
+  function jobItemHtml(p, companyId) {
+    return (
+      '<li class="jobs-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(companyId) + '">' +
+        '<div class="jobs-item-main">' +
+          (p.link
+            ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
+            : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
+          '<span class="jobs-item-meta">posted by ' + esc(p.postedBy) + " · " + esc(fmtPostedAt(p.postedAt)) + "</span>" +
+        "</div>" +
+        '<button type="button" class="jobs-item-remove" aria-label="Remove this posting" title="Remove">×</button>' +
+      "</li>"
+    );
+  }
+
   function jobsSectionHtml(companyId) {
     var postings = JOBS[companyId] || [];
     var listHtml = postings.length
-      ? '<ul class="jobs-list">' +
-          postings.map(function (p) {
-            return (
-              '<li class="jobs-item" data-job-id="' + esc(p.id) + '">' +
-                '<div class="jobs-item-main">' +
-                  (p.link
-                    ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
-                    : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
-                  '<span class="jobs-item-meta">posted by ' + esc(p.postedBy) + " · " + esc(fmtPostedAt(p.postedAt)) + "</span>" +
-                "</div>" +
-              "</li>"
-            );
-          }).join("") +
-        "</ul>"
+      ? '<ul class="jobs-list">' + postings.map(function (p) { return jobItemHtml(p, companyId); }).join("") + "</ul>"
       : '<p class="jobs-empty muted">No postings yet for this one. Be the first if you see something open.</p>';
 
     return (
-      '<div class="jobs-section">' +
+      '<div class="jobs-section" data-company-id="' + esc(companyId) + '">' +
         '<div class="jobs-section-head">Jobs posted by batchmates</div>' +
         listHtml +
         '<form class="jobs-add-form" data-company-id="' + esc(companyId) + '">' +
@@ -74,11 +128,64 @@
     );
   }
 
+  function companyName(id) {
+    for (var i = 0; i < data.length; i++) if (data[i].id === id) return data[i].name;
+    return id;
+  }
+
+  function allPostingsFlat() {
+    var all = [];
+    Object.keys(JOBS).forEach(function (cid) {
+      (JOBS[cid] || []).forEach(function (p) { all.push({ companyId: cid, posting: p }); });
+    });
+    all.sort(function (a, b) { return new Date(b.posting.postedAt) - new Date(a.posting.postedAt); });
+    return all;
+  }
+
+  function feedItemHtml(entry) {
+    var p = entry.posting, cid = entry.companyId;
+    return (
+      '<li class="jobs-item feed-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(cid) + '">' +
+        '<div class="jobs-item-main">' +
+          (p.link
+            ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
+            : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
+          '<button type="button" class="feed-item-company" data-goto="' + esc(cid) + '">at ' + esc(companyName(cid)) + "</button>" +
+          '<span class="jobs-item-meta">posted by ' + esc(p.postedBy) + " · " + esc(fmtPostedAt(p.postedAt)) + "</span>" +
+        "</div>" +
+        '<button type="button" class="jobs-item-remove" aria-label="Remove this posting" title="Remove">×</button>' +
+      "</li>"
+    );
+  }
+
+  function renderRecentPostings() {
+    var list = document.getElementById("recentPostingsList");
+    var updatedEl = document.getElementById("recentPostingsUpdated");
+    if (!list) return;
+    var all = allPostingsFlat();
+    if (!all.length) {
+      list.innerHTML = '<li class="jobs-empty muted">No postings yet anywhere. Open any company below and be the first to add one.</li>';
+      if (updatedEl) updatedEl.textContent = "";
+      return;
+    }
+    list.innerHTML = all.slice(0, 12).map(feedItemHtml).join("");
+    if (updatedEl) updatedEl.textContent = "Last updated " + fmtPostedAt(all[0].posting.postedAt);
+  }
+
   function loadJobs(cb) {
     fetch("/api/jobs")
       .then(function (r) { return r.ok ? r.json() : { companies: {} }; })
-      .then(function (d) { JOBS = (d && d.companies) || {}; jobsLoaded = true; if (cb) cb(); })
-      .catch(function () { jobsLoaded = true; if (cb) cb(); });
+      .then(function (d) { JOBS = (d && d.companies) || {}; jobsLoaded = true; renderRecentPostings(); if (cb) cb(); })
+      .catch(function () { jobsLoaded = true; renderRecentPostings(); if (cb) cb(); });
+  }
+
+  function removeJobEverywhere(companyId, jobId) {
+    if (JOBS[companyId]) JOBS[companyId] = JOBS[companyId].filter(function (p) { return p.id !== jobId; });
+    fetch("/api/jobs", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ companyId: companyId, id: jobId }),
+    }).catch(function () { /* best-effort: a page refresh will show the true state if this failed */ });
   }
 
   document.addEventListener("submit", function (e) {
@@ -106,13 +213,70 @@
       .then(function (posting) {
         if (!JOBS[companyId]) JOBS[companyId] = [];
         JOBS[companyId].unshift(posting);
-        var section = form.closest(".jobs-section");
-        if (section) section.outerHTML = jobsSectionHtml(companyId);
+        var list = form.parentNode.querySelector(".jobs-list");
+        var empty = form.parentNode.querySelector(".jobs-empty");
+        if (!list) {
+          list = document.createElement("ul");
+          list.className = "jobs-list";
+          form.parentNode.insertBefore(list, empty || form);
+        }
+        if (empty) empty.remove();
+        var wrapper = document.createElement("div");
+        wrapper.innerHTML = jobItemHtml(posting, companyId);
+        var li = wrapper.firstChild;
+        list.insertBefore(li, list.firstChild);
+        animateItemIn(li);
+        form.reset();
+        statusEl.hidden = true;
+        btn.disabled = false;
+        renderRecentPostings();
       })
       .catch(function () {
         statusEl.textContent = "Couldn't add that, try again.";
         btn.disabled = false;
       });
+  });
+
+  document.addEventListener("click", function (e) {
+    var removeBtn = e.target.closest ? e.target.closest(".jobs-item-remove") : null;
+    if (removeBtn) {
+      var item = removeBtn.closest(".jobs-item");
+      if (!item) return;
+      var companyId = item.dataset.companyId, jobId = item.dataset.jobId;
+      if (!companyId || !jobId) return;
+      removeBtn.disabled = true;
+      var duplicates = Array.prototype.slice.call(document.querySelectorAll('.jobs-item[data-job-id="' + jobId + '"]'));
+      var pending = duplicates.length;
+      var afterAllGone = function () {
+        var section = document.querySelector('.jobs-section[data-company-id="' + companyId + '"]');
+        if (section && !section.querySelector(".jobs-list li")) {
+          var list = section.querySelector(".jobs-list");
+          if (list) {
+            var empty = document.createElement("p");
+            empty.className = "jobs-empty muted";
+            empty.textContent = "No postings yet for this one. Be the first if you see something open.";
+            list.parentNode.insertBefore(empty, list);
+            list.remove();
+          }
+        }
+        renderRecentPostings();
+      };
+      duplicates.forEach(function (dup) {
+        animateItemOut(dup, function () { pending--; if (pending <= 0) afterAllGone(); });
+      });
+      removeJobEverywhere(companyId, jobId);
+      return;
+    }
+
+    var gotoBtn = e.target.closest ? e.target.closest(".feed-item-company") : null;
+    if (gotoBtn) {
+      var cid = gotoBtn.dataset.goto;
+      var row = document.querySelector('.comp-row[data-id="' + cid + '"]');
+      if (!row) { clearAllFilters(); row = document.querySelector('.comp-row[data-id="' + cid + '"]'); }
+      if (!row) return;
+      if (!row.classList.contains("is-open")) row.click();
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   });
 
   /* ---- "Where else to look": a flat, site-wide list of job boards, design
@@ -543,11 +707,14 @@
       });
     });
   }
-  clearBtn.addEventListener("click", function () {
+  function clearAllFilters() {
     FACETS.forEach(function (f) { selected[f.key].clear(); renderFacetPanel(f); });
     selectedTier.clear(); renderTierToggles();
     search.value = "";
     syncFacetUI(); apply();
+  }
+  clearBtn.addEventListener("click", function () {
+    clearAllFilters();
   });
   renderTierToggles();
 
