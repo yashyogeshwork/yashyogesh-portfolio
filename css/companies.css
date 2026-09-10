@@ -169,6 +169,19 @@ main.pg-shell { padding-bottom: var(--space-6); }
 @media (max-width: 768px) {
   .filter-bar input[type="search"] { font-size: 16px; }
 }
+/* Same iOS Safari zoom-on-focus problem as the search field above, but this
+   one touches every field across all four "Add a ___" forms (studio,
+   posting, competition, resource) since they all share .jobs-input — a
+   phone visitor hitting any of those fields got the same jarring
+   whole-page zoom the search fix above was meant to prevent site-wide. */
+@media (max-width: 768px) {
+  .jobs-input,
+  select.jobs-input,
+  textarea.jobs-input,
+  input.jobs-input[type="date"] {
+    font-size: 16px;
+  }
+}
 .filter-count { font-size: var(--fs-caption); color: var(--color-text-secondary); margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .facet-row { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -538,6 +551,14 @@ a.jobs-item-role:hover { text-decoration: underline; }
 @media (max-width: 640px) {
   .view-tab { font-size: var(--fs-caption); padding: 12px 10px; gap: 6px; }
 }
+/* At true phone widths, four tabs (the longest label is "Competitions")
+   plus their count badges don't fit one row without wrapping mid-label,
+   which reads as broken rather than just tight. Drop the badge and the
+   label size a step further here so every tab stays one line. */
+@media (max-width: 420px) {
+  .view-tab { font-size: 11.5px; padding: 11px 4px; gap: 0; letter-spacing: -0.01em; }
+  .view-tab-count { display: none; }
+}
 
 .view-panel { animation: viewPanelIn 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes viewPanelIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -618,7 +639,14 @@ a.jobs-item-role:hover { text-decoration: underline; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-image);
 }
-.add-posting-form { margin-bottom: 8px; }
+.add-posting-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+@media (max-width: 640px) {
+  .add-posting-form .jobs-input,
+  .add-posting-form select.jobs-input,
+  .add-posting-form .jobs-add-btn {
+    flex: 1 1 100%;
+  }
+}
 .recent-postings-list { max-height: none; }
 
 .comps-list { list-style: none; margin: 0 0 var(--space-2); padding: 0; }
