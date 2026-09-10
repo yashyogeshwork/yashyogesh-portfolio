@@ -356,10 +356,10 @@
       card.el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
       render(card);
       card.el.style.zIndex = nextZ();
-      // Hover always starts as "you can click this to view it" — see
-      // the pointermove drag handler below for where this switches to
-      // "Drag" once an actual drag is under way.
-      dragCursor.textContent = 'Click to view';
+      // Hover now leads with "Drag", the primary interaction on this
+      // wall — clicking still opens the expanded view, but that's the
+      // secondary action, not what the cursor should suggest first.
+      dragCursor.textContent = 'Drag';
       dragCursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
       dragCursor.classList.add('is-visible');
     });
@@ -845,7 +845,7 @@
       hit.el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
       render(hit);
       hit.el.style.zIndex = nextZ();
-      dragCursor.textContent = 'Click to view';
+      dragCursor.textContent = 'Drag';
       dragCursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
       dragCursor.classList.add('is-visible');
     } else {

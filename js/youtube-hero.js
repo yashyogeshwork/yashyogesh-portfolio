@@ -1,10 +1,11 @@
-// YouTube background-video embed — built only when conditions are
-// right (matches what video-data-aware.js used to do for the native
-// video element). YouTube's own player handles looping internally via
-// the loop+playlist parameters, so the manual-loop black-flash
-// workaround that was needed for our own H.264 files doesn't apply
-// here at all, that was specific to the native <video loop> restart
-// mechanism, not something YouTube's player has.
+// YouTube background-video embed, built via the real Player API, not
+// URL parameters. The simpler loop=1&playlist=ID approach looks
+// equivalent but has a known, real quirk: during the transition back
+// to the start, it can briefly show YouTube's own "video ended"
+// screen, complete with play/pause/next/previous controls, before the
+// loop actually kicks in. Controlling playback directly and
+// restarting the video ourselves the instant it ends avoids that
+// screen ever having a chance to appear at all.
 (() => {
   function shouldPlayVideo() {
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -16,11 +17,6 @@
   }
 
   function sizeToCover(iframe, container) {
-    // YouTube embeds are always 16:9 — to "cover" a container with a
-    // different aspect ratio, the iframe has to be deliberately
-    // oversized on one axis and centered, the same logic object-fit:
-    // cover applies to a real <video>, just done by hand since
-    // iframes don't reliably support object-fit across browsers.
     function resize() {
       const rect = container.getBoundingClientRect();
       const containerRatio = rect.width / rect.height;
@@ -42,27 +38,70 @@
     addEventListener('resize', resize);
   }
 
+  const pending = [];
+
   function embedYouTube(containerId, videoId) {
     const container = document.getElementById(containerId);
     if (!container || !shouldPlayVideo()) return;
 
-    const iframe = document.createElement('iframe');
-    const params = [
-      'autoplay=1', 'mute=1', 'loop=1', `playlist=${videoId}`,
-      'controls=0', 'showinfo=0', 'modestbranding=1', 'rel=0',
-      'iv_load_policy=3', 'playsinline=1', 'disablekb=1', 'fs=0',
-    ].join('&');
-    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
-    iframe.style.position = 'absolute';
-    iframe.style.border = 'none';
-    iframe.style.pointerEvents = 'none'; // background video, not an interactive player
-    iframe.setAttribute('allow', 'autoplay; encrypted-media');
-    iframe.setAttribute('title', ''); // decorative background video, not content needing an accessible name
-
-    container.appendChild(iframe);
-    sizeToCover(iframe, container);
+    const placeholder = document.createElement('div');
+    container.appendChild(placeholder);
+    pending.push({ placeholder, container, videoId });
   }
+
+  function createPlayer({ placeholder, container, videoId }) {
+    const player = new YT.Player(placeholder, {
+      videoId,
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        controls: 0,
+        showinfo: 0,
+        modestbranding: 1,
+        rel: 0,
+        iv_load_policy: 3,
+        playsinline: 1,
+        disablekb: 1,
+        fs: 0,
+        origin: window.location.origin,
+      },
+      events: {
+        onReady: (e) => {
+          const iframe = player.getIframe();
+          iframe.style.position = 'absolute';
+          iframe.style.border = 'none';
+          iframe.style.pointerEvents = 'none';
+          iframe.style.opacity = '0';
+          iframe.style.transition = 'opacity 0.4s ease';
+          iframe.setAttribute('title', '');
+          sizeToCover(iframe, container);
+          e.target.playVideo();
+          requestAnimationFrame(() => { iframe.style.opacity = '1'; });
+        },
+        onStateChange: (e) => {
+          // Restart the instant it ends, in code — this is what
+          // actually prevents YouTube's own end-screen controls from
+          // ever rendering, rather than trying to hide them after the
+          // fact with CSS or the loop URL parameter's own timing.
+          if (e.data === YT.PlayerState.ENDED) {
+            player.seekTo(0);
+            player.playVideo();
+          }
+        },
+      },
+    });
+  }
+
+  window.onYouTubeIframeAPIReady = () => {
+    pending.forEach(createPlayer);
+  };
 
   embedYouTube('hiveHeroEmbed', '56FzDGYKALI');
   embedYouTube('toadHeroEmbed', '1SaLk_rTwOQ');
+
+  if (pending.length) {
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(script);
+  }
 })();

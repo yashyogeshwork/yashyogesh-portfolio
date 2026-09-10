@@ -186,7 +186,6 @@
     el.setAttribute('aria-label', `Surface C1 photo ${i + 1}, press Enter to view`);
     fieldWrap.appendChild(el);
     const card = { el, index: i };
-    spawn(card, reduceMotion ? 'static' : undefined);
     function openThisCard() {
       // Anchor the expand to where the card actually is (FLIP), rather
       // than always growing from a fixed center point — per the "things
@@ -227,6 +226,25 @@
     });
     cards.push(card);
   }
+
+  // The actual expensive work — each spawn's overlap-avoidance search
+  // can retry up to 600 times, and doing that for all 32 cards back to
+  // back with no gap for the browser to paint is exactly what produced
+  // the load-time freeze. Card creation above stays synchronous since
+  // it's cheap; only the real cost is deferred, spread across a
+  // handful of frames so the browser can breathe between batches.
+  (function spawnInitialCards() {
+    const BATCH_SIZE = 6;
+    let i = 0;
+    function nextBatch() {
+      const end = Math.min(i + BATCH_SIZE, cards.length);
+      for (; i < end; i++) {
+        spawn(cards[i], reduceMotion ? 'static' : undefined);
+      }
+      if (i < cards.length) requestAnimationFrame(nextBatch);
+    }
+    nextBatch();
+  })();
   function closeExpand() {
     expandVeil.classList.remove('is-active');
     expandClose.classList.remove('is-active');
@@ -394,7 +412,25 @@
 
   addEventListener('resize', () => {
     placed.length = 0;
-    cards.forEach((card) => spawn(card));
+    // Spawning all 32 cards synchronously in one go was the real cause
+    // of the load-time freeze — each spawn can retry its overlap search
+    // up to 600 times, and doing that for all 32 back to back with no
+    // gap for the browser to paint is exactly what a multi-second
+    // freeze looks like. Spreading it across a few frames gives the
+    // same final layout, just interleaved with actual rendering
+    // instead of blocking it outright.
+    const BATCH_SIZE = 6;
+    let spawnIndex = 0;
+    function spawnBatch() {
+      const end = Math.min(spawnIndex + BATCH_SIZE, cards.length);
+      for (; spawnIndex < end; spawnIndex++) {
+        spawn(cards[spawnIndex]);
+      }
+      if (spawnIndex < cards.length) {
+        requestAnimationFrame(spawnBatch);
+      }
+    }
+    spawnBatch();
   });
 
   requestAnimationFrame(tick);

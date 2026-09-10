@@ -34,6 +34,7 @@ body[data-page="project-c1"] .project-scroll-cue {
 .c1-card {
   position:absolute;
   top:0; left:0;
+  opacity: 0;
   /* Sharp-edged squares, no tilt — a thin white frame and soft shadow
      so they still read as physical prints, just square-on rather than
      rounded and rotated. */
