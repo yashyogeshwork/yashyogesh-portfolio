@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Studios & Openings — Yash Yogesh</title>
@@ -126,7 +129,7 @@
         <select class="jobs-input" id="topJobType"><option value="">Type (optional)</option><option value="Internship">Internship</option><option value="Full-time">Full-time</option></select>
         <input type="text" class="jobs-input" id="topJobLocation" placeholder="Location (optional)" maxlength="120">
         <input type="date" class="jobs-input" id="topJobEmployerDate" title="Date the employer posted it (optional)">
-        <input type="url" class="jobs-input" id="topJobLink" placeholder="Link (optional)" maxlength="500">
+        <input type="text" class="jobs-input" id="topJobLink" placeholder="Link or contact info (optional)" maxlength="500">
         <input type="text" class="jobs-input" id="topJobBy" placeholder="Your name" maxlength="80" required>
         <button type="submit" class="jobs-add-btn">Add</button>
         <span class="jobs-add-status muted" id="topJobStatus" hidden></span>
@@ -140,7 +143,7 @@
       <ul class="sources-list" id="sourcesList"></ul>
       <form class="sources-add-form" id="sourceAddForm">
         <input type="text" class="jobs-input source-name" placeholder="Name, e.g. Car Design News" maxlength="120" required>
-        <input type="url" class="jobs-input source-url" placeholder="Link" maxlength="500" required>
+        <input type="text" class="jobs-input source-url" placeholder="Link or contact info" maxlength="500" required>
         <input type="text" class="jobs-input source-note" placeholder="Why it's worth checking (optional)" maxlength="300">
         <input type="text" class="jobs-input source-by" placeholder="Your name (optional)" maxlength="80">
         <button type="submit" class="jobs-add-btn source-add-btn">Add source</button>
@@ -165,7 +168,7 @@
         <input type="text" class="jobs-input" id="compHost" placeholder="Host, e.g. BYD, SAIC Design" maxlength="120" required>
         <input type="text" class="jobs-input" id="compName" placeholder="Competition name" maxlength="160" required>
         <input type="date" class="jobs-input" id="compDeadline" placeholder="Deadline">
-        <input type="url" class="jobs-input" id="compLink" placeholder="Source link (optional)" maxlength="500">
+        <input type="text" class="jobs-input" id="compLink" placeholder="Source link or contact info (optional)" maxlength="500">
         <input type="text" class="jobs-input" id="compBy" placeholder="Your name (optional)" maxlength="80">
         <button type="submit" class="jobs-add-btn">Add competition</button>
       </form>
@@ -180,7 +183,7 @@
       <ul class="sources-list" id="resourcesList"></ul>
       <form class="sources-add-form" id="resourceAddForm">
         <input type="text" class="jobs-input source-name" placeholder="Name, e.g. a tool or channel" maxlength="120" required>
-        <input type="url" class="jobs-input source-url" placeholder="Link" maxlength="500" required>
+        <input type="text" class="jobs-input source-url" placeholder="Link or contact info" maxlength="500" required>
         <input type="text" class="jobs-input source-note" placeholder="Why it's worth checking (optional)" maxlength="300">
         <input type="text" class="jobs-input source-by" placeholder="Your name (optional)" maxlength="80">
         <button type="submit" class="jobs-add-btn source-add-btn">Add resource</button>

@@ -381,7 +381,7 @@
     animateItemOut(sourceEl, function () {
       LIVE_SOURCES = LIVE_SOURCES.filter(function (s) { return s.id !== id; });
     });
-    fetch("/api/sources", {
+    fetch("/api/resources", {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id: id }),
@@ -455,7 +455,7 @@
      forums, an Instagram account, whatever anyone finds, not tied to any one
      company. SOURCES_SEED (below) is the starting set pulled from the
      research corpus; LIVE_SOURCES is whatever's been added since, fetched
-     from /api/sources (netlify/functions/sources.js). Same open-access
+     from /api/resources (netlify/functions/sources.js). Same open-access
      model as the per-company postings: no login, goes live immediately,
      name is optional. */
   var SOURCES_SEED = [
@@ -508,7 +508,7 @@
   }
 
   function loadSources() {
-    fetch("/api/sources")
+    fetch("/api/resources")
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (list) { LIVE_SOURCES = list || []; renderSources(); })
       .catch(function () { renderSources(); });
@@ -537,7 +537,7 @@
       statusEl.hidden = false;
       statusEl.textContent = "Adding…";
 
-      fetch("/api/sources", {
+      fetch("/api/resources", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: name, url: url, note: note, addedBy: addedBy }),

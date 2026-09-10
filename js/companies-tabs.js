@@ -58,6 +58,7 @@
     indicator.style.transform = "translateX(" + tab.offsetLeft + "px)";
   }
 
+  var loadedOnce = {};
   function showView(name) {
     tabs.forEach(function (t) {
       var active = t.dataset.view === name;
@@ -67,6 +68,19 @@
     });
     Object.keys(panels).forEach(function (k) { if (panels[k]) panels[k].hidden = k !== name; });
     if (history.replaceState) history.replaceState(null, "", "#" + name);
+    if (!loadedOnce[name]) {
+      loadedOnce[name] = true;
+      if (name === "competitions") {
+        var compsListEl = document.getElementById("compsList");
+        if (compsListEl) compsListEl.innerHTML = '<li class="jobs-empty muted">Loading…</li>';
+        loadCompetitions();
+      }
+      if (name === "resources") {
+        var resourcesListEl = document.getElementById("resourcesList");
+        if (resourcesListEl) resourcesListEl.innerHTML = '<li class="jobs-empty muted">Loading…</li>';
+        loadResources();
+      }
+    }
   }
 
   tabs.forEach(function (t) {
@@ -314,7 +328,11 @@
       .then(function (list) { COMPETITIONS = list || []; renderCompetitions(); })
       .catch(function () { renderCompetitions(); });
   }
-  loadCompetitions();
+  // Deferred until the Competitions tab is actually opened (see
+  // showView below) — firing this on every page load regardless of
+  // which tab is visible meant a real, unnecessary serverless
+  // function call (and its cold-start delay) for every single
+  // visitor, even ones who never look at this tab.
 
   var compAddForm = document.getElementById("compAddForm");
   if (compAddForm) {
@@ -390,7 +408,9 @@
       .then(function (list) { RESOURCES = list || []; renderResources(); })
       .catch(function () { renderResources(); });
   }
-  loadResources();
+  // Deferred until the Resources tab is actually opened (see showView
+  // below), same reasoning as Competitions — no reason to cold-start
+  // this function for every visitor regardless of which tab they use.
 
   var resourceAddForm = document.getElementById("resourceAddForm");
   if (resourceAddForm) {
