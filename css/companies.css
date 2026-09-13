@@ -228,6 +228,7 @@ main.pg-shell { padding-bottom: var(--space-6); }
 .facet-panel-actions button:hover { color: var(--color-text-primary); }
 .facet-option { display: flex; align-items: flex-start; gap: 9px; padding: 7px 8px; min-height: 32px; border-radius: var(--radius-small); font-size: 13px; color: var(--color-text-primary); cursor: pointer; transition: background-color var(--duration-hover) var(--ease-cinematic); }
 .facet-option:hover { background: var(--color-bg-section); }
+.facet-option:active { opacity: 0.6; }
 .facet-option input[type="checkbox"] { width: 15px; height: 15px; margin-top: 2px; accent-color: var(--color-text-primary); cursor: pointer; flex-shrink: 0; }
 .facet-option-label { flex: 1; min-width: 0; text-wrap: pretty; padding-top: 1px; }
 .facet-option-count { flex-shrink: 0; padding-top: 1px; font-size: 11px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
@@ -805,6 +806,7 @@ a.jobs-item-role:hover { text-decoration: underline; }
   transition: background-color 0.15s ease-out, color 0.15s ease-out;
 }
 .feed-item-company:hover { background: var(--color-border); color: var(--color-text-primary); }
+.feed-item-company:active { opacity: 0.6; }
 .recent-postings-list .jobs-item-meta { flex-basis: 100%; }
 
 .jobs-add-form {
@@ -876,6 +878,7 @@ a.jobs-item-role:hover { text-decoration: underline; }
   text-decoration: none;
 }
 .source-item-name:hover { text-decoration: underline; }
+.source-item-name:active { opacity: 0.6; }
 .source-item-note { font-size: var(--fs-caption); color: var(--color-text-secondary); }
 .source-item-meta { font-size: 11px; color: var(--color-text-secondary); opacity: 0.8; }
 /* Only live/community-added sources carry an id and get a remove control;

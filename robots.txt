@@ -1,7 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /companies.html
-Disallow: /uid.html
 Disallow: /playbook.html
 Disallow: /admin.html
 
