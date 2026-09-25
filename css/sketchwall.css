@@ -76,6 +76,7 @@ html, body {
 }
 
 .wall-frame-link:hover { opacity: 1; }
+.wall-frame-link:active { opacity: 0.5; }
 
 @media (max-width: 768px) {
   .wall-frame-top { padding: 22px var(--side-padding-mobile); }

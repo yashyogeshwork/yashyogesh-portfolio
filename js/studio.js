@@ -74,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const HOLD_MS = 2800;
   const STEP_MS = 650;
-  const ENTRANCE_MS = 2600;
-  const ENTRANCE_SWEEP = 3 * N;
+  const ENTRANCE_MS = 1400;
+  const ENTRANCE_SWEEP = N;
   const EXIT_SWEEP_MS = 900;
 
   /* ---------- Build ---------- */

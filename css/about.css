@@ -398,8 +398,8 @@
 
 /* ---- Anonymous reaction + note ---- */
 .about-react {
-  margin-top: 20px;
-  padding-top: 18px;
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--color-border);
   max-width: 620px;
 }
@@ -414,8 +414,8 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 14px;
-  margin-bottom: 16px;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 .react-sticker {

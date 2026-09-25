@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="preload" as="image" href="images/hive/hero-pods.jpg" fetchpriority="high">
+  <link rel="preload" as="image" href="images/hive/hero-cover-new.jpg" fetchpriority="high">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2601X4DE6"></script>
   <script>
@@ -73,7 +73,9 @@
   <!-- ============ HERO ============ -->
   <section class="project-intro gradient-overlay-vignette" id="main">
     <div class="project-intro-media" id="hiveHeroMedia" style="background: linear-gradient(160deg, #E8E2D5 0%, #C9BFA8 45%, #8A9B7E 100%);">
-      <video autoplay muted playsinline preload="metadata" aria-hidden="true" style="width:100%; height:100%; object-fit:cover;" poster="images/hive/hero-pods.jpg" id="hiveHeroVideo"></video>
+      <video autoplay muted playsinline preload="metadata" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.5s ease;" poster="images/hive/hero-cover-new.jpg" id="hiveHeroVideo">
+        <source src="videos/hive-hero.mp4" type="video/mp4">
+      </video>
     </div>
     <div class="container project-intro-content">
       <div class="project-intro-eyebrow" data-c="hive.eyebrow">Hyundai · Concept</div>
@@ -191,6 +193,7 @@
   <script src="js/project-nav.js"></script>
   <script src="js/next-project.js"></script>
   <script src="js/scroll-depth.js"></script>
-  <script src="js/bunny-hero.js"></script>
+  <script src="js/video-data-aware.js"></script>
+  <script src="js/video-manual-loop.js"></script>
 </body>
 </html>

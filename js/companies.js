@@ -932,7 +932,21 @@
         '<td class="col-loc">' + esc(c.location) + (c.country ? ", " + esc(c.country) : "") + "</td>" +
         '<td class="col-type">' + esc(c.type) + "</td>" +
       "</tr>" +
-      '<tr class="detail-row"><td colspan="4"><div class="detail-row-inner"><div class="detail-row-content">' +
+      // The actual rich detail content (10+ fields plus a full add-job
+      // form) is deliberately NOT built here — with 218 companies,
+      // generating and parsing all of that upfront, whether or not
+      // anyone ever opens it, was the real, substantial cost behind
+      // the sluggish feeling, far more than the search timing alone.
+      // It's built once, the first time this specific row is actually
+      // expanded (see toggleRow below), and cached from then on.
+      '<tr class="detail-row"><td colspan="4"><div class="detail-row-inner"><div class="detail-row-content" data-detail-for="' + esc(c.id) + '">' +
+        (open ? detailContentHtml(c) : "") +
+      "</div></div></td></tr>"
+    );
+  }
+
+  function detailContentHtml(c) {
+    return (
         '<dl class="detail-grid">' +
           (c.momentum ? '<dt>Momentum <span class="dt-hint">hiring trend</span></dt><dd><span class="momentum-badge ' + momentumClass(c.momentum) + '">' + esc(c.momentum) + "</span></dd>" : "") +
           (c.confidence ? '<dt>Confidence <span class="dt-hint">how sure this data is</span></dt><dd>' + esc(c.confidence) + "</dd>" : "") +
@@ -950,8 +964,7 @@
             '<div class="strategy-block">' + esc(c.strategy) + "</div>" +
           "</div>" +
         "</dl>" +
-        jobsSectionHtml(c.id) +
-      "</div></div></td></tr>"
+        jobsSectionHtml(c.id)
     );
   }
 
@@ -983,7 +996,19 @@
           var id = row.dataset.id;
           var open = row.classList.toggle("is-open");
           row.setAttribute("aria-expanded", open ? "true" : "false");
-          if (open) openIds.add(id); else openIds.delete(id);
+          if (open) {
+            openIds.add(id);
+            var contentEl = row.nextElementSibling && row.nextElementSibling.querySelector('[data-detail-for="' + id + '"]');
+            if (contentEl && !contentEl.dataset.built) {
+              var company = filtered.filter(function (x) { return String(x.id) === String(id); })[0];
+              if (company) {
+                contentEl.innerHTML = detailContentHtml(company);
+                contentEl.dataset.built = "1";
+              }
+            }
+          } else {
+            openIds.delete(id);
+          }
         }
         row.addEventListener("click", toggleRow);
         row.addEventListener("keydown", function (e) {
@@ -1005,7 +1030,11 @@
     count.textContent = filtered.length + " of " + data.length;
     syncFacetUI();
   }
-  search.addEventListener("input", apply);
+  var searchDebounce;
+  search.addEventListener("input", function () {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(apply, 200);
+  });
   syncFacetUI();
   apply();
   loadJobs(function () { apply(); });

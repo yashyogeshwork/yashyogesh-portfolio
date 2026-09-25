@@ -7,6 +7,14 @@
 // this specific class of issue.
 (() => {
   document.querySelectorAll('.project-intro-media video').forEach((video) => {
+    // Fade in only once real playback has actually started, not just
+    // once the file's metadata has loaded — the video previously cut
+    // in instantly the moment it began playing, an abrupt handoff
+    // from the poster that read as unpolished rather than deliberate.
+    video.addEventListener('playing', () => {
+      video.style.opacity = '1';
+    }, { once: true });
+
     video.addEventListener('ended', () => {
       video.currentTime = 0.05;
       video.play();

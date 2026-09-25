@@ -280,8 +280,10 @@
   progressWrap.appendChild(progressBar);
   fieldWrap.parentElement.appendChild(progressWrap);
 
+  let separateFrameCounter = 0;
   function tick() {
-    separateCards();
+    separateFrameCounter++;
+    if (separateFrameCounter % 2 === 0) separateCards();
     const { h } = getDims();
     cards.forEach((card) => {
       if (!unlocked && !seen.has(card.index) && card.baseY + card.size > 0 && card.baseY < h) {
