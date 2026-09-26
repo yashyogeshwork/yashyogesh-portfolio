@@ -5,16 +5,31 @@
 .about-hero {
   display: flex;
   align-items: center;
-  padding: 100px 0 var(--space-6);
+  /* The opening screen holds only the greeting, portrait and statement,
+     with room to breathe. "Based in", CV and the rest start below the fold. */
+  min-height: 100vh;
+  min-height: 100svh;
+  box-sizing: border-box;
+  padding: var(--space-6) 0 var(--space-6);
 }
 
 .about-hero-grid {
   display: grid;
   grid-template-columns: 0.7fr 1.3fr;
-  gap: var(--space-6);
+  /* The portrait spans both rows; "Hello" starts level with its top
+     edge, and the statement follows below it. */
+  grid-template-areas:
+    "photo greet"
+    "photo intro";
+  grid-template-rows: auto 1fr;
+  column-gap: var(--space-6);
+  row-gap: 0;
   align-items: start;
   width: 100%;
 }
+.about-hero-grid > .about-greeting-row { grid-area: greet; }
+.about-hero-grid > .about-portrait-col { grid-area: photo; }
+.about-hero-grid > .about-intro { grid-area: intro; }
 
 .about-portrait-col {
   display: flex;
@@ -30,7 +45,7 @@
 .about-intro {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-3);
 }
 
 .about-greeting-row {
@@ -149,12 +164,12 @@
   align-items: center;
   gap: var(--space-1);
   margin-top: var(--space-3);
-  padding: 12px 22px;
+  padding: 12px 24px;
   background: var(--color-text-primary);
   color: var(--color-bg);
-  border: 1px solid var(--color-text-primary);
+  border: none;
   border-radius: var(--radius-pill);
-  font-size: var(--fs-body);
+  font-size: 14px;
   font-weight: var(--fw-medium);
   width: fit-content;
   transition: background var(--duration-hover) var(--ease-cinematic),
@@ -258,9 +273,9 @@
 .about-intro-contact {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2); /* was 8px: the three lines read as one cramped block */
   margin-top: 0;
-  padding-top: 18px;
+  padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
 }
 
@@ -338,8 +353,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--color-border);
+  /* No rule between items: 25 hairlines made the page read as a stack
+     of dashes. Spacing alone separates them. */
+  padding: var(--space-1) 0 var(--space-2);
 }
 
 .about-recognition-item:first-of-type {
@@ -373,6 +389,10 @@
   .about-hero-grid,
   .about-body-grid {
     grid-template-columns: 1fr;
+  }
+  .about-hero-grid {
+    grid-template-areas: "greet" "photo" "intro";
+    row-gap: var(--space-4);
   }
   .about-credentials-grid {
     column-gap: var(--space-5);
@@ -467,7 +487,7 @@
 .about-react-note-row {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-2);
 }
 
 .about-react-textarea,
@@ -490,13 +510,13 @@
 .about-react-submit {
   align-self: flex-start;
   margin-top: var(--space-2);
-  padding: 9px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   background: var(--color-text-primary);
   color: var(--color-bg);
   font-family: var(--font-primary);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: var(--fw-medium);
   cursor: pointer;
   transition: opacity var(--duration-hover) var(--ease-cinematic);
@@ -770,4 +790,16 @@ body[data-page="about"] .nav-link-here:active {
 
 @media (prefers-reduced-motion: reduce) {
   .nav-vehicle-arrow { animation: none; opacity: 0.7; }
+}
+
+/* Feedback form, now its own section after the bio (was directly under
+   the opening statement, before anything about the work or the person). */
+.about-react-section {
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--color-border);
+}
+.about-react-section .about-react {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }

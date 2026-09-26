@@ -92,21 +92,75 @@
   // directly clicked. Used by every patch on the page: the plain
   // patches below, the footer shape, and every card in the "pop all
   // 15" gallery.
-  function wireDragToPop(container) {
-    let dragging = false;
-    container.addEventListener('pointerdown', (e) => {
-      dragging = true;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      if (el && el.classList.contains('about-bubble')) pop(el);
+  // Why pops used to miss:
+  //  1. Fast swipes: the browser only reports pointer positions every
+  //     few ms, so a quick swipe jumped 30-60px between reports and any
+  //     bubble in between never popped. Now every point along the path
+  //     between two reports is checked.
+  //  2. Near-misses: bubbles are circles, so the corners of each cell
+  //     were dead zones. Hit-testing now uses each bubble's centre with
+  //     a little tolerance.
+  //  3. Every re-render of a shape attached another set of handlers.
+  //     Each container is now wired exactly once, and the move/up
+  //     listeners are shared by the whole page.
+  const wired = new WeakSet();
+  let gesture = null; // { rects, last:[x,y], step }
+
+  function collectBubbles(container) {
+    return [...container.querySelectorAll('.about-bubble:not(.is-popped)')].map((el) => {
+      const b = el.getBoundingClientRect();
+      const r = (b.width / 2) * 1.2;
+      return { el, cx: b.left + b.width / 2, cy: b.top + b.height / 2, r2: r * r, w: b.width };
     });
-    container.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      if (el && el.classList.contains('about-bubble')) pop(el);
-    });
-    addEventListener('pointerup', () => { dragging = false; });
-    addEventListener('pointercancel', () => { dragging = false; });
   }
+  function bubbleAt(x, y) {
+    for (const r of gesture.rects) {
+      const dx = x - r.cx, dy = y - r.cy;
+      if (dx * dx + dy * dy <= r.r2) return r.el;
+    }
+    return null;
+  }
+  function popAlong(x, y) {
+    const [lx, ly] = gesture.last;
+    const n = Math.max(1, Math.ceil(Math.hypot(x - lx, y - ly) / gesture.step));
+    for (let i = 1; i <= n; i++) {
+      const el = bubbleAt(lx + (x - lx) * i / n, ly + (y - ly) * i / n);
+      if (el) pop(el);
+    }
+    gesture.last = [x, y];
+  }
+
+  function wireDragToPop(container) {
+    if (wired.has(container)) return;
+    wired.add(container);
+    container.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return; // left button / touch / pen only
+      const rects = collectBubbles(container);
+      gesture = { rects, last: [e.clientX, e.clientY], step: Math.max(3, ((rects[0] && rects[0].w) || 24) / 3) };
+      const el = bubbleAt(e.clientX, e.clientY);
+      if (el) pop(el);
+    });
+  }
+  let prevPt = null; // pointer position at the previous report
+  addEventListener('pointermove', (e) => {
+    const from = prevPt;
+    prevPt = [e.clientX, e.clientY];
+    if (!gesture) {
+      // Button held down but the press started just outside a patch:
+      // begin popping the moment the pointer sweeps onto one.
+      if (!(e.buttons & 1)) return;
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const container = hit && hit.closest('.about-bubblewrap');
+      if (!container || !wired.has(container)) return;
+      const rects = collectBubbles(container);
+      // Start the path where the pointer actually was, so bubbles between
+      // the last report outside the patch and this one still count.
+      gesture = { rects, last: from || [e.clientX, e.clientY], step: Math.max(3, ((rects[0] && rects[0].w) || 24) / 3) };
+    }
+    popAlong(e.clientX, e.clientY);
+  }, { passive: true });
+  addEventListener('pointerup', () => { gesture = null; });
+  addEventListener('pointercancel', () => { gesture = null; });
 
   // ---- Plain rectangular patches — any element with class
   // "about-bubblewrap" that is NOT the shape-reveal footer patch.

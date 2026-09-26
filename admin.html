@@ -4,7 +4,10 @@
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Site Editor — Yash Yogesh</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Site Editor, Yash Yogesh</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -81,20 +84,20 @@
 <body>
 
 <h1>Site Editor</h1>
-<p class="sub">Edit any text on the site and manage the sketch wall — no coding needed.</p>
+<p class="sub">Edit any text on the site and manage the sketch wall, no coding needed.</p>
 
 <div class="howto">
   <b>How publishing works (3 steps):</b>
   <ol>
     <li>Edit anything below, then press <b>Download updated content.js</b>.</li>
-    <li>Go to your GitHub repo → open the <b>js</b> folder → click <b>content.js</b> → click the pencil/edit — or simpler: use <b>Add file → Upload files</b> into the <b>js</b> folder and upload your downloaded file (it replaces the old one).</li>
+    <li>Go to your GitHub repo → open the <b>js</b> folder → click <b>content.js</b> → click the pencil/edit, or simpler: use <b>Add file → Upload files</b> into the <b>js</b> folder and upload your downloaded file (it replaces the old one).</li>
     <li>Commit. Netlify republishes automatically in about a minute. Done.</li>
   </ol>
   <br>
   <b>Adding / replacing sketches:</b>
   <ol>
     <li>On GitHub, open the <b>images/sketches</b> folder → <b>Add file → Upload files</b> → upload your sketch image (JPG or PNG).</li>
-    <li>To <b>replace</b> an existing sketch: upload a new file with the <b>same filename</b> — nothing else needed, it's live after commit.</li>
+    <li>To <b>replace</b> an existing sketch: upload a new file with the <b>same filename</b>, nothing else needed, it's live after commit.</li>
     <li>To <b>add a new</b> sketch: upload the file, then add its filename in the Sketch Wall section below and download/upload the new content.js.</li>
   </ol>
 </div>
@@ -116,9 +119,9 @@
   const SECTIONS = [
     { key: 'site', title: 'Site-wide (name, navigation, footer)' },
     { key: 'home', title: 'Homepage', skip: ['projects'] },
-    { key: 'hive', title: 'Project — Hive' },
-    { key: 'toad', title: 'Project — TOAD' },
-    { key: 'c1', title: 'Project — Surface C1' },
+    { key: 'hive', title: 'Project: Hive' },
+    { key: 'toad', title: 'Project: TOAD' },
+    { key: 'c1', title: 'Project: Surface C1' },
     { key: 'sketchwall', title: 'Sketch Wall (headline + sketches)', skip: ['items'] },
     { key: 'about', title: 'About page' },
     { key: 'contact', title: 'Contact page' },
@@ -153,23 +156,23 @@
 
   /* ---- Homepage project titles ---- */
   const dProjects = document.createElement('details');
-  let pInner = '<summary>Homepage — project titles &amp; images</summary><div class="fields">';
+  let pInner = '<summary>Homepage: project titles &amp; images</summary><div class="fields">';
   C.home.projects.forEach((p, i) => {
     pInner += `
-      <label>Project ${i + 1} — title</label>
+      <label>Project ${i + 1}: title</label>
       <input type="text" data-proj="${i}" data-pkey="title" value="${p.title}">
-      <label>Project ${i + 1} — image file (in images/ folder; leave empty for placeholder)</label>
+      <label>Project ${i + 1}: image file (in images/ folder; leave empty for placeholder)</label>
       <input type="text" data-proj="${i}" data-pkey="image" value="${p.image || ''}" placeholder="e.g. images/hive-hero.jpg">
     `;
   });
-  pInner += '<p class="note">Order and links are fixed here to keep the carousel stable — ask for an HTML edit if a project is added or removed.</p></div>';
+  pInner += '<p class="note">Order and links are fixed here to keep the carousel stable, ask for an HTML edit if a project is added or removed.</p></div>';
   dProjects.innerHTML = pInner;
   editor.appendChild(dProjects);
 
   /* ---- Sketch list ---- */
   const dSketch = document.createElement('details');
   dSketch.open = true;
-  dSketch.innerHTML = '<summary>Sketch Wall — the sketches</summary><div class="fields"><p class="note" style="margin-bottom:12px">Each row is one sketch. The filename must match a file uploaded to images/sketches/ on GitHub. Empty filename = placeholder gradient.</p><div id="sketchList"></div><button class="add-btn" type="button" id="addSketch">+ Add sketch</button></div>';
+  dSketch.innerHTML = '<summary>Sketch Wall: the sketches</summary><div class="fields"><p class="note" style="margin-bottom:12px">Each row is one sketch. The filename must match a file uploaded to images/sketches/ on GitHub. Empty filename = placeholder gradient.</p><div id="sketchList"></div><button class="add-btn" type="button" id="addSketch">+ Add sketch</button></div>';
   editor.appendChild(dSketch);
   const sketchList = dSketch.querySelector('#sketchList');
 
@@ -212,7 +215,7 @@
 
   /* ---- Generate the new content.js ---- */
   function generate() {
-    return '/* Generated by admin.html — ' + new Date().toISOString().slice(0, 10) + ' */\n' +
+    return '/* Generated by admin.html, ' + new Date().toISOString().slice(0, 10) + ' */\n' +
            'window.CONTENT = ' + JSON.stringify(C, null, 2) + ';\n';
   }
 
@@ -238,7 +241,7 @@
   previewBtn.addEventListener('click', () => {
     if (localStorage.getItem('contentPreviewJSON')) {
       localStorage.removeItem('contentPreviewJSON');
-      alert('Preview cleared — pages in this browser now show the published content again.');
+      alert('Preview cleared, pages in this browser now show the published content again.');
     } else {
       try {
         localStorage.setItem('contentPreviewJSON', JSON.stringify(C));

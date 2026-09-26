@@ -29,6 +29,14 @@
     return cachedDims;
   }
   function invalidateDims() { cachedDims = null; }
+
+  // Place cards on whole device pixels. They drift under 1px per frame,
+  // so unsnapped positions cycled through every in-between value and the
+  // photos alternated between crisp and softened ~4 times a second,
+  // which read as flickering motion blur. Snapping keeps every frame sharp.
+  const DPR = window.devicePixelRatio || 1;
+  const snap = (v) => Math.round(v * DPR) / DPR;
+  const place = (el, x, y) => { el.style.transform = `translate3d(${snap(x)}px, ${snap(y)}px, 0)`; };
   addEventListener('resize', invalidateDims);
   addEventListener('orientationchange', invalidateDims);
 
@@ -117,9 +125,11 @@
     }
 
     const item = ((window.CONTENT && CONTENT.c1 && CONTENT.c1.heroImages) || [])[card.index];
-    card.el.style.width = size + 'px';
-    card.el.style.height = size + 'px';
-    card.el.style.background = (item && item.image) ? `url('${item.image}') center/cover` : tones[card.index % tones.length];
+    // Only touch size/background when they actually change: re-setting
+    // the same image URL on every recycle forced a repaint of the photo.
+    if (card.size !== size) { card.el.style.width = size + 'px'; card.el.style.height = size + 'px'; }
+    const bg = (item && item.image) ? `url('${item.image}') center/cover` : tones[card.index % tones.length];
+    if (card.bg !== bg) { card.el.style.background = bg; card.bg = bg; }
 
     const existing = placed.find((p) => p.card === card);
     const record = { card, cx: x + size / 2, cy: y + size / 2, r: size / 2 };
@@ -132,7 +142,7 @@
     card.depth = rand(0, 1);
     card.speed = 0.46 + card.depth * 0.78;
     card.el.style.opacity = '1';
-    card.el.style.transform = `translate(${x}px, ${y}px)`;
+    place(card.el, x, y);
   }
 
   // Spawn-time spacing only holds for an instant: cards drift at different
@@ -233,17 +243,29 @@
   // the load-time freeze. Card creation above stays synchronous since
   // it's cheap; only the real cost is deferred, spread across a
   // handful of frames so the browser can breathe between batches.
-  (function spawnInitialCards() {
-    const BATCH_SIZE = 6;
-    let i = 0;
-    function nextBatch() {
-      const end = Math.min(i + BATCH_SIZE, cards.length);
-      for (; i < end; i++) {
-        spawn(cards[i], reduceMotion ? 'static' : undefined);
-      }
-      if (i < cards.length) requestAnimationFrame(nextBatch);
+  // Each photo is decoded before its card appears. Previously all 32
+  // were decoded on the fly the first time they were painted, which
+  // stalled frames for up to ~160ms in the first seconds (the "freeze").
+  // img.decode() does that work off the main thread, and the result is
+  // cached, so the paint is instant and later recycles reuse it.
+  const decoded = new Map();
+  function decodeImage(url) {
+    if (!url) return Promise.resolve();
+    if (!decoded.has(url)) {
+      const im = new Image();
+      im.src = url;
+      decoded.set(url, (im.decode ? im.decode() : Promise.resolve()).catch(() => {}));
     }
-    nextBatch();
+    return decoded.get(url);
+  }
+  (function spawnInitialCards() {
+    const list = (window.CONTENT && CONTENT.c1 && CONTENT.c1.heroImages) || [];
+    cards.forEach((card) => {
+      const url = list[card.index] && list[card.index].image;
+      // Cap the wait so a slow photo never holds its card back for long.
+      Promise.race([decodeImage(url), new Promise((r) => setTimeout(r, 1500))])
+        .then(() => requestAnimationFrame(() => spawn(card, reduceMotion ? 'static' : undefined)));
+    });
   })();
   function closeExpand() {
     expandVeil.classList.remove('is-active');
@@ -261,7 +283,11 @@
   // lock, no recycling. The page simply scrolls normally from here.
   if (reduceMotion) return;
 
+  // Scroll feels like a push: each scroll adds to a target speed, the
+  // photos accelerate toward it over ~250ms, then the target fades and
+  // they ease back down. (Before, speed jumped instantly then decayed.)
   let boost = 0;
+  let boostTarget = 0;
   let unlocked = false;
   // Each of the 32 card elements is permanently tied to one image
   // (card.index never changes, only where it's positioned), so "shown
@@ -286,6 +312,7 @@
     if (separateFrameCounter % 2 === 0) separateCards();
     const { h } = getDims();
     cards.forEach((card) => {
+      if (card.baseY == null) return; // not placed yet (its photo is still decoding)
       if (!unlocked && !seen.has(card.index) && card.baseY + card.size > 0 && card.baseY < h) {
         seen.add(card.index);
       }
@@ -305,7 +332,7 @@
           card.el.style.opacity = '0';
         }
       } else {
-        card.el.style.transform = `translate(${card.baseX}px, ${card.baseY}px)`;
+        place(card.el, card.baseX, card.baseY);
       }
     });
     if (!unlocked) {
@@ -315,11 +342,8 @@
         progressWrap.classList.add('is-hidden');
       }
     }
-    // Tightened from 0.94 so boost tracks the scroll that's actually
-    // happening right now rather than coasting on one from a moment ago
-    // — each new wheel/touch input reads as a direct, current response
-    // instead of blending into a lingering trail.
-    boost *= 0.88;
+    boost += (boostTarget - boost) * 0.12; // accelerate toward the push
+    boostTarget *= 0.93;                   // the push fades, so they slow again
     requestAnimationFrame(tick);
   }
 
@@ -334,10 +358,12 @@
   // regardless of how many cards have been seen. A single gesture is
   // grouped by a short quiet-gap timeout, since one real-world swipe
   // fires many discrete wheel events, not one.
-  const GESTURE_LIMIT = 3;
+  // Two scrolls push the photos along; the third moves into the case study.
+  const GESTURE_LIMIT = 2;
   let gestureCount = 0;
   let gestureActive = false;
   let gestureTimer = null;
+  let swallowUntilIdle = false;
 
   function forceUnlock() {
     unlocked = true;
@@ -345,6 +371,17 @@
     document.documentElement.style.overflow = '';
     document.body.style.overflow = '';
   }
+
+  // Keyboard users had no way past the hero at all: overflow:hidden
+  // swallowed PageDown, Space, arrows and End. Any scroll key now
+  // releases the page, and the key's own scroll then happens normally.
+  const SCROLL_KEYS = new Set(['PageDown', 'PageUp', ' ', 'Spacebar', 'ArrowDown', 'ArrowUp', 'End', 'Home']);
+  addEventListener('keydown', (e) => {
+    if (unlocked || !SCROLL_KEYS.has(e.key)) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
+    forceUnlock();
+  });
 
   addEventListener('wheel', (e) => {
     if (!unlocked) {
@@ -356,9 +393,18 @@
       const isNewGesture = !gestureActive;
       if (isNewGesture) {
         if (gestureCount >= GESTURE_LIMIT) {
-          // This is the 4th gesture — let it through untouched instead of
-          // capturing it, so it becomes the first real scroll of the page.
+          // The third scroll: glide to exactly the start of the case study.
+          // Letting the scroll through raw meant the rest of the same
+          // trackpad swipe kept going and carried half the first section
+          // past. The remainder of this gesture is absorbed instead.
+          e.preventDefault();
           forceUnlock();
+          swallowUntilIdle = true;
+          const first = document.querySelector('.cs-section');
+          if (first) window.scrollTo({ top: first.getBoundingClientRect().top + scrollY, behavior: reduceMotion ? 'auto' : 'smooth' });
+          gestureActive = true;
+          clearTimeout(gestureTimer);
+          gestureTimer = setTimeout(() => { gestureActive = false; swallowUntilIdle = false; }, 220);
           return;
         }
         gestureCount += 1;
@@ -375,8 +421,15 @@
       // Gain and cap raised, decay tightened (see below), so the cards
       // read as responding to each scroll input directly rather than
       // trailing a smoothed-out average of recent ones.
-      boost = Math.min(13, boost + Math.abs(e.deltaY) * 0.14);
+      boostTarget = Math.min(24, boostTarget + Math.abs(e.deltaY) * 0.3);
     } else {
+      if (swallowUntilIdle) {
+        // Still the same swipe that triggered the glide: absorb it.
+        e.preventDefault();
+        clearTimeout(gestureTimer);
+        gestureTimer = setTimeout(() => { gestureActive = false; swallowUntilIdle = false; }, 220);
+        return;
+      }
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
     }
@@ -393,6 +446,8 @@
     if (!unlocked) {
       if (gestureCount >= GESTURE_LIMIT) {
         forceUnlock();
+        const first = document.querySelector('.cs-section');
+        if (first) window.scrollTo({ top: first.getBoundingClientRect().top + scrollY, behavior: reduceMotion ? 'auto' : 'smooth' });
       } else {
         gestureCount += 1;
       }
@@ -405,8 +460,15 @@
     touchStartY = e.touches[0].clientY;
     if (!unlocked) {
       if (dy > 0) e.preventDefault();
-      boost = Math.min(13, boost + Math.abs(dy) * 0.32);
+      boostTarget = Math.min(24, boostTarget + Math.abs(dy) * 0.66);
     } else {
+      if (swallowUntilIdle) {
+        // Still the same swipe that triggered the glide: absorb it.
+        e.preventDefault();
+        clearTimeout(gestureTimer);
+        gestureTimer = setTimeout(() => { gestureActive = false; swallowUntilIdle = false; }, 220);
+        return;
+      }
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
     }

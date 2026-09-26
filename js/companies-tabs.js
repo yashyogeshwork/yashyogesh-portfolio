@@ -128,8 +128,8 @@
         '<td class="col-name"><span class="row-chevron">›</span>' + esc(s.name) + '<span class="community-tag">Added by community</span>' +
           removeControlHtml("studio", "this studio") +
           '<span class="col-name-meta">' + esc(s.location || "") + '</span></td>' +
-        '<td class="col-loc">' + esc(s.location || "—") + "</td>" +
-        '<td class="col-type">' + esc(s.type || "—") + "</td>" +
+        '<td class="col-loc">' + esc(s.location || "Not listed") + "</td>" +
+        '<td class="col-type">' + esc(s.type || "Not listed") + "</td>" +
       "</tr>"
     );
   }

@@ -110,7 +110,7 @@
     return raw;
   }
 
-  const FRICTION = 0.965;
+  const FRICTION = 0.955; // a touch more drag so throws settle rather than sail
   const RESTITUTION = 0.62;
   // Only used by the rescatter burst (regular throws don't fall). Raised
   // from 0.38 — simulating the actual formula showed the old value let
@@ -309,6 +309,34 @@
     });
   }
 
+  // Scale and rotation ease toward their targets frame by frame inside
+  // the physics loop (easeVisual, below), instead of via CSS transitions.
+  // A CSS transition on `transform` also animated every position update,
+  // so a dragged card trailed ~220ms behind the pointer and a dropped or
+  // hovered-in-flight card smeared while physics moved it.
+  function targetRot(card) {
+    if (card.exploding || card.gliding) return card.flightRot;
+    return card.hovered ? 0 : card.baseRot;
+  }
+  function easeVisual(card, dt) {
+    const tr = targetRot(card), ts = card.curScale || 1;
+    if (card.rShow == null) card.rShow = tr;
+    if (card.sShow == null) card.sShow = ts;
+    if (card.exploding || card.gliding) { card.rShow = tr; }
+    let dr = tr - card.rShow; dr = ((dr + 180) % 360 + 360) % 360 - 180;
+    const ds = ts - card.sShow;
+    if (Math.abs(ds) < 0.0015 && Math.abs(dr) < 0.08) {
+      if (ds || dr) { card.sShow = ts; card.rShow = tr; return true; }
+      return false;
+    }
+    // Exponential approach: fast start, settles without overshoot.
+    const kS = prefersReducedMotion ? 1 : 1 - Math.exp(-dt / 70);
+    const kR = prefersReducedMotion ? 1 : 1 - Math.exp(-dt / 110);
+    card.sShow += ds * kS;
+    card.rShow += dr * kR;
+    return true;
+  }
+
   function render(card) {
     let rot;
     if (card.exploding || card.gliding) {
@@ -322,7 +350,10 @@
     } else {
       rot = card.hovered ? 0 : card.baseRot;
     }
-    const scale = card.curScale || 1;
+    if (card.rShow == null) card.rShow = rot;
+    if (card.sShow == null) card.sShow = card.curScale || 1;
+    rot = card.rShow;
+    const scale = card.sShow;
     // ox/oy: a small ambient offset from the cursor-proximity nudge below —
     // additive to the card's real x/y, never written back into them, so
     // drag/throw/layout math elsewhere stays untouched.
@@ -335,6 +366,8 @@
     let dragOffsetX = 0, dragOffsetY = 0;
     let lastMoveX = 0, lastMoveY = 0, lastMoveT = 0;
     let downX = 0, downY = 0;
+    let tapSlop = 6;
+    let moveHistory = [];
 
     // Keyboard equivalent of a click: Enter/Space opens the sketch.
     // Dragging and throwing stay mouse/touch-only — there's no keyboard
@@ -353,8 +386,6 @@
       // rotation reset. Skipped mid-flight/mid-flinch — this only reads
       // right on a card that's actually sitting still.
       if (!card.inMotion && !card.exploding) card.curScale = 1.15;
-      card.el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
-      render(card);
       card.el.style.zIndex = nextZ();
       // Hover now leads with "Drag", the primary interaction on this
       // wall — clicking still opens the expanded view, but that's the
@@ -367,8 +398,6 @@
       if (draggingCard) return;
       card.hovered = false;
       card.curScale = 1;
-      card.el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
-      render(card);
       dragCursor.classList.remove('is-visible');
     });
     el.addEventListener('pointermove', (e) => {
@@ -392,18 +421,14 @@
       dragOffsetY = e.clientY - card.y;
       lastMoveX = e.clientX; lastMoveY = e.clientY; lastMoveT = performance.now();
       downX = e.clientX; downY = e.clientY;
-      // Immediate squash-and-stretch pop on grab — real, snappy, tactile
-      // feedback the instant you touch it, not just a shadow change.
-      // Snap to the pop instantly (no transition), then let it relax
-      // down to a resting "held" scale with an actual eased transition.
+      tapSlop = e.pointerType === 'touch' ? 10 : 6; // fingers jitter more than mice
+      moveHistory = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
+      // Feedback on press: the card lifts to its held size right away
+      // (eased in the physics loop). No overshoot pop: the site's motion
+      // rules rule out bounce.
       card.el.style.transition = 'none';
-      card.curScale = 1.16;
-      render(card);
-      requestAnimationFrame(() => {
-        card.el.style.transition = 'transform 0.22s var(--ease-cinematic)';
-        card.curScale = 1.06;
-        render(card);
-      });
+      card.gliding = false; // exploding is left alone: rescatter's rebuild timing depends on it
+      card.curScale = 1.06;
     });
     el.addEventListener('pointermove', (e) => {
       if (!card.dragging) return;
@@ -419,14 +444,13 @@
       // Only relabel once it's actually a drag, not a click that hasn't
       // resolved yet — same 6px hysteresis endDrag() uses to tell them
       // apart, so the label always agrees with what release is about to do.
-      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) {
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > tapSlop) {
         dragCursor.textContent = 'Drag';
       }
 
       const now = performance.now();
-      const dt = Math.max(1, now - lastMoveT);
-      card.vx = ((e.clientX - lastMoveX) / dt) * 16;
-      card.vy = ((e.clientY - lastMoveY) / dt) * 16;
+      moveHistory.push({ x: e.clientX, y: e.clientY, t: now });
+      while (moveHistory.length > 2 && now - moveHistory[0].t > 100) moveHistory.shift();
       lastMoveX = e.clientX; lastMoveY = e.clientY; lastMoveT = now;
     });
     function endDrag(e) {
@@ -435,16 +459,34 @@
       draggingCard = null;
       el.classList.remove('is-dragging');
 
+      // Release velocity from the last ~80ms of movement, not a single
+      // sample: one sample was noisy (a tiny wobble killed a real flick)
+      // and it never decayed, so holding a card still and then letting
+      // go still threw it at the old speed.
+      const tNow = performance.now();
+      const recent = moveHistory.filter((m) => tNow - m.t <= 80);
+      if (recent.length >= 2 && tNow - recent[recent.length - 1].t < 50) {
+        const a = recent[0], b = recent[recent.length - 1];
+        // Averaged over at least 32ms, scaled down and capped. A quick
+        // flick used to divide by a ~8ms span and launch the card clean
+        // across the screen (~1,700px). Now a hard flick glides ~400px.
+        const span = Math.max(32, b.t - a.t);
+        const GAIN = 0.6, MAX_SPEED = 18;
+        let vx = ((b.x - a.x) / span) * 16 * GAIN;
+        let vy = ((b.y - a.y) / span) * 16 * GAIN;
+        const sp = Math.hypot(vx, vy);
+        if (sp > MAX_SPEED) { vx *= MAX_SPEED / sp; vy *= MAX_SPEED / sp; }
+        card.vx = vx; card.vy = vy;
+      } else { card.vx = 0; card.vy = 0; }
       const throwSpeed = Math.hypot(card.vx, card.vy);
       const THROW_THRESHOLD = 3; // a real deliberate flick, not an accidental nudge
       const moveDist = e ? Math.hypot(e.clientX - downX, e.clientY - downY) : 999;
 
-      if (moveDist < 6) {
+      if (moveDist < tapSlop) {
         // Barely moved at all — this was a click, not a drag. Open the
         // real expand view instead of settling in place.
-        card.el.style.transition = 'transform 0.5s var(--ease-cinematic)';
+        card.el.style.transition = '';
         card.curScale = 1;
-        render(card);
         openExpand(card);
         return;
       }
@@ -480,9 +522,8 @@
         // Just a drop, not a throw — safe to use a real CSS transition
         // here since nothing else is touching its transform right now.
         // Elastic overshoot settle, not a flat instant snap.
-        card.el.style.transition = 'transform 0.5s var(--ease-cinematic)';
+        card.el.style.transition = '';
         card.curScale = 1;
-        render(card);
         // Hand this off to physicsTick even though it isn't a throw —
         // its non-exploding branch already clamps position to the wall
         // bounds every frame (see below). Without this, a card dropped
@@ -498,12 +539,15 @@
   let isExploding = false;
   let allExplodedAt = 0; // timestamp once every sketch has launched — see completion check below
 
+  let lastTickAt = performance.now();
   function physicsTick() {
     const w = innerWidth, h = innerHeight;
     const now = performance.now();
+    const dt = Math.min(50, now - lastTickAt); lastTickAt = now;
     ambientTick();
     cards.forEach((card) => {
-      if (!card.inMotion) return;
+      const easing = easeVisual(card, dt);
+      if (!card.inMotion) { if (easing) render(card); return; }
 
       card.x += card.vx;
       card.y += card.vy;
@@ -562,12 +606,11 @@
         // A satisfying little "landing" pulse now that it's genuinely
         // at rest — safe to use a real transition here, nothing else
         // is touching its transform anymore.
-        card.el.style.transition = 'transform 0.4s var(--ease-cinematic)';
-        card.curScale = 1.08;
-        render(card);
+        // Landing settles straight into place (the rotation eases to its
+        // resting angle in easeVisual). The old 1.08 scale pulse was an
+        // overshoot, which the site's motion rules exclude.
+        card.curScale = 1;
         setTimeout(() => {
-          card.curScale = 1;
-          render(card);
           // A card that was still settling (mid-throw, mid-rescatter) the
           // moment a sketch got expanded was skipped by partWall() — it
           // only ever ran once, at the instant of opening, and it

@@ -91,13 +91,31 @@
     navLink.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      var target = document.getElementById('popitStage');
-      if (target) {
-        target.scrollIntoView({
-          behavior: reduceMotion ? 'auto' : 'smooth',
-          block: 'start'
-        });
-      }
+      // Land with the whole pop-it section centred in the space below the
+      // nav. It used to scroll the stage's top edge to the very top of the
+      // screen (under the fixed nav, cutting the pop-its) and the browser's
+      // default smooth scroll raced over the long distance.
+      var block = document.querySelector('.about-popit') || document.getElementById('popitStage');
+      if (!block) return;
+      var nav = document.getElementById('siteNav');
+      var navH = nav ? nav.getBoundingClientRect().height : 0;
+      var r = block.getBoundingClientRect();
+      var room = window.innerHeight - navH;
+      var goal = window.scrollY + r.top - navH - Math.max(0, (room - r.height) / 2);
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      goal = Math.max(0, Math.min(goal, maxY));
+      if (reduceMotion) { window.scrollTo(0, goal); return; }
+      var from = window.scrollY, dist = goal - from;
+      var dur = Math.min(1400, Math.max(700, Math.abs(dist) * 0.45)); // calm, scales with distance
+      var t0 = performance.now();
+      var html = document.documentElement, prevBehavior = html.style.scrollBehavior;
+      html.style.scrollBehavior = 'auto'; // our own easing, not the CSS smooth-scroll on top
+      (function step(now) {
+        var t = Math.min(1, (now - t0) / dur);
+        var e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease in-out
+        window.scrollTo(0, from + dist * e);
+        if (t < 1) requestAnimationFrame(step); else html.style.scrollBehavior = prevBehavior;
+      })(t0);
     });
   }
 

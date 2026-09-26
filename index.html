@@ -12,9 +12,12 @@
   </script>
 
   <meta charset="UTF-8">
+  <!-- Hide the stage from the very first paint (only when JS runs), so the
+       entrance never flashes the page visible and then hides it again. -->
+  <script>document.documentElement.classList.add('studio-preload')</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Yash Yogesh · Transportation Designer Portfolio</title>
-  <meta name="description" content="Portfolio of Yash Yogesh, a transportation designer with an MFA from Umeå Institute of Design.">
+  <meta name="description" content="Portfolio of Yash Yogesh, a transportation designer studying for an MFA at Umeå Institute of Design.">
 <link rel="canonical" href="https://yashyogesh.com/">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -24,12 +27,12 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://yashyogesh.com/">
   <meta property="og:title" content="Yash Yogesh · Transportation Designer">
-  <meta property="og:description" content="Portfolio of Yash Yogesh, a transportation designer with an MFA from Umeå Institute of Design.">
+  <meta property="og:description" content="Portfolio of Yash Yogesh, a transportation designer studying for an MFA at Umeå Institute of Design.">
   <meta property="og:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Yash Yogesh · Transportation Designer">
-  <meta name="twitter:description" content="Portfolio of Yash Yogesh, a transportation designer with an MFA from Umeå Institute of Design.">
+  <meta name="twitter:description" content="Portfolio of Yash Yogesh, a transportation designer studying for an MFA at Umeå Institute of Design.">
   <meta name="twitter:image" content="https://yashyogesh.com/images/yash-portrait.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,7 +49,7 @@
     "name": "Yash Yogesh",
     "url": "https://yashyogesh.com/",
     "jobTitle": "Transportation Designer",
-    "description": "Transportation Designer. MFA Transportation Design, Umeå Institute of Design.",
+    "description": "Transportation designer, MFA Transportation Design student at Umeå Institute of Design.",
     "image": "https://yashyogesh.com/images/yash-portrait.jpg",
     "email": "mailto:yashyogesh.work@gmail.com",
     "sameAs": [
@@ -54,7 +57,7 @@
       "https://www.instagram.com/yash.yogesh_/",
       "https://www.behance.net/yashyogesh"
     ],
-    "alumniOf": {
+    "affiliation": {
       "@type": "CollegeOrUniversity",
       "name": "Umeå Institute of Design",
       "url": "https://www.umu.se/en/umea-institute-of-design/"
@@ -67,7 +70,7 @@
 
 <a class="skip-link" href="#studioCinema">Skip to studio</a>
 
-<h1 class="sr-only">Yash Yogesh — Transportation Designer, MFA at Umeå Institute of Design</h1>
+<h1 class="sr-only">Yash Yogesh, Transportation Designer, MFA at Umeå Institute of Design</h1>
 
 <!-- Bowed cinema-screen clip path, shared by every panel -->
 <svg width="0" height="0" style="position:absolute">

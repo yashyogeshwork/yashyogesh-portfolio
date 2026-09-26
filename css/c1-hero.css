@@ -44,7 +44,8 @@ body[data-page="project-c1"] .project-scroll-cue {
   box-shadow:0 2px 6px -2px rgba(17,17,17,0.14), 0 14px 30px -18px rgba(17,17,17,0.28);
   cursor:pointer;
   will-change:transform;
-  transition:box-shadow 100ms ease-out;
+  /* Cards fade in softly as their photo becomes ready, instead of popping. */
+  transition:box-shadow 100ms ease-out, opacity 0.6s var(--ease-cinematic);
 }
 
 .c1-card:active {
@@ -84,13 +85,18 @@ body[data-page="project-c1"] .project-scroll-cue {
 .c1-expand-veil {
   position:fixed; inset:0; z-index:100;
   background:rgba(17,17,17,0.85);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
   display:flex; align-items:center; justify-content:center;
   opacity:0; pointer-events:none;
-  transition:opacity 0.4s ease;
+  /* Hidden = fully removed from compositing. It used to keep an 8px
+     backdrop blur live over the moving photos even at opacity 0. */
+  visibility:hidden;
+  transition:opacity 0.4s var(--ease-cinematic), visibility 0s linear 0.4s;
 }
-.c1-expand-veil.is-active { opacity:1; pointer-events:all; }
+.c1-expand-veil.is-active {
+  opacity:1; pointer-events:all; visibility:visible;
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  transition:opacity 0.4s var(--ease-cinematic), visibility 0s;
+}
 .c1-expand-card {
   width:min(60vw,480px); height:min(60vw,480px);
   border-radius:0;
@@ -293,3 +299,15 @@ body[data-page="project-c1"] .project-scroll-cue {
     display: none;
   }
 }
+
+/* Interaction states (audit fill-in) */
+.c1-expand-close.is-active:hover { opacity: 1; }
+.c1-expand-close.is-active:active { opacity: 0.5; transition-duration: 100ms; }
+/* Hover: a print lifting slightly. Shadow only, because JS owns this
+   card's transform and opacity for the floating animation. */
+@media (hover: hover) {
+  .c1-card:hover {
+    box-shadow: 0 4px 10px -2px rgba(17,17,17,0.18), 0 24px 44px -18px rgba(17,17,17,0.36);
+  }
+}
+

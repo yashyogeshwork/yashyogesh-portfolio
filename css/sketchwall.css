@@ -140,6 +140,10 @@ html, body {
 .wall-field {
   position: absolute;
   inset: 0;
+  /* A tilted or lifted card can overhang its clamped box by a few px.
+     Clip here so the page can never gain sideways scroll (iOS doesn't
+     always honour overflow:hidden on body). Same edge the screen shows. */
+  overflow: clip;
 }
 
 /* Note: this page used to pin sketches to the wall with a .wall-sketch
@@ -453,3 +457,8 @@ html, body {
     transition:opacity 0.2s ease, transform 0.2s ease;
   }
   .drag-cursor.is-visible { opacity:0.85; transform:translate(-50%, -50%) scale(1); }
+
+/* Interaction states (audit fill-in) */
+.wall-mark { transition: opacity var(--duration-hover) var(--ease-cinematic); }
+.wall-mark:hover { opacity: 0.7; }
+.wall-mark:active { opacity: 0.5; }

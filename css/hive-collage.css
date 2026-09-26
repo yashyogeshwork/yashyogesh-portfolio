@@ -10,7 +10,7 @@
 
 .cs-problem-image {
   width: 100%;
-  margin: var(--space-5) 0 0 0;
+  margin: var(--cs-media-gap) 0 0 0;
   border-radius: var(--radius-image);
   overflow: hidden;
 }
@@ -22,7 +22,7 @@
 
 .cs-problem-statement {
   max-width: 900px;
-  margin: var(--space-5) auto 0;
+  margin: var(--space-5) auto 0; /* closer than image-to-image: it belongs to the collage above */
   text-align: center;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
@@ -35,7 +35,7 @@
 
 .cs-board {
   width: 100%;
-  margin: var(--space-5) 0 0 0;
+  margin: var(--cs-media-gap) 0 0 0;
   border-radius: var(--radius-image);
   overflow: hidden;
 }
@@ -50,7 +50,7 @@
 
 .cs-render {
   width: 100%;
-  margin: var(--space-5) 0 0 0;
+  margin: var(--cs-media-gap) 0 0 0;
   border-radius: var(--radius-image);
   overflow: hidden;
 }
@@ -60,6 +60,10 @@
 .cs-board-statement {
   text-align: center;
   max-width: 700px;
-  margin: var(--space-5) auto 0;
+  margin: var(--cs-media-gap) auto 0;
   color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .cs-problem-statement { margin-top: var(--space-4); }
 }

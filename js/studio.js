@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // window that starts narrow (e.g. a preview iframe) and is then
     // resized wider keeps using mobile numbers forever.
     isMobile = matchMedia('(max-width: 768px)').matches;
-    panelW = isMobile ? vw * 0.80 : Math.min(vw * 0.58, 860);
+    panelW = isMobile ? vw * 0.80 : Math.min(vw * 0.52, 780); // was 58% / 860px: too big on laptops
     // ~10% of viewport — measured from the Figma reference — gives real
     // visible breathing room between the center panel and the peek.
     gap = isMobile ? vw * 0.05 : vw * 0.10;
@@ -51,11 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // real images exactly — no crop, no letterbox. If that would make
     // the stage taller than the available viewport, panelW is scaled
     // down to fit instead of letting the stage overflow the window.
-    const maxH = Math.min(innerHeight * 0.72, 700);
-    let h = panelW / 1.5;
+    const maxH = Math.min(innerHeight * 0.62, 620); // was 72% of the screen height
+    const RATIO = 1.487; // the carousel photos' own shape, so cover crops nothing
+    let h = panelW / RATIO;
     if (h > maxH) {
       h = maxH;
-      panelW = h * 1.5;
+      panelW = h * RATIO;
       gap = isMobile ? vw * 0.05 : vw * 0.10;
       unit = panelW + gap;
     }
@@ -72,11 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let raf = null;
   let exited = false;
 
-  const HOLD_MS = 2800;
+  const HOLD_MS = 3200;
+  const AUTO_MS = 1400;
+  const USER_PAUSE_MS = 8000;
+  let lastUserAction = -Infinity;
+  const markUser = () => { lastUserAction = performance.now(); };
   const STEP_MS = 650;
-  const ENTRANCE_MS = 1400;
-  const ENTRANCE_SWEEP = N;
-  const EXIT_SWEEP_MS = 900;
+  // Entrance: a short, calm glide into place (half a slide) instead of
+  // spinning through every project. The old 4-slide sweep started at
+  // almost 6 slides/second, which read as a blur of passing images.
+  const EXIT_MS = 650;
+  // Scrolling past the last project wraps back to the first; only after
+  // three full turns does the next forward scroll leave for About.
+  const LAPS_BEFORE_ABOUT = 3;
+  let lapsCompleted = 0;
 
   /* ---------- Build ---------- */
   const panelEls = [];
@@ -124,13 +134,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keep exactly one panel's link clickable: whichever is actually
   // centered on screen right now. Runs every frame via the render loop.
+  // Worked out from `pos` directly. The previous version read every
+  // panel's getBoundingClientRect() each frame, right after render()
+  // had moved them, forcing a full layout recalculation 60 times a
+  // second during every drag, scroll and slide.
+  const linkState = [];
+  function nearestIndex() { return ((Math.round(pos) % N) + N) % N; }
   function updateActiveLink() {
-    const centerX = innerWidth / 2;
-    panelEls.forEach((panel, i) => {
-      const rect = panel.getBoundingClientRect();
-      const pc = rect.left + rect.width / 2;
-      const centered = rect.width > 0 && Math.abs(pc - centerX) < rect.width * 0.4;
-      panelLinks[i].style.pointerEvents = (centered && state === 'hold' && !exited) ? 'auto' : 'none';
+    const n = nearestIndex();
+    const settled = Math.abs(pos - Math.round(pos)) < 0.1;
+    panelLinks.forEach((l, i) => {
+      const on = i === n && settled && state === 'hold' && !exited;
+      if (linkState[i] !== on) { l.style.pointerEvents = on ? 'auto' : 'none'; linkState[i] = on; }
     });
   }
 
@@ -140,11 +155,14 @@ document.addEventListener('DOMContentLoaded', () => {
     l.className = 'studio-label';
     l.dataset.key = s.key;
     l.textContent = s.title;
-    l.addEventListener('click', () => jumpToIndex(i));
+    l.addEventListener('click', () => { markUser(); jumpToIndex(i); });
     labelBar.appendChild(l);
   });
   const labelEls = [...labelBar.children];
+  let committed = -1;
   function commitLabel(i) {
+    if (i === committed) return;
+    committed = i;
     labelEls.forEach((el, j) => el.classList.toggle('is-active', j === i));
   }
 
@@ -189,6 +207,25 @@ document.addEventListener('DOMContentLoaded', () => {
   function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
   }
+  // Softer than cubic at both ends: no sudden start or stop.
+  function easeInOutSine(t) {
+    return -(Math.cos(Math.PI * t) - 1) / 2;
+  }
+  // Glide pos by `delta` over `ms`. The label follows whichever slide is
+  // actually nearest the centre, so it changes as the slide arrives,
+  // not the instant the motion starts (that early switch read as a "tick").
+  function animateGlide(delta, ms, ease, onDone) {
+    cancelAnimationFrame(raf);
+    const from = pos, t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min((now - t0) / ms, 1);
+      pos = from + delta * ease(t);
+      render();
+      commitLabel(nearestIndex());
+      if (t < 1) raf = requestAnimationFrame(frame);
+      else { pos = from + delta; render(); onDone && onDone(); }
+    })(performance.now());
+  }
 
   function animateEase(delta, ms, onDone) {
     cancelAnimationFrame(raf);
@@ -220,55 +257,44 @@ document.addEventListener('DOMContentLoaded', () => {
     })(performance.now());
   }
 
-  function animateLinearDecel(delta, ms, onDone) {
-    cancelAnimationFrame(raf);
-    const from = pos, v0 = 2 * delta / ms, t0 = performance.now();
-    (function frame(now) {
-      const t = Math.min(now - t0, ms);
-      pos = from + v0 * t - (v0 / (2 * ms)) * t * t;
-      render();
-      if (t < ms) raf = requestAnimationFrame(frame);
-      else { pos = from + delta; render(); onDone && onDone(); }
-    })(performance.now());
-  }
-
-  function animateLinearAccel(delta, ms, onDone) {
-    cancelAnimationFrame(raf);
-    const from = pos, a = 2 * delta / (ms * ms), t0 = performance.now();
-    (function frame(now) {
-      const t = Math.min(now - t0, ms);
-      pos = from + 0.5 * a * t * t;
-      render();
-      if (t < ms) raf = requestAnimationFrame(frame);
-      else { pos = from + delta; render(); onDone && onDone(); }
-    })(performance.now());
-  }
-
   /* ---------- Hold / auto-advance loop — always running ---------- */
   function scheduleHold() {
     state = 'hold';
     pos = ((pos % N) + N) % N;
     currentIndex = Math.round(pos) % N;
     render();
+    commitLabel(currentIndex);
     clearTimeout(holdTimer);
+    // A scroll that arrived while a slide was still moving is kept and
+    // played now, instead of being silently dropped.
+    // A queued click only ever centres a slide. If that slide already
+    // arrived in the centre meanwhile, there's nothing to do: opening the
+    // project needs a deliberate click on the centred slide.
+    if (pendingJump !== -1) { const j = pendingJump; pendingJump = -1; if (j !== currentIndex) { jumpToIndex(j); return; } }
+    if (pendingDir) { const d = pendingDir; pendingDir = 0; requestStep(d); return; }
     if (reducedMotion) return; // never auto-advance — user-initiated drag/click still works fine
-    holdTimer = setTimeout(autoAdvance, HOLD_MS);
+    // After someone scrolls, drags or clicks, they're in control: wait
+    // much longer before the carousel moves on by itself.
+    const recentlyUsed = performance.now() - lastUserAction < USER_PAUSE_MS;
+    holdTimer = setTimeout(autoAdvance, recentlyUsed ? USER_PAUSE_MS : HOLD_MS);
   }
 
   function autoAdvance() {
     if (exited) return;
     state = 'auto';
-    const next = (currentIndex + 1) % N;
-    commitLabel(next);
-    animateEase(1, STEP_MS, scheduleHold);
+    // A slow, soft glide rather than a quick 650ms step: it drifts to the
+    // next project and settles, so auto-advance feels continuous and calm.
+    animateGlide(1, AUTO_MS, easeInOutSine, scheduleHold);
   }
 
   /* ---------- Direct navigation via label bar — only from a settled
      hold state, to avoid the stuck-mid-transition race. Clicking the
      label for the ALREADY-centered project enters it, exactly like
      tapping the slide itself — clicking any other label rotates there. */
+  let pendingJump = -1;
   function jumpToIndex(target) {
-    if (exited || state !== 'hold') return;
+    if (exited) return;
+    if (state !== 'hold') { if (state !== 'drag' && state !== 'exiting') pendingJump = target; return; }
 
     if (target === currentIndex) {
       const inner = panelEls[target].querySelector('.studio-panel-inner');
@@ -291,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastPos = pos;
   let lastMoveAt = performance.now();
   setInterval(() => {
-    if (state === 'hold' || state === 'entrance' || state === 'drag') { lastPos = pos; lastMoveAt = performance.now(); return; }
+    if (state === 'hold' || state === 'entrance' || state === 'drag' || state === 'exiting') { lastPos = pos; lastMoveAt = performance.now(); return; }
     if (pos !== lastPos) { lastPos = pos; lastMoveAt = performance.now(); return; }
     if (performance.now() - lastMoveAt > 1000) {
       cancelAnimationFrame(raf);
@@ -308,27 +334,19 @@ document.addEventListener('DOMContentLoaded', () => {
      AND vertical touch swipe, so the two behave identically: same
      trigger threshold, same easing, same label update, same exit. ---------- */
   let wheelAcc = 0;
-  const WHEEL_TRIGGER = 90;
-  let lapsCompleted = 0; // how many times we've cycled all the way through
+  const WHEEL_TRIGGER = 60;
+  let pendingDir = 0;
+  let wheelLocked = false, wheelIdle = null;
 
-  function stepFromDelta(delta) {
-    if (state !== 'hold' || exited) return;
-    wheelAcc += delta;
-    if (Math.abs(wheelAcc) < WHEEL_TRIGGER) return;
-    const dir = wheelAcc > 0 ? 1 : -1;
-    wheelAcc = 0;
-
-    // Reaching the end and continuing forward completes a lap. The
-    // first time this happens, we just loop back to the start and let
-    // them go through everything again — someone curious enough to
-    // reach the end once deserves a second pass, not an immediate exit.
-    // Only on the SECOND lap do we actually leave for About.
+  // One step per slide change, whoever asks for it (wheel, trackpad,
+  // touch swipe). If a slide is already moving, remember the request
+  // and play it the moment the carousel settles.
+  function requestStep(dir) {
+    if (exited) return;
+    if (state !== 'hold') { if (state !== 'drag') pendingDir = dir; return; }
     if (dir > 0 && currentIndex === N - 1) {
-      lapsCompleted++;
-      if (lapsCompleted >= 2) {
-        exitToAbout();
-        return;
-      }
+      lapsCompleted += 1;
+      if (lapsCompleted >= LAPS_BEFORE_ABOUT) { exitToAbout(); return; }
     }
     const target = (currentIndex + dir + N) % N;
     state = 'step';
@@ -337,9 +355,25 @@ document.addEventListener('DOMContentLoaded', () => {
     animateEase(dir, STEP_MS, scheduleHold);
   }
 
+  // One gesture = one slide. Trackpads keep firing wheel events for up
+  // to a second after the fingers lift (inertia), and the old handler
+  // could turn that tail into a second, unintended step. Now a step
+  // locks the wheel until events stop for 180ms, i.e. a new gesture.
   function onWheel(e) {
     e.preventDefault();
-    stepFromDelta(e.deltaY);
+    markUser();
+    if (exited) return;
+    const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    const px = e.deltaMode === 1 ? d * 40 : d; // line-based wheels
+    clearTimeout(wheelIdle);
+    wheelIdle = setTimeout(() => { wheelLocked = false; wheelAcc = 0; }, 180);
+    if (wheelLocked) return;
+    wheelAcc += px;
+    if (Math.abs(wheelAcc) < WHEEL_TRIGGER) return;
+    const dir = wheelAcc > 0 ? 1 : -1;
+    wheelAcc = 0;
+    wheelLocked = true;
+    requestStep(dir);
   }
   addEventListener('wheel', onWheel, { passive: false });
 
@@ -368,10 +402,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const AXIS_LOCK_PX = 6;
 
   let lastDragX = 0, lastDragT = 0, dragVelocity = 0;
+  let swipeStepped = false;
 
   let dragRafId = null;
   function dragRenderLoop() {
     render();
+    commitLabel(nearestIndex()); // the label follows your finger live
     dragRafId = requestAnimationFrame(dragRenderLoop);
   }
 
@@ -453,13 +489,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleTap(clientX, clientY) {
-    if (state !== 'hold' || exited) return;
+    if (exited) return;
+    // Side slides are tilted in 3D, so the click usually lands on the
+    // slide's outer frame rather than its inner photo layer. The old code
+    // only accepted the inner layer, so every side-slide click was
+    // silently dropped. Accept either.
     const target = document.elementFromPoint(clientX, clientY);
-    const panelInner = target && target.closest('.studio-panel-inner');
-    if (!panelInner) return;
-    const panel = panelInner.closest('.studio-panel');
+    const panel = target && target.closest('.studio-panel');
+    if (!panel) return;
+    const panelInner = panel.querySelector('.studio-panel-inner');
     const i = panelEls.indexOf(panel);
     if (i === -1) return;
+    // Mid-motion (auto-advance or a slide change): remember the click and
+    // act on it the moment the carousel settles, instead of ignoring it.
+    if (state !== 'hold') { if (state !== 'drag' && state !== 'exiting') pendingJump = i; return; }
 
     // Check the ACTUAL screen position, not the currentIndex variable —
     // if that variable ever drifts out of sync with what's really
@@ -479,12 +522,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Entering a project: the centred slide zooms gently toward you while
+  // the page fades, so it reads as going *into* the project.
   function thumpThenEnter(inner, href) {
-    inner.style.transition = 'transform 0.16s cubic-bezier(0.5,0,0.75,0)';
-    inner.style.transform = 'scale(0.94)';
-    setTimeout(() => {
-      window.pageTransitionOut ? window.pageTransitionOut(href) : (window.location.href = href);
-    }, 150);
+    if (exited) return;
+    exited = true; state = 'exiting'; clearTimeout(holdTimer);
+    const go = () => window.pageTransitionOut ? window.pageTransitionOut(href, 380) : (window.location.href = href);
+    if (reducedMotion) { go(); return; }
+    inner.style.transition = 'transform 0.55s cubic-bezier(0.7, 0, 0.84, 0)';
+    inner.style.transform = 'scale(1.06)';
+    setTimeout(go, 160);
   }
 
   cinema.style.touchAction = 'none';
@@ -508,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panelEls.forEach((panelEl, i) => {
       panelEl.addEventListener('pointerenter', () => {
         if (state === 'drag') return;
-        studioCursor.textContent = 'View';
+        studioCursor.textContent = (i === currentIndex) ? 'View' : 'Select';
         studioCursor.classList.add('is-visible');
         // Pause auto-advance while hovering — without this, reading
         // "View" and then clicking (completely normal, and often takes
@@ -531,8 +578,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cinema.addEventListener('pointerdown', (e) => {
     if (exited) return;
+    markUser();
     pointerActive = true;
     pointerMode = null;
+    swipeStepped = false;
     dragOccurred = false;
     pointerId = e.pointerId;
     startX = e.clientX;
@@ -565,9 +614,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       // Vertical swipe reads as scroll — swipe up = advance, matching
       // the same sign convention as a natural downward wheel scroll.
-      const deltaY = lastY - e.clientY;
-      lastY = e.clientY;
-      stepFromDelta(deltaY);
+      // One step per swipe, same as the wheel.
+      if (!swipeStepped && Math.abs(startY - e.clientY) > 40) {
+        swipeStepped = true;
+        requestStep(startY - e.clientY > 0 ? 1 : -1);
+      }
     }
   });
 
@@ -588,31 +639,46 @@ document.addEventListener('DOMContentLoaded', () => {
     pointerMode = null;
   }
   cinema.addEventListener('pointerup', onPointerUp);
+  // If the system cancels a touch mid-drag (notification, OS gesture),
+  // settle on the nearest slide. Before, the carousel froze between two
+  // slides, and the watchdog skips the drag state so it never recovered.
   cinema.addEventListener('pointercancel', () => {
+    const wasDragging = pointerMode === 'drag';
     pointerActive = false;
     pointerMode = null;
     cancelAnimationFrame(dragRafId);
     cinema.classList.remove('is-grabbing');
+    if (wasDragging) {
+      const target = Math.round(pos);
+      state = 'step';
+      commitLabel(((target % N) + N) % N);
+      animateSnap(target - pos, 320, scheduleHold);
+    }
   });
 
 
   /* ---------- Exit to About: accelerate away (mirror of entrance),
      scene dissolves, THEN the shared page-transition veil covers and
      navigates for real. ---------- */
+  // Leaving for About: the scene eases gently forward and fades while
+  // the page veil comes in. Replaces a 3-slide accelerating spin plus a
+  // full-screen blur (blur on large images is expensive and stuttered).
   function exitToAbout() {
     exited = true;
     state = 'exiting';
     clearTimeout(holdTimer);
-    animateLinearAccel(3, EXIT_SWEEP_MS, () => {
-      stage.classList.add('is-vanishing');
-      setTimeout(() => {
-        if (window.pageTransitionOut) {
-          window.pageTransitionOut('about.html', 550);
-        } else {
-          window.location.href = 'about.html';
-        }
-      }, 250);
-    });
+    const go = () => window.pageTransitionOut ? window.pageTransitionOut('about.html', 450) : (window.location.href = 'about.html');
+    if (reducedMotion) { go(); return; }
+    document.body.classList.add('studio-is-leaving');
+    const from = pos, t0 = performance.now();
+    cancelAnimationFrame(raf);
+    (function frame(now) {
+      const t = Math.min((now - t0) / EXIT_MS, 1);
+      pos = from + 0.35 * t * t * t; // ease-in: starts still, gathers pace
+      render();
+      if (t < 1) raf = requestAnimationFrame(frame);
+    })(performance.now());
+    setTimeout(go, 280);
   }
 
   addEventListener('resize', () => { computeGeom(); applySizes(); render(); });
@@ -622,17 +688,44 @@ document.addEventListener('DOMContentLoaded', () => {
   applySizes();
   commitLabel(0);
   if (reducedMotion) {
+    document.documentElement.classList.remove('studio-preload');
     pos = 0;
     render();
     scheduleHold();
     hint.classList.add('is-visible');
   } else {
-    pos = -ENTRANCE_SWEEP;
+    // Arrive with motion: the slides glide in from ~0.6 of a slide away
+    // and decelerate into place while the scene fades up, so it reads as
+    // "it moves, slows, and it's yours". Glide and fade start together.
+    // Arrive by travelling from C1, past Sketches, to Hive. The first frame
+    // shows C1 in full, a ~20% glimpse of TOAD at the left edge and about
+    // half of Sketches on the right.
+    // Motion starts almost still while the page fades in, gathers pace
+    // gently, then settles slowly onto Hive: one calm movement, never two
+    // things changing fast at once.
+    const ENTRANCE_OFFSET = 1.9, ENTRANCE_MS = 2800;
+    pos = -ENTRANCE_OFFSET;
     render();
+    commitLabel(((Math.floor(pos) % N) + N) % N); // C1 highlighted on the first frame
     state = 'entrance';
-    animateLinearDecel(ENTRANCE_SWEEP, ENTRANCE_MS, () => {
-      scheduleHold();
-      setTimeout(() => hint.classList.add('is-visible'), 900);
-    });
+    // Wait for the centre photo and its neighbours to be decoded (capped),
+    // so nothing pops in after the fade. Then reveal in one move.
+    const urls = [0, 1, N - 1, N - 2, N - 3].map((k) => ((k % N) + N) % N).map((k) => {
+      const m = (getComputedStyle(panelEls[k].querySelector('.studio-panel-inner')).backgroundImage || '').match(/url\(["']?([^"')]+)/);
+      return m && m[1];
+    }).filter(Boolean);
+    const ready = Promise.all(urls.map((u) => { const im = new Image(); im.src = u; return im.decode ? im.decode().catch(() => {}) : Promise.resolve(); }));
+    let started = false;
+    const start = () => {
+      if (started) return; started = true;
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('studio-preload');
+        animateGlide(ENTRANCE_OFFSET, ENTRANCE_MS, easeInOutCubic, () => {
+          scheduleHold();
+          setTimeout(() => hint.classList.add('is-visible'), 300);
+        });
+      });
+    };
+    ready.then(start); setTimeout(start, 900);
   }
 });

@@ -187,7 +187,7 @@ p {
   pointer-events: none;
   z-index: 1;
   background:
-    linear-gradient(to bottom, rgba(0,0,0,0.22) 0%, transparent 18%, transparent 78%, rgba(0,0,0,0.28) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,0.22) 0%, transparent 18%, transparent 50%, rgba(0,0,0,0.18) 68%, rgba(0,0,0,0.5) 100%),
     linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.15) 100%);
 }
 
@@ -251,3 +251,55 @@ p {
 .skip-link:focus-visible {
   top: 16px;
 }
+
+/* ==========================================================================
+   INTERACTION STATES — filling gaps found in a full browser audit.
+   Same convention the nav already uses: hover moves grey toward black or
+   dims slightly, press drops to 0.6 opacity. Instant on press, no bounce.
+   ========================================================================== */
+
+/* Footer links ("Back to studio", "Privacy") */
+a.caption {
+  text-decoration: none;
+  transition: color var(--duration-hover) var(--ease-cinematic), opacity 100ms ease-out;
+}
+a.caption:hover { color: var(--color-text-primary); }
+a.caption:active { opacity: 0.6; }
+
+/* Site logo in the top nav */
+.nav-logo { transition: opacity var(--duration-hover) var(--ease-cinematic); }
+.nav-logo:hover { opacity: 0.7; }
+
+/* Plain inline links in running text (privacy email, 404 links, playbook logo) */
+a:not([class]) { transition: opacity var(--duration-hover) var(--ease-cinematic); }
+a:not([class]):hover { opacity: 0.7; }
+a:not([class]):active { opacity: 0.5; }
+
+/* Text fields: a visible focus state for keyboard and touch users */
+input[type="text"], input[type="email"], input[type="search"], input:not([type]), textarea {
+  transition: border-color var(--duration-hover) var(--ease-cinematic);
+}
+input[type="text"]:hover, input[type="email"]:hover, input[type="search"]:hover, input:not([type]):hover, textarea:hover {
+  border-color: var(--color-text-secondary);
+}
+input[type="text"]:focus-visible, input[type="email"]:focus-visible, input[type="search"]:focus-visible, input:not([type]):focus-visible, textarea:focus-visible,
+input[type="text"]:focus, input[type="email"]:focus, input[type="search"]:focus, input:not([type]):focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.caption, .nav-logo, a:not([class]), input, textarea { transition: none; }
+}
+
+/* iOS Safari zooms the whole page when a text field under 16px is focused,
+   and doesn't zoom back out. 16px on phones stops that for every form. */
+@media (max-width: 768px) {
+  input[type="text"], input[type="email"], input[type="search"], input[type="url"],
+  input[type="date"], input:not([type]), textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Keeps hyphenated words whole across line breaks. */
+.nowrap { white-space: nowrap; }

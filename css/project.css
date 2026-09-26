@@ -67,12 +67,16 @@
 
 /* ---- Case study sections ---- */
 
+:root { --cs-media-gap: var(--space-6); } /* 96px between images: real breathing room */
+
 .cs-section {
-  padding: var(--space-7) 0;
+  /* Was 160px top and bottom: ~320px of empty space at every section
+     change on desktop. */
+  padding: var(--space-6) 0;
 }
 
 .cs-section:first-of-type {
-  padding-top: calc(64px + var(--space-6));
+  padding-top: var(--space-6);
 }
 
 .cs-section-alt {
@@ -104,7 +108,7 @@
 .cs-fullbleed {
   width: 100%;
   aspect-ratio: 16 / 9;
-  margin: var(--space-5) 0;
+  margin: var(--cs-media-gap) 0 0;
   content-visibility: auto;
   background-color: var(--color-bg-section);
 }
@@ -133,8 +137,11 @@
 
 .cs-split {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  align-items: center;
+  /* Text gets the wider column and both start at the same top edge.
+     The photo was the larger column (~663 x 605px) with the text
+     floating in its vertical middle. */
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+  align-items: start;
   gap: var(--space-6);
 }
 
@@ -147,17 +154,28 @@
   width: 100%;
 }
 
+/* Key facts strip. Most of these values are words ("Low-density",
+   "Production"), and at 32px display size they read as fake statistics,
+   stacking into giant lone words on phones. Now a label over a clearly
+   readable value, each separated by a hairline. */
 .cs-stat-row {
   display: flex;
-  gap: var(--space-6);
-  margin-top: var(--space-4);
   flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-4);
+}
+.cs-stat-row > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end; /* in column-reverse this pins content to the top, so side-by-side facts line up */
+  gap: var(--space-1);
 }
 
 .cs-stat-value {
-  font-size: 32px;
+  font-size: 20px;
   font-weight: var(--fw-medium);
-  letter-spacing: var(--ls-heading);
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
 }
 
 .cs-stat-label {
@@ -165,6 +183,10 @@
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+@media (max-width: 768px) {
+  .cs-stat-row { display: grid; grid-template-columns: 1fr 1fr; }
 }
 
 /* ---- Next project navigation ---- */
@@ -193,7 +215,39 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  /* Must keep .reveal's fade/rise too: this file loads after components.css,
+     so a transition declared here replaces the reveal's unless listed. */
+  transition: opacity 0.9s var(--ease-cinematic), transform 0.9s var(--ease-cinematic);
 }
+
+/* The whole block is one link, so hovering anywhere on it (label, title,
+   or "Scroll or click") draws the title's underline, not just the title. */
+.cs-next-link:hover .accent-underline::after { width: 100%; }
+.cs-next-link.is-visible:active { opacity: 0.6; transition-duration: 80ms; }
+
+.cs-back-home {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--space-3);
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-hover) var(--ease-cinematic),
+              opacity 0.9s var(--ease-cinematic),
+              transform 0.9s var(--ease-cinematic);
+}
+
+.cs-back-home svg {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--duration-hover) ease;
+}
+
+.cs-back-home:hover { color: var(--color-text-primary); }
+.cs-back-home:hover svg { transform: translateX(-6px); }
+.cs-back-home.is-visible:active { opacity: 0.6; transition-duration: 80ms; }
 
 @media (max-width: 768px) {
   .cs-grid-2 {
@@ -223,17 +277,79 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  font-weight: var(--fw-medium);
+  font-weight: 400;
   color: var(--color-text-primary);
 }
 
+/* Same line-drawn arrow as "Back to home" (1.8 stroke), instead of a
+   text glyph that sat low and read as a different style. */
 .cs-next-hint::before {
-  content: '↓';
+  content: '';
   display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Cpath d='M12 5v14M6 13l6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Cpath d='M12 5v14M6 13l6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
   animation: nextHintBounce 1.4s ease-in-out infinite;
 }
 
 @keyframes nextHintBounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(4px); }
+}
+
+/* Reduced motion: the bobbing hint arrow and the hover nudge on the back
+   arrow are decorative, so they stop. Colour/opacity feedback stays. */
+@media (prefers-reduced-motion: reduce) {
+  .cs-next-hint::before { animation: none; }
+  .cs-back-home svg { transition: none; }
+  .cs-back-home:hover svg { transform: none; }
+  .accent-underline::after { transition: none; }
+}
+
+
+/* ==========================================================================
+   PROJECT IMAGE FRAME — one treatment for every image block on Hive,
+   TOAD and C1. Before this, the three pages used three systems: C1 had
+   square corners, TOAD's image stacks had no spacing at all, and images
+   with white borders baked in vanished into white sections, so the eye
+   measured uneven gaps between their contents instead of the cards.
+   ========================================================================== */
+.cs-board, .cs-render, .cs-problem-image,
+.cs-image-stack-item, .cs-fullbleed, .cs-split-media {
+  position: relative;
+  border-radius: var(--radius-image);
+  clip-path: inset(0 round var(--radius-image));
+}
+
+
+
+/* TOAD's stacked images: previously had no rule at all, so images
+   touched each other and the paragraph above. */
+.cs-image-stack {
+  display: grid;
+  gap: var(--cs-media-gap);
+  margin-top: var(--cs-media-gap);
+}
+
+/* Phones: the desktop 160px section padding left ~320px of blank
+   screen between sections on a 390px phone. Step down the scale. */
+@media (max-width: 768px) {
+  :root { --cs-media-gap: var(--space-4); }
+  .cs-section { padding: var(--space-5) 0; }
+  .cs-section:first-of-type { padding-top: var(--space-5); }
+}
+
+/* Hive's boards are real <img> tags: the card reveals on time as a soft
+   grey placeholder and the photo fades in once decoded. No blank gap
+   while it loads, and no photo popping in after the fade has finished. */
+.cs-board, .cs-render, .cs-problem-image { background-color: var(--color-bg-section); }
+.cs-board img, .cs-render img, .cs-problem-image img {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-cinematic);
+}
+.cs-board img.is-loaded, .cs-render img.is-loaded, .cs-problem-image img.is-loaded { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .cs-board img, .cs-render img, .cs-problem-image img { transition: none; }
 }

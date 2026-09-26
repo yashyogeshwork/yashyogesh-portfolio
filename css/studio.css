@@ -20,7 +20,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 64px var(--side-padding-desktop) 30px;
+  padding: 52px var(--side-padding-desktop) 30px;
   opacity: 0;
   animation: studioNavFadeIn 0.6s ease 0.2s forwards;
 }
@@ -78,14 +78,32 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
+  transition: opacity 0.9s var(--ease-cinematic), transform 1.2s var(--ease-cinematic);
 }
 
-.studio-stage.is-vanishing {
+/* Entrance: hidden from the first paint, then one calm fade with a
+   slight settle in scale. No sideways movement. */
+html.studio-preload .studio-stage {
   opacity: 0;
-  filter: blur(6px);
-  transform: scale(1.04);
+  transform: scale(0.975);
 }
+
+/* Exit to About: ease-in, so it starts calm and gathers pace, then the
+   shared page veil takes over. No blur (costly on full-size photos). */
+body.studio-is-leaving .studio-label-bar,
+body.studio-is-leaving .studio-frame-top {
+  /* These fade in via a held animation, which outranks a plain opacity
+     rule, so they fade out with their own animation too. */
+  animation: studioFadeOut 0.45s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+@keyframes studioFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+body.studio-is-leaving .studio-stage,
+body.studio-is-leaving .studio-hint {
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.7, 0, 0.84, 0), transform 0.65s cubic-bezier(0.7, 0, 0.84, 0);
+}
+body.studio-is-leaving .studio-stage { transform: scale(0.97); }
 
 .studio-cinema {
   position: relative;
@@ -126,21 +144,29 @@ html, body {
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.94) saturate(0.9);
-  transition: filter 0.4s ease;
+  /* Side slides are dimmed by an overlay's opacity (compositor-only)
+     rather than a CSS filter, which repainted the whole photo. */
   pointer-events: none;
 }
 
-.studio-panel.is-center .studio-panel-inner {
-  filter: none;
+.studio-panel-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: #111111;
+  opacity: 0.07;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease-cinematic);
 }
+.studio-panel.is-center .studio-panel-inner::after { opacity: 0; }
 
 /* ---------- Label bar — clickable, editorial caps, no motion drama ---------- */
 
 .studio-label-bar {
   position: fixed;
-  bottom: 7vh;
-  bottom: 7dvh;
+  bottom: calc(7vh + 12px);
+  bottom: calc(7dvh + 12px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
@@ -160,7 +186,7 @@ html, body {
   font-weight: var(--fw-medium);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #C9C6C2;
+  color: #C9C6C2; /* deliberately light: only the slide in front of you reads as active */
   transition: color 0.4s ease;
   pointer-events: auto;
   cursor: pointer;
@@ -223,5 +249,12 @@ html, body {
 .studio-cursor.is-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .studio-panel-inner, .studio-label { transition: none; }
+  .studio-panel-inner, .studio-panel-inner::after, .studio-label, .studio-stage { transition: none; }
 }
+
+/* Interaction states (audit fill-in) */
+.studio-mark { transition: opacity var(--duration-hover) var(--ease-cinematic); }
+.studio-mark:hover { opacity: 0.7; }
+.studio-mark:active { opacity: 0.5; }
+.studio-label:not(.is-active):hover { color: var(--color-text-secondary); }
+.studio-label:active { opacity: 0.6; }

@@ -31,6 +31,19 @@
     requestAnimationFrame(() => { veil.style.opacity = '0'; });
   });
 
+  // When a page is restored from the browser's back-forward cache (e.g.
+  // clicking the browser's own Back button) rather than loading fresh,
+  // this whole script doesn't re-run — so without this, a page left at
+  // full veil opacity right before navigating away would come back
+  // exactly as frozen, a solid black screen covering everything, since
+  // nothing would ever trigger the fade-out a second time.
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) {
+      veil.style.pointerEvents = 'none';
+      veil.style.opacity = '0';
+    }
+  });
+
   // The "departure" half — exposed globally so any script on any page can
   // trigger the identical transition rather than building its own veil.
   window.pageTransitionOut = function (href, delay) {

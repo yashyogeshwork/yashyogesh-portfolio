@@ -71,8 +71,9 @@
 
   <!-- Cinematic intro — real TOAD video, autoplay/muted/looping hero background -->
   <section class="project-intro gradient-overlay-vignette" id="main">
-    <div class="project-intro-media" id="toadHeroMedia" style="background: linear-gradient(160deg, #DCE5D2 0%, #AEC49A 45%, #6E8A5E 100%);">
-      <video autoplay muted playsinline preload="metadata" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.5s ease;" poster="images/toad/exterior-cover-new.jpg" id="toadHeroVideo">
+    <div class="project-intro-media" id="toadHeroMedia" style="background: url('images/toad/exterior-cover-new.jpg') center / cover no-repeat, linear-gradient(160deg, #DCE5D2 0%, #AEC49A 45%, #6E8A5E 100%);">
+      <video autoplay muted playsinline preload="metadata" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.8s var(--ease-cinematic);" poster="images/toad/exterior-cover-new.jpg" id="toadHeroVideo">
+        <source src="videos/toad-hero-720.mp4" type="video/mp4" media="(max-width: 768px)">
         <source src="videos/toad-hero.mp4" type="video/mp4">
       </video>
     </div>
@@ -118,7 +119,7 @@
       <div class="cs-eyebrow">The system</div>
       <h2 class="cs-heading reveal" data-c="toad.systemHeading">Learns your land. Does the heavy work.</h2>
       <p class="cs-body reveal" data-c="toad.systemBody">It studies the soil, the seasons, and the crops, then does the physical work itself, guiding its owner through decisions instead of expecting them to already know.</p>
-      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.systemImage" role="img" aria-label="TOAD studying soil, seasons, and crops to guide its owner through farm work" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94); aspect-ratio: 2880 / 1560;"></div>
+      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.systemImage" role="img" aria-label="TOAD studying soil, seasons, and crops to guide its owner through farm work" style="background: linear-gradient(135deg, #DCD5C2, #B8AE94); aspect-ratio: 2880 / 1300;"></div>
     </div>
   </section>
 
@@ -139,9 +140,9 @@
       <h2 class="cs-heading reveal" data-c="toad.exteriorHeading">Built low, wide, and calm.</h2>
       <p class="cs-body reveal" data-c="toad.exteriorBody">Every surface reads as calm and close to the ground, built to move through a field without looking like it belongs on a construction site.</p>
       <div class="cs-image-stack">
-        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage1" role="img" aria-label="TOAD exterior concept sketch" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8); aspect-ratio: 2880 / 1681;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage1" role="img" aria-label="TOAD exterior concept sketch" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8); aspect-ratio: 2880 / 1500;"></div>
         <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage2" role="img" aria-label="TOAD exterior functional layout study" style="background: linear-gradient(135deg, #DAD5CE, #B7AFA2); aspect-ratio: 2880 / 1562;"></div>
-        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage3" role="img" aria-label="TOAD exterior packaging study" style="background: linear-gradient(135deg, #E7D9E3, #D4B8CB); aspect-ratio: 2880 / 1634;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage3" role="img" aria-label="TOAD exterior packaging study" style="background: linear-gradient(135deg, #E7D9E3, #D4B8CB); aspect-ratio: 2880 / 1459;"></div>
         <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage4" role="img" aria-label="TOAD exterior color, material, and finish study" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9); aspect-ratio: 2880 / 1560;"></div>
       </div>
     </div>
@@ -170,13 +171,17 @@
           <div class="cs-next-hint">Scroll or click</div>
         </div>
       </a>
+      <a href="index.html" class="cs-back-home reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Back to home
+      </a>
     </div>
   </section>
 
   <footer class="site-footer">
     <div class="container footer-bottom" style="border-top: none; padding-top: 0;">
       <span class="caption">Yash Yogesh © 2026</span>
-      <a href="index.html" class="caption">Back to studio</a>
+      <a href="index.html" class="caption">Back to home</a>
     </div>
   </footer>
 
