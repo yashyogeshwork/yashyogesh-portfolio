@@ -65,11 +65,51 @@
     }
   }
 
+  const reduceMotionPref = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function pop(bubble) {
     if (bubble.classList.contains('is-popped')) return;
     bubble.classList.add('is-popped');
     playPop();
+    popCounter.add(1);
+    // Every bubble in the footer vehicle popped: let it drive off.
+    const shape = bubble.closest('[data-shape-pool]');
+    if (shape && !shape.querySelector('.about-bubble:not(.is-popped)')) {
+      shape.dispatchEvent(new CustomEvent('popit:complete'));
+    }
   }
+
+  // ---- Shared counter: every visitor's pops add to one total. Pops are
+  // batched (sent every few seconds, and when leaving the page), not one
+  // request per pop. If the counter can't be reached, the line stays hidden.
+  const popCounter = (() => {
+    let serverTotal = null, pending = 0, timer = null;
+    const line = document.createElement('div');
+    line.className = 'about-popit-count';
+    line.hidden = true;
+    function show() {
+      if (serverTotal === null) return;
+      line.textContent = `Visitors have popped ${(serverTotal + pending).toLocaleString('en-US')} bubbles`;
+      line.hidden = false;
+    }
+    function flush(useBeacon) {
+      if (!pending) return;
+      const count = Math.min(pending, 500);
+      pending -= count;
+      const body = JSON.stringify({ count });
+      if (useBeacon && navigator.sendBeacon) { navigator.sendBeacon('/api/pops', new Blob([body], { type: 'application/json' })); serverTotal = (serverTotal || 0) + count; return; }
+      fetch('/api/pops', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true })
+        .then((r) => r.ok ? r.json() : null).then((d) => { if (d && typeof d.total === 'number') { serverTotal = d.total; show(); } })
+        .catch(() => { pending += count; });
+    }
+    fetch('/api/pops').then((r) => r.ok ? r.json() : Promise.reject())
+      .then((d) => { serverTotal = d.total; show(); })
+      .catch(() => { if (typeof window.__POPS_DEMO === 'number') { serverTotal = window.__POPS_DEMO; show(); } });
+    addEventListener('pagehide', () => flush(true));
+    return {
+      el: line,
+      add(n) { pending += n; show(); clearTimeout(timer); timer = setTimeout(() => flush(false), 3000); },
+    };
+  })();
 
   // Real keyboard access — without this, every bubble on the page is
   // only reachable by mouse or touch, the same gap already found and
@@ -272,6 +312,39 @@
           fitFooterPatch();
         }
         showFooterShape(pickRandomName(names));
+
+        const labelEl = document.querySelector('.about-popit-label');
+        if (labelEl) labelEl.insertAdjacentElement('afterend', popCounter.el);
+
+        // The gift: a fully popped vehicle drives off (speeding up as it
+        // leaves), and the next one rolls in and eases to a stop. No
+        // bounce, per the site's motion rules.
+        let driving = false;
+        revealWrap.addEventListener('popit:complete', () => {
+          if (driving) return;
+          driving = true;
+          const next = pickRandomName(names, currentName);
+          if (reduceMotionPref) { showFooterShape(next); driving = false; return; }
+          if (revealStage) revealStage.classList.add('is-driving');
+          setTimeout(() => {
+            revealWrap.style.transition = 'transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.4)';
+            revealWrap.style.transform = 'translateX(115%)';
+            setTimeout(() => {
+              revealWrap.style.transition = 'none';
+              showFooterShape(next);
+              revealWrap.style.transform = 'translateX(-115%)';
+              void revealWrap.offsetWidth;
+              revealWrap.style.transition = 'transform 1s cubic-bezier(0.16, 1, 0.3, 1)';
+              revealWrap.style.transform = 'translateX(0)';
+              setTimeout(() => {
+                revealWrap.style.transition = '';
+                revealWrap.style.transform = '';
+                if (revealStage) revealStage.classList.remove('is-driving');
+                driving = false;
+              }, 1050);
+            }, 920);
+          }, 350);
+        });
 
         if (revealStage && window.ResizeObserver) {
           const revealRo = new ResizeObserver(fitFooterPatch);

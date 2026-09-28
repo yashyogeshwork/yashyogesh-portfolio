@@ -260,11 +260,33 @@
   }
   (function spawnInitialCards() {
     const list = (window.CONTENT && CONTENT.c1 && CONTENT.c1.heroImages) || [];
+    // Every photo decodes in parallel (so none of them individually stall a
+    // frame), but they tend to finish decoding within a few ms of each
+    // other. Spawning each one the instant its own decode resolves meant
+    // most of the 32 cards became ready in the same one or two frames, and
+    // inserting/painting that many new elements at once was the actual
+    // "brief freeze on load" — real, but invisible to a long-task check,
+    // since it's paint/composite cost, not blocked script time.
+    // A small per-frame cap spreads that paint work back out, the same
+    // fix already proven for the original synchronous-spawn freeze.
+    const BATCH_SIZE = 4;
+    const ready = [];
+    let draining = false;
+    function drain() {
+      draining = true;
+      const batch = ready.splice(0, BATCH_SIZE);
+      batch.forEach((card) => spawn(card, reduceMotion ? 'static' : undefined));
+      if (ready.length) requestAnimationFrame(drain);
+      else draining = false;
+    }
     cards.forEach((card) => {
       const url = list[card.index] && list[card.index].image;
       // Cap the wait so a slow photo never holds its card back for long.
       Promise.race([decodeImage(url), new Promise((r) => setTimeout(r, 1500))])
-        .then(() => requestAnimationFrame(() => spawn(card, reduceMotion ? 'static' : undefined)));
+        .then(() => {
+          ready.push(card);
+          if (!draining) requestAnimationFrame(drain);
+        });
     });
   })();
   function closeExpand() {

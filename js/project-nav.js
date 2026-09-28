@@ -74,4 +74,33 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   observer.observe(intro);
+
+
+  // Reading progress as a ring around a back-to-top button (bottom right).
+  // The ring fills as you read; clicking returns to the top. Hidden over the
+  // hero, fades in once the case study begins.
+  const firstSection = document.querySelector('.cs-section');
+  const ring = document.createElement('button');
+  ring.type = 'button';
+  ring.className = 'progress-ring';
+  ring.setAttribute('aria-label', 'Back to top');
+  ring.innerHTML = '<svg viewBox="0 0 44 44" aria-hidden="true"><circle class="progress-ring-track" cx="22" cy="22" r="20.5"/><circle class="progress-ring-arc" cx="22" cy="22" r="20.5" transform="rotate(-90 22 22)"/></svg><span class="progress-ring-arrow" aria-hidden="true"></span>';
+  document.body.appendChild(ring);
+  const arc = ring.querySelector('.progress-ring-arc');
+  const CIRC = 2 * Math.PI * 20.5;
+  arc.style.strokeDasharray = String(CIRC);
+  const reduceMotionRing = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  ring.addEventListener('click', () => scrollTo({ top: 0, behavior: reduceMotionRing ? 'auto' : 'smooth' }));
+  let ringTick = false;
+  function updateRing() {
+    ringTick = false;
+    const H = document.documentElement.scrollHeight - innerHeight;
+    const p = Math.min(1, Math.max(0, scrollY / Math.max(1, H)));
+    arc.style.strokeDashoffset = String(CIRC * (1 - p));
+    const started = firstSection && firstSection.getBoundingClientRect().top < innerHeight * 0.5;
+    ring.classList.toggle('is-on', !!started);
+  }
+  addEventListener('scroll', () => { if (!ringTick) { ringTick = true; requestAnimationFrame(updateRing); } }, { passive: true });
+  addEventListener('resize', updateRing);
+  updateRing();
 });

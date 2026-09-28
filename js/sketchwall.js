@@ -920,7 +920,30 @@
   expandClose.addEventListener('click', closeExpand);
   addEventListener('keydown', (e) => { if (e.key === 'Escape') closeExpand(); });
 
-  addEventListener('resize', buildField);
+  // Any resize used to rebuild the whole wall instantly: every card
+  // vanished and re-scattered, which looks exactly like the page
+  // refreshing. Small size changes happen constantly on a laptop (a
+  // download bar, the browser sidebar, a taskbar auto-hiding, zoom), so
+  // now only a real change of screen (width off by more than 15%, e.g.
+  // rotating a tablet) rebuilds. Anything smaller keeps every card where
+  // it is and just nudges any that ended up off-screen back into view.
+  let lastW = innerWidth, resizeTimer = null;
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (Math.abs(innerWidth - lastW) / lastW > 0.15) {
+        lastW = innerWidth;
+        buildField();
+        return;
+      }
+      lastW = innerWidth;
+      cards.forEach((c) => {
+        const nx = Math.min(Math.max(c.x, 0), Math.max(0, innerWidth - c.w));
+        const ny = Math.min(Math.max(c.y, 0), Math.max(0, innerHeight - c.h));
+        if (nx !== c.x || ny !== c.y) { c.x = nx; c.y = ny; render(c); }
+      });
+    }, 200);
+  });
   buildField();
   requestAnimationFrame(physicsTick);
 })();

@@ -1,0 +1,7 @@
+/* Plus Jakarta Sans, hosted on this site instead of Google Fonts: removes
+   two extra server connections from the path to first text. font-display:
+   swap shows text immediately in the fallback font until this arrives. */
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 300; font-display: swap; src: url('../fonts/plus-jakarta-sans-latin-300-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/plus-jakarta-sans-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/plus-jakarta-sans-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/plus-jakarta-sans-latin-600-normal.woff2') format('woff2'); }

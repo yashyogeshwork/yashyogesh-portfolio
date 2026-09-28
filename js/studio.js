@@ -687,12 +687,32 @@ document.addEventListener('DOMContentLoaded', () => {
   computeGeom();
   applySizes();
   commitLabel(0);
+  let returnIndex = -1;
+  try {
+    const last = sessionStorage.getItem('studio-last');
+    if (last) returnIndex = slides.findIndex((s) => s.href === last);
+  } catch (e) {}
+  if (reducedMotion && returnIndex > -1) { pos = returnIndex; }
   if (reducedMotion) {
     document.documentElement.classList.remove('studio-preload');
-    pos = 0;
+    pos = returnIndex > -1 ? returnIndex : 0;
     render();
     scheduleHold();
     hint.classList.add('is-visible');
+  } else if (returnIndex > -1) {
+    // Coming back from a project: that project glides gently into the
+    // centre instead of replaying the C1 -> Sketches -> Hive intro.
+    pos = returnIndex - 0.6;
+    render();
+    commitLabel(returnIndex);
+    state = 'entrance';
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('studio-preload');
+      animateGlide(0.6, 1400, easeInOutCubic, () => {
+        scheduleHold();
+        setTimeout(() => hint.classList.add('is-visible'), 300);
+      });
+    });
   } else {
     // Arrive with motion: the slides glide in from ~0.6 of a slide away
     // and decelerate into place while the scene fades up, so it reads as
@@ -728,4 +748,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     ready.then(start); setTimeout(start, 900);
   }
+
+  // Browser Back can restore this page exactly as it was left: mid-exit,
+  // with the clicked slide zoomed or the stage faded out for About, and
+  // the carousel marked as exited (unresponsive). Reset all of that and
+  // settle on the project that was in front.
+  addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    exited = false;
+    cancelAnimationFrame(raf);
+    clearTimeout(holdTimer);
+    pendingDir = 0; pendingJump = -1;
+    document.body.classList.remove('studio-is-leaving');
+    document.documentElement.classList.remove('studio-preload');
+    panelEls.forEach((p) => {
+      const inner = p.querySelector('.studio-panel-inner');
+      if (inner) { inner.style.transition = 'none'; inner.style.transform = ''; }
+    });
+    pos = Math.round(pos);
+    scheduleHold();
+  });
 });

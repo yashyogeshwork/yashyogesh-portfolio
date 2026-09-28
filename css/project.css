@@ -353,3 +353,26 @@
 @media (prefers-reduced-motion: reduce) {
   .cs-board img, .cs-render img, .cs-problem-image img { transition: none; }
 }
+
+/* ==========================================================================
+   ONE CONTENT COLUMN PER PAGE. Text and every slide share a single column,
+   so all slides are the same width and line up with the text's left edge.
+   ========================================================================== */
+/* Every slide fills the column exactly. */
+.cs-fullbleed, .cs-image-stack-item,
+.cs-board, .cs-render, .cs-problem-image {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Text -> the slide that illustrates it: a step tighter than slide -> slide,
+   because the slide belongs to the text above it. Slide-to-slide keeps
+   the full --cs-media-gap for breathing room. */
+:root { --cs-text-gap: var(--space-5); }
+:is(.cs-eyebrow, .cs-heading, .cs-body, .cs-stat-row) + :is(.cs-fullbleed, .cs-image-stack, .cs-board, .cs-render, .cs-problem-image) {
+  margin-top: var(--cs-text-gap);
+}
+@media (max-width: 768px) {
+  :root { --cs-text-gap: var(--space-4); }
+}

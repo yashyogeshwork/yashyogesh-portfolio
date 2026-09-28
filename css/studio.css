@@ -201,7 +201,7 @@ body.studio-is-leaving .studio-stage { transform: scale(0.97); }
 }
 
 @media (max-width: 768px) {
-  .studio-label { font-size: 10px; }
+  .studio-label { font-size: 11px; } /* was 10px: under Apple's 11px minimum on phones */
   .studio-label-bar { gap: var(--space-3); bottom: 8.5vh; bottom: 8.5dvh; }
 }
 
@@ -258,3 +258,10 @@ body.studio-is-leaving .studio-stage { transform: scale(0.97); }
 .studio-mark:active { opacity: 0.5; }
 .studio-label:not(.is-active):hover { color: var(--color-text-secondary); }
 .studio-label:active { opacity: 0.6; }
+
+/* Homepage touch targets (phones/tablets): 44px tap areas, nothing moves. */
+@media (pointer: coarse) {
+  .studio-label-bar .studio-label { padding: 16px 12px; margin: -16px -12px; }
+  .studio-frame-top .studio-mark,
+  .studio-frame-top .studio-frame-link { padding: 12px 8px; margin: -12px -8px; }
+}

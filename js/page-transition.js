@@ -7,6 +7,15 @@
    ========================================================================== */
 
 (function () {
+  // Remember which project was last open, so returning to the homepage
+  // (Back to home, the browser's Back button, or a reload) shows that
+  // project in front instead of restarting on Hive.
+  try {
+    const PROJECT_PAGES = { 'hive.html': 'hive.html', 'toad.html': 'toad.html', 'surface-c1.html': 'surface-c1.html', 'sketches.html': 'sketches.html' };
+    const page = location.pathname.split('/').pop();
+    if (PROJECT_PAGES[page]) sessionStorage.setItem('studio-last', PROJECT_PAGES[page]);
+  } catch (e) {}
+
   function ensureVeil() {
     let veil = document.getElementById('pageVeil');
     if (!veil) {
@@ -24,12 +33,29 @@
     return veil;
   }
 
-  const veil = ensureVeil();
+  // Only play the arrival fade when this page was reached from another
+  // page of the site (the leaving page sets a short-lived marker). On a
+  // first visit, from Google or a shared link, there is no fade at all:
+  // the veil used to pop over text that had already appeared and then
+  // fade out, which read as text loading slowly, or twice.
+  let arriving = false;
+  try {
+    const t = +sessionStorage.getItem('pt-arrive');
+    arriving = t > 0 && Date.now() - t < 4000;
+    sessionStorage.removeItem('pt-arrive');
+  } catch (e) {}
 
-  // Fade the veil out shortly after this page has loaded — the "arrival" half.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => { veil.style.opacity = '0'; });
-  });
+  const veil = ensureVeil();
+  if (!arriving) {
+    veil.style.transition = 'none';
+    veil.style.opacity = '0';
+    requestAnimationFrame(() => { veil.style.transition = 'opacity 0.45s cubic-bezier(0.16,1,0.3,1)'; });
+  } else {
+    // The "arrival" half of an in-site transition.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { veil.style.opacity = '0'; });
+    });
+  }
 
   // When a page is restored from the browser's back-forward cache (e.g.
   // clicking the browser's own Back button) rather than loading fresh,
@@ -47,6 +73,7 @@
   // The "departure" half — exposed globally so any script on any page can
   // trigger the identical transition rather than building its own veil.
   window.pageTransitionOut = function (href, delay) {
+    try { sessionStorage.setItem('pt-arrive', String(Date.now())); } catch (e) {}
     veil.style.pointerEvents = 'all';
     veil.style.opacity = '1';
     setTimeout(() => { window.location.href = href; }, delay || 420);

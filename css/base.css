@@ -303,3 +303,50 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="search"]:focus,
 
 /* Keeps hyphenated words whole across line breaks. */
 .nowrap { white-space: nowrap; }
+
+/* ==========================================================================
+   SHARED CONTENT COLUMN (project pages + About)
+   ========================================================================== */
+:root {
+  /* Option B: a middle ground between slides that fully fit a short laptop
+     screen (wider margins) and full width (slides run well off-screen).
+     The column is capped by screen height so typical slides overflow the
+     visible area only slightly. Standard screens and phones: full width. */
+  --slide-chrome: 16px;
+  --tallest-slide: 1.846;
+}
+/* Every container on the project pages and About (nav, hero text,
+   sections, next-project, footer) shares this one column, so all edges
+   line up, including the footer line and across pages. */
+body[data-page^="project"] .container,
+body[data-page="about"] .container {
+  max-width: min(
+    var(--site-max-width),
+    calc((100svh - var(--slide-chrome)) * var(--tallest-slide) + 2 * var(--side-padding-desktop))
+  );
+}
+
+
+/* ==========================================================================
+   TOUCH TARGETS (phones/tablets). Apple's minimum comfortable tap is 44px;
+   several links and buttons were 20-34px tall. Padding enlarges the tap
+   area and a matching negative margin cancels it, so nothing moves.
+   ========================================================================== */
+@media (pointer: coarse) {
+  .cs-back-home,
+  .site-footer a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-top: -12px;
+    margin-bottom: -12px;
+  }
+  .about-email {
+    display: inline-block;
+    padding: 9px 0;
+    margin: -9px 0;
+  }
+  .react-sticker,
+  .about-popit-btn {
+    min-height: 44px;
+  }
+}

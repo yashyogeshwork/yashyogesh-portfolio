@@ -16,8 +16,8 @@
 .about-hero-grid {
   display: grid;
   grid-template-columns: 0.7fr 1.3fr;
-  /* The portrait spans both rows; "Hello" starts level with its top
-     edge, and the statement follows below it. */
+  /* The portrait spans both rows and sits centred against the text
+     column (greeting, statement, contact lines). */
   grid-template-areas:
     "photo greet"
     "photo intro";
@@ -28,7 +28,7 @@
   width: 100%;
 }
 .about-hero-grid > .about-greeting-row { grid-area: greet; }
-.about-hero-grid > .about-portrait-col { grid-area: photo; }
+.about-hero-grid > .about-portrait-col { grid-area: photo; align-self: center; } /* centred against the greeting + statement column */
 .about-hero-grid > .about-intro { grid-area: intro; }
 
 .about-portrait-col {
@@ -802,4 +802,18 @@ body[data-page="about"] .nav-link-here:active {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
+}
+
+/* Pop-it gift: while a vehicle drives off / rolls in, the stage edges fade
+   so it leaves and arrives smoothly instead of being cut at a hard line. */
+.about-popit-stage.is-driving {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+}
+.about-popit-count {
+  margin-top: var(--space-1);
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
