@@ -57,7 +57,7 @@
 
   function spawn(card, mode) {
     const { w, h } = getDims();
-    const size = Math.max(173, Math.min(317, w * 0.144));
+    const size = Math.max(173, Math.min(460, w * 0.144)); // cap raised from 317 so photos grow on big monitors
     const others = placed.filter((p) => p.card !== card);
 
     function overlaps(x, y, gap) {
@@ -521,3 +521,12 @@
 
   requestAnimationFrame(tick);
 })();
+
+// No native drag or text selection can start on the draggable surfaces:
+// a stray selection or image drag let the browser take over a press
+// (red "no drop" circle) instead of the page's own drag handling.
+['dragstart', 'selectstart'].forEach((type) => {
+  document.addEventListener(type, (e) => {
+    if (e.target && e.target.closest && e.target.closest('#c1Field, #c1Mosaic, .c1-expand-card')) e.preventDefault();
+  });
+});

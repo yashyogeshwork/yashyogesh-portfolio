@@ -445,7 +445,7 @@ html, body {
     pointer-events:none;
     background:rgba(255,255,255,0.9);
     color:var(--color-text-secondary);
-    font-size:9px;
+    font-size:11px; /* was 9px */
     font-weight:500;
     letter-spacing:0.06em;
     text-transform:uppercase;
@@ -462,3 +462,13 @@ html, body {
 .wall-mark { transition: opacity var(--duration-hover) var(--ease-cinematic); }
 .wall-mark:hover { opacity: 0.7; }
 .wall-mark:active { opacity: 0.5; }
+
+/* Keep "Take me to Instagram ->" on one line (it wrapped and stranded the arrow on small phones). */
+.below a { white-space: nowrap; }
+
+/* No text selection or native drag on the sketch wall (see sketchwall.js). */
+.wall-field, .wall-field *, .wall-expand-card, .wall-expand-card * {
+  -webkit-user-select: none;
+          user-select: none;
+  -webkit-user-drag: none;
+}

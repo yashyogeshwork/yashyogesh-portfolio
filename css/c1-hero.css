@@ -311,3 +311,10 @@ body[data-page="project-c1"] .project-scroll-cue {
   }
 }
 
+
+/* No text selection or native drag on C1's floating photos and gallery. */
+#c1Field, #c1Field *, #c1Mosaic, #c1Mosaic *, .c1-expand-card {
+  -webkit-user-select: none;
+          user-select: none;
+  -webkit-user-drag: none;
+}

@@ -66,7 +66,7 @@ html, body {
   opacity: 1;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-width: 1100px) and (orientation: portrait) { /* phones + upright tablets */
   .studio-frame-top { padding: 22px var(--side-padding-mobile); }
 }
 
@@ -200,7 +200,7 @@ body.studio-is-leaving .studio-stage { transform: scale(0.97); }
   color: var(--color-text-primary);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-width: 1100px) and (orientation: portrait) { /* phones + upright tablets */
   .studio-label { font-size: 11px; } /* was 10px: under Apple's 11px minimum on phones */
   .studio-label-bar { gap: var(--space-3); bottom: 8.5vh; bottom: 8.5dvh; }
 }
@@ -212,7 +212,7 @@ body.studio-is-leaving .studio-stage { transform: scale(0.97); }
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
-  font-size: 10px;
+  font-size: 11px; /* was 10px: below the 11px readability minimum */
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
@@ -264,4 +264,15 @@ body.studio-is-leaving .studio-stage { transform: scale(0.97); }
   .studio-label-bar .studio-label { padding: 16px 12px; margin: -16px -12px; }
   .studio-frame-top .studio-mark,
   .studio-frame-top .studio-frame-link { padding: 12px 8px; margin: -12px -8px; }
+}
+
+/* Nothing on the homepage stage can be text-selected or natively dragged:
+   a stray selection let the browser take over a press on a side image
+   (red "no drop" circle) instead of the carousel. */
+.studio-stage, .studio-stage *,
+.studio-label-bar, .studio-label-bar *,
+.studio-hint {
+  -webkit-user-select: none;
+          user-select: none;
+  -webkit-user-drag: none;
 }

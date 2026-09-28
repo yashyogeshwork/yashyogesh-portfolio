@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!cinema || !track) return; // guard: only runs on the homepage
 
-  let isMobile = matchMedia('(max-width: 768px)').matches;
+  let isMobile = matchMedia('(max-width: 768px), (max-width: 1100px) and (orientation: portrait)').matches  /* phones, plus tablets held upright */;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* Real project pages — driven by js/content.js when present. */
@@ -41,8 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Re-measured on every call, not just once at load — otherwise a
     // window that starts narrow (e.g. a preview iframe) and is then
     // resized wider keeps using mobile numbers forever.
-    isMobile = matchMedia('(max-width: 768px)').matches;
-    panelW = isMobile ? vw * 0.80 : Math.min(vw * 0.52, 780); // was 58% / 860px: too big on laptops
+    isMobile = matchMedia('(max-width: 768px), (max-width: 1100px) and (orientation: portrait)').matches  /* phones, plus tablets held upright */;
+    // Proportional to the screen: 52% of its width. The old 780px cap
+    // left a small slide floating in empty space on big monitors.
+    panelW = isMobile ? vw * 0.80 : vw * 0.52;
     // ~10% of viewport — measured from the Figma reference — gives real
     // visible breathing room between the center panel and the peek.
     gap = isMobile ? vw * 0.05 : vw * 0.10;
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // real images exactly — no crop, no letterbox. If that would make
     // the stage taller than the available viewport, panelW is scaled
     // down to fit instead of letting the stage overflow the window.
-    const maxH = Math.min(innerHeight * 0.62, 620); // was 72% of the screen height
+    const maxH = innerHeight * 0.62; // proportional; no fixed cap, so big monitors get a big slide
     const RATIO = 1.487; // the carousel photos' own shape, so cover crops nothing
     let h = panelW / RATIO;
     if (h > maxH) {
@@ -182,7 +184,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Live speed of the carousel (slides per second), measured every frame,
+  // so an interruption can hand the current momentum to the next motion.
+  let liveVel = 0, lastRenderPos = null, lastRenderT = 0;
   function render() {
+    const nowT = performance.now();
+    if (lastRenderPos !== null && nowT - lastRenderT > 4 && nowT - lastRenderT < 100) {
+      const inst = (pos - lastRenderPos) / ((nowT - lastRenderT) / 1000);
+      liveVel = liveVel * 0.5 + inst * 0.5;
+    } else if (nowT - lastRenderT >= 100) { liveVel = 0; }
+    lastRenderPos = pos; lastRenderT = nowT;
     // Runs every frame during drag/animation — touches ONLY transform
     // (and a class toggle), nothing layout-affecting, so the browser can
     // push this straight to the compositor. This is the actual fix for
@@ -214,9 +225,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Glide pos by `delta` over `ms`. The label follows whichever slide is
   // actually nearest the centre, so it changes as the slide arrives,
   // not the instant the motion starts (that early switch read as a "tick").
+  let glideTarget = null; // where the current glide (auto-advance/entrance) is heading
   function animateGlide(delta, ms, ease, onDone) {
-    cancelAnimationFrame(raf);
+    cancelAnimationFrame(raf); springRunning = false;
     const from = pos, t0 = performance.now();
+    glideTarget = from + delta;
     (function frame(now) {
       const t = Math.min((now - t0) / ms, 1);
       pos = from + delta * ease(t);
@@ -228,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function animateEase(delta, ms, onDone) {
-    cancelAnimationFrame(raf);
+    cancelAnimationFrame(raf); springRunning = false;
     const from = pos, t0 = performance.now();
     (function frame(now) {
       const t = Math.min((now - t0) / ms, 1);
@@ -246,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // between "you just let go" and "nothing visibly responds yet" is
   // what reads as unpolished/laggy.
   function animateSnap(delta, ms, onDone) {
-    cancelAnimationFrame(raf);
+    cancelAnimationFrame(raf); springRunning = false;
     const from = pos, t0 = performance.now();
     (function frame(now) {
       const t = Math.min((now - t0) / ms, 1);
@@ -255,6 +268,65 @@ document.addEventListener('DOMContentLoaded', () => {
       if (t < 1) raf = requestAnimationFrame(frame);
       else { pos = from + delta; render(); onDone && onDone(); }
     })(performance.now());
+  }
+
+  /* ---------- Spring: every user-driven movement ----------
+     Critically damped (no bounce, no overshoot, per the site's motion
+     rules) and always started from the carousel's CURRENT position and
+     speed, so it can be redirected at any instant. Replaces fixed-length
+     eases that made input wait in a queue until a glide finished. */
+  const SPRING_RESPONSE = 0.6; // seconds; Apple-style "response"
+  let springTarget = null, springVel = 0, springRunning = false, springW = (2 * Math.PI) / SPRING_RESPONSE;
+  function springTo(target, vel, response) {
+    if (exited) return;
+    springW = (2 * Math.PI) / (response || SPRING_RESPONSE);
+    clearTimeout(holdTimer);
+    glideTarget = null;
+    springTarget = target;
+    if (typeof vel === 'number') springVel = vel;
+    state = 'step';
+    if (reducedMotion) { cancelAnimationFrame(raf); pos = target; springVel = 0; render(); springRunning = false; scheduleHold(); return; }
+    // Already moving: the running loop simply picks up the new target and
+    // keeps its current speed. (The old version cancelled the loop first
+    // and then returned here, which stopped the carousel dead.)
+    if (springRunning) return;
+    cancelAnimationFrame(raf); // stop any glide before the spring takes over
+    springRunning = true;
+    let last = performance.now();
+    (function frame(now) {
+      const w = springW;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      const sub = 4, h = dt / sub;
+      for (let k = 0; k < sub; k++) {
+        const a = -w * w * (pos - springTarget) - 2 * w * springVel;
+        springVel += a * h;
+        pos += springVel * h;
+      }
+      render();
+      commitLabel(nearestIndex());
+      if (Math.abs(pos - springTarget) < 0.004 && Math.abs(springVel) < 0.05) { // ~3px: visually arrived
+        pos = springTarget; springVel = 0; springRunning = false; springTarget = null;
+        render();
+        scheduleHold();
+        return;
+      }
+      raf = requestAnimationFrame(frame);
+    })(last);
+  }
+  // Where the carousel is heading right now (for redirects).
+  function headingTo() {
+    if (state === 'step' && springTarget !== null) return springTarget;
+    if ((state === 'auto' || state === 'entrance') && glideTarget !== null) return glideTarget;
+    return Math.round(pos);
+  }
+  function stopMotion() { cancelAnimationFrame(raf); springRunning = false; }
+  // A slide that has visibly arrived should act arrived: if the spring is
+  // within a few pixels of its target, finish it now so a click opens the
+  // project (instead of being treated as a mid-motion click).
+  function settleIfArrived() {
+    if (state === 'step' && springTarget !== null && Math.abs(pos - springTarget) < 0.06) {
+      stopMotion(); pos = springTarget; springVel = 0; springTarget = null; render(); scheduleHold();
+    }
   }
 
   /* ---------- Hold / auto-advance loop — always running ---------- */
@@ -294,7 +366,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingJump = -1;
   function jumpToIndex(target) {
     if (exited) return;
-    if (state !== 'hold') { if (state !== 'drag' && state !== 'exiting') pendingJump = target; return; }
+    settleIfArrived();
+    if (state === 'drag' || state === 'exiting') return;
+    // Mid-motion: redirect straight to that project from where we are now.
+    // (A click during motion only ever centres a slide, never opens it.)
+    if (state !== 'hold') {
+      const base = headingTo();
+      let d = (target - (((Math.round(base) % N) + N) % N) + N) % N;
+      if (d > N / 2) d -= N;
+      const v = springRunning ? springVel : liveVel;
+      stopMotion();
+      springTo(Math.round(base) + d, v);
+      return;
+    }
 
     if (target === currentIndex) {
       const inner = panelEls[target].querySelector('.studio-panel-inner');
@@ -306,11 +390,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (diff > N / 2) diff -= N;
     if (diff === 0) return;
 
-    clearTimeout(holdTimer);
-    state = 'step';
     commitLabel(target);
-    const ms = Math.max(STEP_MS, Math.abs(diff) * 550);
-    animateEase(diff, ms, () => { currentIndex = target; scheduleHold(); });
+    springTo(pos + diff, 0);
   }
 
   /* ---------- Watchdog — force-finish if anything ever gets stuck ---------- */
@@ -320,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state === 'hold' || state === 'entrance' || state === 'drag' || state === 'exiting') { lastPos = pos; lastMoveAt = performance.now(); return; }
     if (pos !== lastPos) { lastPos = pos; lastMoveAt = performance.now(); return; }
     if (performance.now() - lastMoveAt > 1000) {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf); springRunning = false; springTarget = null; springVel = 0;
       const target = Math.round(pos);
       pos = target;
       render();
@@ -342,17 +423,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // touch swipe). If a slide is already moving, remember the request
   // and play it the moment the carousel settles.
   function requestStep(dir) {
-    if (exited) return;
-    if (state !== 'hold') { if (state !== 'drag') pendingDir = dir; return; }
-    if (dir > 0 && currentIndex === N - 1) {
+    if (exited || state === 'drag' || state === 'exiting') return;
+    // Redirect from wherever the carousel is heading right now, never
+    // wait for the current motion to finish.
+    const base = Math.round(headingTo());
+    // Don't let rapid scrolling run away more than two slides ahead.
+    if (Math.abs(base + dir - pos) > 2.2) return;
+    const fromIdx = ((base % N) + N) % N;
+    if (dir > 0 && fromIdx === N - 1) {
       lapsCompleted += 1;
-      if (lapsCompleted >= LAPS_BEFORE_ABOUT) { exitToAbout(); return; }
+      if (lapsCompleted >= LAPS_BEFORE_ABOUT) { stopMotion(); exitToAbout(); return; }
     }
-    const target = (currentIndex + dir + N) % N;
-    state = 'step';
-    clearTimeout(holdTimer);
-    commitLabel(target);
-    animateEase(dir, STEP_MS, scheduleHold);
+    const v = springRunning ? springVel : (state === 'hold' ? 0 : liveVel);
+    stopMotion();
+    springTo(base + dir, v);
   }
 
   // One gesture = one slide. Trackpads keep firing wheel events for up
@@ -402,6 +486,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const AXIS_LOCK_PX = 6;
 
   let lastDragX = 0, lastDragT = 0, dragVelocity = 0;
+  // Release speed is measured over the last ~80ms of movement, not just the
+  // last two events (which gave about half the real speed), and is zero if
+  // the finger had stopped before letting go.
+  let dragHistory = [];
+  function releaseVelocity() {
+    const now = performance.now();
+    const recent = dragHistory.filter((h) => now - h[0] <= 120);
+    if (recent.length < 2) return 0;
+    const a = recent[0], z = recent[recent.length - 1];
+    if (now - z[0] > 100 || z[0] - a[0] < 24) return 0;
+    return -(z[1] - a[1]) / unit / ((z[0] - a[0]) / 1000);
+  }
   let swipeStepped = false;
 
   let dragRafId = null;
@@ -417,12 +513,18 @@ document.addEventListener('DOMContentLoaded', () => {
     state = 'drag';
     dragOccurred = true;
     clearTimeout(holdTimer);
-    cancelAnimationFrame(raf);
+    // stopMotion (not a bare cancelAnimationFrame): it also clears the
+    // spring's running flag. Without that, grabbing the carousel while it
+    // was still moving left the spring thinking it was running, so on
+    // release it never restarted and the carousel froze until the watchdog.
+    stopMotion();
+    springTarget = null; springVel = 0; glideTarget = null;
     dragStartPos = pos;
     cinema.classList.add('is-grabbing');
     lastDragX = startX;
     lastDragT = performance.now();
     dragVelocity = 0;
+    dragHistory = [[performance.now(), startX]];
     dragRafId = requestAnimationFrame(dragRenderLoop);
   }
   let dragStartPos = 0;
@@ -440,6 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // movement, not the whole gesture — this is what lets a fast flick
     // feel different from a slow, deliberate drag on release.
     const now = performance.now();
+    dragHistory.push([now, clientX]);
+    if (dragHistory.length > 20) dragHistory.shift();
     const dt = now - lastDragT;
     if (dt > 8) {
       dragVelocity = -(clientX - lastDragX) / unit / (dt / 1000);
@@ -469,27 +573,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // whichever one you happened to be closest to when you let go —
     // that's what makes it feel like real momentum, not just a
     // position snap.
-    const FLICK_THRESHOLD = 0.45; // panels/sec
-    let projected = pos;
-    if (Math.abs(dragVelocity) > FLICK_THRESHOLD) {
-      projected += Math.sign(dragVelocity) * Math.min(1, Math.abs(dragVelocity) * 0.18);
+    // Momentum projection (Apple's scroll-deceleration maths): project
+    // where the flick is heading, snap to the slide nearest THAT point,
+    // capped at two slides. Then hand the finger's exact speed to the
+    // spring, so there is no seam between dragging and settling.
+    dragVelocity = releaseVelocity();
+    const DECEL = 0.995; // paging rate: a carousel snaps to pages, so project shorter than a free scroll
+    const projected = pos + (dragVelocity / 1000) * DECEL / (1 - DECEL);
+    let target = Math.round(projected);
+    // Grabbed a side slide and pulled it toward the middle (even a short
+    // way, >= 40px)? Bring that slide to the centre, same as clicking it.
+    // Long or fast drags can still carry further via the projection above.
+    const moved = pos - dragStartPos; // + when content moves left
+    if (grabOffset !== 0 && Math.sign(moved) === Math.sign(grabOffset) && Math.abs(moved) * unit >= 40) {
+      const grabbedTarget = Math.round(dragStartPos) + grabOffset;
+      target = grabOffset > 0 ? Math.max(target, grabbedTarget) : Math.min(target, grabbedTarget);
     }
-    const target = Math.round(projected);
-    const delta = target - pos;
-
-    // Faster release = snappier, shorter settle; a gentle drag eases
-    // more slowly — the snap duration itself responds to how the
-    // gesture actually felt, not a fixed generic time for every release.
-    const speed = Math.min(1, Math.abs(dragVelocity) / 3);
-    const duration = 380 - speed * 160; // 380ms gentle -> 220ms for a fast flick
-
-    state = 'step';
+    target = Math.max(Math.round(dragStartPos) - 2, Math.min(Math.round(dragStartPos) + 2, target));
     commitLabel(((target % N) + N) % N);
-    animateSnap(delta, duration, scheduleHold);
+    // Match the spring to the throw so the carousel only ever DECELERATES
+    // from the finger's speed (never jolts faster): stiffness w <= 2v/D,
+    // kept between a 0.45s and 1.4s response so it never feels sluggish.
+    const D = target - pos;
+    let resp = SPRING_RESPONSE;
+    if (Math.abs(D) > 0.01 && Math.sign(D) === Math.sign(dragVelocity) && Math.abs(dragVelocity) > 0.05) {
+      const w = Math.max((2 * Math.PI) / 1.4, Math.min((2 * Math.PI) / 0.45, 2 * Math.abs(dragVelocity) / Math.abs(D)));
+      resp = (2 * Math.PI) / w;
+    }
+    springTo(target, dragVelocity, resp);
   }
 
   function handleTap(clientX, clientY) {
     if (exited) return;
+    settleIfArrived();
     // Side slides are tilted in 3D, so the click usually lands on the
     // slide's outer frame rather than its inner photo layer. The old code
     // only accepted the inner layer, so every side-slide click was
@@ -502,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (i === -1) return;
     // Mid-motion (auto-advance or a slide change): remember the click and
     // act on it the moment the carousel settles, instead of ignoring it.
-    if (state !== 'hold') { if (state !== 'drag' && state !== 'exiting') pendingJump = i; return; }
+    if (state !== 'hold') { if (state !== 'drag' && state !== 'exiting') jumpToIndex(i); return; }
 
     // Check the ACTUAL screen position, not the currentIndex variable —
     // if that variable ever drifts out of sync with what's really
@@ -534,6 +650,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(go, 160);
   }
 
+  // Keyboard: arrows move, Enter opens the centred project.
+  addEventListener('keydown', (e) => {
+    if (exited || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); markUser(); requestStep(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); markUser(); requestStep(-1); }
+    else if (e.key === 'Enter' && (t === document.body || t === cinema) && state === 'hold') { e.preventDefault(); jumpToIndex(currentIndex); }
+  });
+
+  // Backstop: no native drag or selection can start on the homepage stage.
+  ['dragstart', 'selectstart'].forEach((type) => {
+    document.addEventListener(type, (e) => {
+      if (e.target && e.target.closest && e.target.closest('.studio-stage, .studio-label-bar, .studio-hint')) e.preventDefault();
+    });
+  });
+
   cinema.style.touchAction = 'none';
 
   /* ---------- Custom hover cursor ----------
@@ -555,7 +688,11 @@ document.addEventListener('DOMContentLoaded', () => {
     panelEls.forEach((panelEl, i) => {
       panelEl.addEventListener('pointerenter', () => {
         if (state === 'drag') return;
-        studioCursor.textContent = (i === currentIndex) ? 'View' : 'Select';
+        // Follow the slide that is VISIBLY centred (not the last settled one),
+        // and say View only once it has arrived, so the label always matches
+        // what a click will do.
+        const arrived = state === 'hold' || Math.abs(pos - Math.round(pos)) < 0.06;
+        studioCursor.textContent = (i === nearestIndex() && arrived) ? 'View' : 'Select';
         studioCursor.classList.add('is-visible');
         // Pause auto-advance while hovering — without this, reading
         // "View" and then clicking (completely normal, and often takes
@@ -578,6 +715,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cinema.addEventListener('pointerdown', (e) => {
     if (exited) return;
+    // Never let the browser start its own text selection or native drag
+    // from the carousel: that is what showed the red "no drop" circle on
+    // the side images and swallowed the click/drag. The carousel handles
+    // every press itself, so nothing is lost. Also clear any selection
+    // left over from earlier (fast clicks count as double/triple-clicks).
+    if (e.pointerType === 'mouse') e.preventDefault();
+    const sel = window.getSelection && window.getSelection();
+    if (sel && sel.rangeCount && !sel.isCollapsed) sel.removeAllRanges();
     markUser();
     pointerActive = true;
     pointerMode = null;
@@ -589,7 +734,18 @@ document.addEventListener('DOMContentLoaded', () => {
     lastY = e.clientY;
     startTime = performance.now();
     cinema.setPointerCapture(e.pointerId);
+    // Which slide was grabbed, as an offset from the centre (-1 left,
+    // +1 right, 0 centre), so pulling a side slide inward can select it.
+    grabOffset = 0;
+    const gp = document.elementFromPoint(e.clientX, e.clientY);
+    const gpanel = gp && gp.closest('.studio-panel');
+    const gi = gpanel ? panelEls.indexOf(gpanel) : -1;
+    if (gi !== -1) {
+      let d = (gi - pos) % N; if (d > N / 2) d -= N; if (d < -N / 2) d += N;
+      grabOffset = Math.round(d);
+    }
   });
+  let grabOffset = 0;
 
   cinema.addEventListener('pointermove', (e) => {
     if (!pointerActive || e.pointerId !== pointerId) return;
@@ -671,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reducedMotion) { go(); return; }
     document.body.classList.add('studio-is-leaving');
     const from = pos, t0 = performance.now();
-    cancelAnimationFrame(raf);
+    cancelAnimationFrame(raf); springRunning = false;
     (function frame(now) {
       const t = Math.min((now - t0) / EXIT_MS, 1);
       pos = from + 0.35 * t * t * t; // ease-in: starts still, gathers pace
@@ -757,6 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!e.persisted) return;
     exited = false;
     cancelAnimationFrame(raf);
+    springRunning = false; springVel = 0; springTarget = null; glideTarget = null;
     clearTimeout(holdTimer);
     pendingDir = 0; pendingJump = -1;
     document.body.classList.remove('studio-is-leaving');

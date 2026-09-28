@@ -71,8 +71,9 @@
   <!-- Cinematic intro — real TOAD video, autoplay/muted/looping hero background -->
   <section class="project-intro gradient-overlay-vignette" id="main">
     <div class="project-intro-media" id="toadHeroMedia" style="background: url('images/toad/exterior-cover-new.jpg') center / cover no-repeat, linear-gradient(160deg, #DCE5D2 0%, #AEC49A 45%, #6E8A5E 100%);">
-      <video autoplay muted playsinline preload="metadata" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.8s var(--ease-cinematic);" poster="images/toad/exterior-cover-new.jpg" id="toadHeroVideo">
+      <video autoplay muted playsinline preload="auto" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.8s var(--ease-cinematic);" poster="images/toad/exterior-cover-new.jpg" id="toadHeroVideo">
         <source src="videos/toad-hero-720.mp4" type="video/mp4" media="(max-width: 768px)">
+        <source src="videos/toad-hero-hq.mp4" type="video/mp4" media="(min-width: 1800px)">
         <source src="videos/toad-hero.mp4" type="video/mp4">
       </video>
     </div>
@@ -108,7 +109,7 @@
       <div class="cs-eyebrow">The user</div>
       <h2 class="cs-heading reveal" data-c="toad.personaHeading">Digital work by day, farms by choice.</h2>
       <p class="cs-body reveal" data-c="toad.personaBody">They moved for space, not to become farmers. TOAD is built for someone with no agricultural background who still wants real results from their land.</p>
-      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.personaImage" role="img" aria-label="A neo-rural remote worker, someone with no farming background who moved to the countryside for a slower life" style="background: linear-gradient(135deg, #E5E0D2, #C7BFA5); aspect-ratio: 2632 / 1274;"></div>
+      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.personaImage" role="img" aria-label="A neo-rural remote worker, someone with no farming background who moved to the countryside for a slower life" style="background: linear-gradient(135deg, #E5E0D2, #C7BFA5); aspect-ratio: 2632 / 1426;"></div>
     </div>
   </section>
 
@@ -128,7 +129,7 @@
       <div class="cs-eyebrow">Form</div>
       <h2 class="cs-heading reveal" data-c="toad.formHeading">Shaped like a toad. Low and grounded.</h2>
       <p class="cs-body reveal" data-c="toad.formBody">A low, wide stance and a soft, rounded body, an animal-inspired form built to feel grounded and approachable, not industrial.</p>
-      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.formImage" role="img" aria-label="Form inspiration study, a low wide toad-like stance" style="background: linear-gradient(135deg, #EDE3EF, #D6C2DB); aspect-ratio: 2880 / 1514;"></div>
+      <div class="cs-fullbleed img-rounded reveal" data-c-bg="toad.formImage" role="img" aria-label="Form inspiration study, a low wide toad-like stance" style="background: linear-gradient(135deg, #EDE3EF, #D6C2DB); aspect-ratio: 2880 / 1560;"></div>
     </div>
   </section>
 
@@ -139,9 +140,9 @@
       <h2 class="cs-heading reveal" data-c="toad.exteriorHeading">Built low, wide, and calm.</h2>
       <p class="cs-body reveal" data-c="toad.exteriorBody">Every surface reads as calm and close to the ground, built to move through a field without looking like it belongs on a construction site.</p>
       <div class="cs-image-stack">
-        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage1" role="img" aria-label="TOAD exterior concept sketch" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8); aspect-ratio: 2880 / 1500;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage1" role="img" aria-label="TOAD exterior concept sketch" style="background: linear-gradient(135deg, #E8E2D5, #C9BFA8); aspect-ratio: 2880 / 1393;"></div>
         <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage2" role="img" aria-label="TOAD exterior functional layout study" style="background: linear-gradient(135deg, #DAD5CE, #B7AFA2); aspect-ratio: 2880 / 1562;"></div>
-        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage3" role="img" aria-label="TOAD exterior packaging study" style="background: linear-gradient(135deg, #E7D9E3, #D4B8CB); aspect-ratio: 2880 / 1459;"></div>
+        <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage3" role="img" aria-label="TOAD exterior packaging study" style="background: linear-gradient(135deg, #E7D9E3, #D4B8CB); aspect-ratio: 2880 / 1395;"></div>
         <div class="cs-image-stack-item img-rounded reveal" data-c-bg="toad.exteriorImage4" role="img" aria-label="TOAD exterior color, material, and finish study" style="background: linear-gradient(135deg, #D5DCE5, #A8B8C9); aspect-ratio: 2880 / 1560;"></div>
       </div>
     </div>
@@ -189,6 +190,7 @@
   <script src="js/responsive-bg-images.js"></script>
   <script src="js/page-transition.js"></script>
   <script src="js/scroll-reveal.js"></script>
+  <script src="js/slide-stage.js"></script>
   <script src="js/project-nav.js"></script>
   <script src="js/next-project.js"></script>
   <script src="js/scroll-depth.js"></script>

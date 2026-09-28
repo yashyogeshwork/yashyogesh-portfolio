@@ -817,3 +817,29 @@ body[data-page="about"] .nav-link-here:active {
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
+
+/* Large screens: statement and portrait scale with the rest of the site. */
+@media (min-width: 1800px) {
+  .about-statement { font-size: 34px; }
+  .about-portrait { width: 288px; }
+}
+@media (min-width: 2300px) {
+  .about-statement { font-size: 40px; }
+  .about-portrait { width: 336px; }
+}
+
+@media (min-width: 3200px) {
+  .about-statement { font-size: 52px; }
+  .about-portrait { width: 440px; }
+}
+
+/* Pop-its: no text selection or native dragging anywhere in the pop-it
+   area. Selected text here let the browser take over a press-and-drag
+   (red "no drop" cursor) and stop the popping. */
+.about-popit, .about-popit *,
+.about-bubblewrap, .about-bubblewrap *,
+.about-popit-gallery, .about-popit-gallery * {
+  -webkit-user-select: none;
+          user-select: none;
+  -webkit-user-drag: none;
+}

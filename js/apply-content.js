@@ -39,12 +39,27 @@
      real photo once one is set, otherwise leaves whatever's already
      there (the gradient placeholder), so nothing breaks before real
      images exist. */
+  // Speed: every slide used to request its full-size image the moment the
+  // page loaded, including slides far down the page, and phones then
+  // swapped to the small version, so they downloaded both (TOAD: 19
+  // images, 4.5MB up front). Now the right size is chosen before anything
+  // is requested (the -800w version under 768px), and each image loads
+  // only when its slide is about a screen away from view.
+  const smallScreen = window.innerWidth < 768;
+  const pickSize = (v) => smallScreen ? v.replace(/\.(jpg|jpeg|webp|png)$/i, '-800w.$1') : v;
+  const setBg = (el) => { el.style.backgroundImage = `url('${el.dataset.cBgSrc}')`; };
+  const lazyBg = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { setBg(e.target); lazyBg.unobserve(e.target); }
+      }), { rootMargin: '100% 0px' })
+    : null;
   document.querySelectorAll('[data-c-bg]').forEach((el) => {
     const val = get(el.getAttribute('data-c-bg'));
     if (typeof val === 'string' && val.length) {
-      el.style.backgroundImage = `url('${val}')`;
+      el.dataset.cBgSrc = pickSize(val);
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
+      if (lazyBg) lazyBg.observe(el); else setBg(el);
     }
   });
 

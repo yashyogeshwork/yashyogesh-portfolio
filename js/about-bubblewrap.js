@@ -175,12 +175,31 @@
     wired.add(container);
     container.addEventListener('pointerdown', (e) => {
       if (e.button > 0) return; // left button / touch / pen only
+      // Stop the browser starting its own text selection or native drag.
+      // Fast popping registers as double-clicks, which selected nearby text;
+      // the next press-and-drag then grabbed that selection, the browser
+      // showed its red "no drop" cursor, and stopped sending the pointer
+      // moves that pop bubbles. Also clear any selection left from before.
+      if (e.pointerType === 'mouse') e.preventDefault();
+      clearSelection();
       const rects = collectBubbles(container);
       gesture = { rects, last: [e.clientX, e.clientY], step: Math.max(3, ((rects[0] && rects[0].w) || 24) / 3) };
       const el = bubbleAt(e.clientX, e.clientY);
       if (el) pop(el);
     });
   }
+  function clearSelection() {
+    const sel = window.getSelection && window.getSelection();
+    if (sel && sel.rangeCount && !sel.isCollapsed) sel.removeAllRanges();
+  }
+  // Backstop: never let a native drag or text selection start anywhere in
+  // the pop-it area (patches, labels, counter, buttons, gallery).
+  const POPIT_AREA = '.about-popit, .about-bubblewrap, .about-popit-gallery';
+  ['dragstart', 'selectstart'].forEach((type) => {
+    document.addEventListener(type, (e) => {
+      if (e.target && e.target.closest && e.target.closest(POPIT_AREA)) e.preventDefault();
+    });
+  });
   let prevPt = null; // pointer position at the previous report
   addEventListener('pointermove', (e) => {
     const from = prevPt;
@@ -192,6 +211,7 @@
       const hit = document.elementFromPoint(e.clientX, e.clientY);
       const container = hit && hit.closest('.about-bubblewrap');
       if (!container || !wired.has(container)) return;
+      clearSelection();
       const rects = collectBubbles(container);
       // Start the path where the pointer actually was, so bubbles between
       // the last report outside the patch and this one still count.
@@ -319,6 +339,19 @@
         // The gift: a fully popped vehicle drives off (speeding up as it
         // leaves), and the next one rolls in and eases to a stop. No
         // bounce, per the site's motion rules.
+        // Which way each vehicle's front points in its bubble shape, so the
+        // drive-off always moves forward. Read from the shapes themselves.
+        // Read from each silhouette: a windshield rake, a long hood, a bucket
+        // arm or a propeller marks the front. (The car has a long hood on
+        // the left and a blunt rear on the right; the snowmobile has a
+        // low seat on the left and a tall windshield and sloping nose on
+        // the right. An earlier version had those two the wrong way round.)
+        const VEHICLE_FACING = {
+          scooter: 'left', rickshaw: 'left', car: 'left', jcb: 'left',
+          bus: 'left', train: 'left', pickup: 'left',
+          tank: 'right', helicopter: 'right', ambulance: 'right',
+          submarine: 'right', snowmobile: 'right',
+        };
         let driving = false;
         revealWrap.addEventListener('popit:complete', () => {
           if (driving) return;
@@ -326,13 +359,17 @@
           const next = pickRandomName(names, currentName);
           if (reduceMotionPref) { showFooterShape(next); driving = false; return; }
           if (revealStage) revealStage.classList.add('is-driving');
+          // Each vehicle drives off the way it faces, and the next one arrives
+          // from behind, also moving forward (never in reverse).
+          const outDir = VEHICLE_FACING[currentName] === 'left' ? -1 : 1;
+          const inDir = VEHICLE_FACING[next] === 'left' ? -1 : 1;
           setTimeout(() => {
             revealWrap.style.transition = 'transform 0.9s cubic-bezier(0.55, 0, 0.9, 0.4)';
-            revealWrap.style.transform = 'translateX(115%)';
+            revealWrap.style.transform = `translateX(${115 * outDir}%)`;
             setTimeout(() => {
               revealWrap.style.transition = 'none';
               showFooterShape(next);
-              revealWrap.style.transform = 'translateX(-115%)';
+              revealWrap.style.transform = `translateX(${-115 * inDir}%)`;
               void revealWrap.offsetWidth;
               revealWrap.style.transition = 'transform 1s cubic-bezier(0.16, 1, 0.3, 1)';
               revealWrap.style.transform = 'translateX(0)';

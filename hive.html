@@ -72,8 +72,9 @@
   <!-- ============ HERO ============ -->
   <section class="project-intro gradient-overlay-vignette" id="main">
     <div class="project-intro-media" id="hiveHeroMedia" style="background: url('images/hive/hero-cover-new.jpg') center / cover no-repeat, linear-gradient(160deg, #E8E2D5 0%, #C9BFA8 45%, #8A9B7E 100%);">
-      <video autoplay muted playsinline preload="metadata" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.8s var(--ease-cinematic);" poster="images/hive/hero-cover-new.jpg" id="hiveHeroVideo">
+      <video autoplay muted playsinline preload="auto" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.8s var(--ease-cinematic);" poster="images/hive/hero-cover-new.jpg" id="hiveHeroVideo">
         <source src="videos/hive-hero-720.mp4" type="video/mp4" media="(max-width: 768px)">
+        <source src="videos/hive-hero-hq.mp4" type="video/mp4" media="(min-width: 1800px)">
         <source src="videos/hive-hero.mp4" type="video/mp4">
       </video>
     </div>
@@ -103,7 +104,7 @@
       </div>
 
       <div class="cs-problem-image reveal">
-        <img width="1800" height="562" src="images/hive/p2-problem-collage-full.jpg" srcset="images/hive/p2-problem-collage-full-800w.jpg 800w, images/hive/p2-problem-collage-full.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Problem collage: rural roads and farmland showing low density regions, a father walking his son to catch the bus, a child looking out a bus window, and a parent seeing a child onto the school bus" loading="lazy">
+        <img width="1800" height="496" src="images/hive/p2-problem-collage-full.jpg" srcset="images/hive/p2-problem-collage-full-800w.jpg 800w, images/hive/p2-problem-collage-full.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Problem collage: rural roads and farmland showing low density regions, a father walking his son to catch the bus, a child looking out a bus window, and a parent seeing a child onto the school bus" loading="lazy">
       </div>
 
       <p class="cs-problem-statement reveal">How might we enable children aged 7 to 14 to access daily education independently in <span class="nowrap">low-density</span> regions, where long commute times to centralized schools result in <span class="nowrap">travel-related</span> fatigue?</p>
@@ -133,7 +134,7 @@
         <img width="1800" height="757" src="images/hive/board-exterior-ideation.jpg" srcset="images/hive/board-exterior-ideation-800w.jpg 800w, images/hive/board-exterior-ideation.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Exterior ideation: rejected modular van concepts, tetrapod form inspiration, and pods connecting side by side" loading="lazy">
       </div>
       <div class="cs-board reveal">
-        <img width="1800" height="797" src="images/hive/board-exterior-final.jpg" srcset="images/hive/board-exterior-final-800w.jpg 800w, images/hive/board-exterior-final.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Final exterior: form evolution, grid based light for non verbal interaction, free movement between docked pods, and a door that retracts into the body" loading="lazy">
+        <img width="1800" height="796" src="images/hive/board-exterior-final.jpg" srcset="images/hive/board-exterior-final-800w.jpg 800w, images/hive/board-exterior-final.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="Final exterior: form evolution, grid based light for non verbal interaction, free movement between docked pods, and a door that retracts into the body" loading="lazy">
       </div>
       <div class="cs-board reveal">
         <img width="1800" height="975" src="images/hive/board-cmf-package.jpg" srcset="images/hive/board-cmf-package-800w.jpg 800w, images/hive/board-cmf-package.jpg 1800w" sizes="(min-width: 1440px) 1312px, 100vw" alt="CMF materials: tactile, neutral, grounded, childsafe. Package drawing sized against an eleven year old, with two children posing at the front of the pod" loading="lazy">
@@ -194,6 +195,7 @@
   <script src="js/apply-content.js"></script>
   <script src="js/page-transition.js"></script>
   <script src="js/scroll-reveal.js"></script>
+  <script src="js/slide-stage.js"></script>
   <script src="js/project-nav.js"></script>
   <script src="js/next-project.js"></script>
   <script src="js/scroll-depth.js"></script>

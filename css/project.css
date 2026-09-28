@@ -67,7 +67,13 @@
 
 /* ---- Case study sections ---- */
 
-:root { --cs-media-gap: var(--space-6); } /* 96px between images: real breathing room */
+:root {
+  /* Slide to slide: each slide gets its own moment. The gap scales with
+     the screen height (30% of it, never less than the spacing scale's
+     96px step), so on a big monitor the next slide arrives as you scroll
+     instead of already sitting underneath the current one. */
+  --cs-media-gap: max(var(--space-6), 30svh);
+}
 
 .cs-section {
   /* Was 160px top and bottom: ~320px of empty space at every section
@@ -376,3 +382,22 @@
 @media (max-width: 768px) {
   :root { --cs-text-gap: var(--space-4); }
 }
+
+/* Large screens: the hero title keeps growing past its 80px laptop cap. */
+@media (min-width: 1800px) { .project-intro-title { font-size: 96px; } }
+@media (min-width: 2300px) { .project-intro-title { font-size: 112px; } }
+
+/* Scroll-linked slides (js/slide-stage.js): driven every frame by scroll
+   position, so no CSS transition on transform/opacity (it would lag). */
+.slide-scrub {
+  transition: none;
+  will-change: transform, opacity;
+  transform-origin: 50% 60%;
+}
+
+/* Phones: each slide gets its own moment too (was a fixed 40px). */
+@media (max-width: 768px) {
+  :root { --cs-media-gap: max(var(--space-4), 16svh); }
+}
+
+@media (min-width: 3200px) { .project-intro-title { font-size: 144px; } }

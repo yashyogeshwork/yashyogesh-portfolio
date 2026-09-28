@@ -13,6 +13,17 @@
     let hintSeen = true;
     try { hintSeen = !!localStorage.getItem('sketchwallTouchHintSeen'); } catch (e) { /* private mode etc — just don't nag */ }
     if (isCoarsePointer && !hintSeen) {
+      // On very small screens the hint's usual spot overlaps the headline's
+      // first line (and sits above it), so drop it just below the headline.
+      const placeHint = () => {
+        const hl = document.querySelector('.wall-headline');
+        if (!hl) return;
+        touchHint.style.top = '';
+        const h = touchHint.getBoundingClientRect(), t = hl.getBoundingClientRect();
+        if (h.bottom > t.top && h.top < t.bottom) touchHint.style.top = Math.round(t.bottom + 12) + 'px';
+      };
+      placeHint();
+      addEventListener('resize', placeHint);
       requestAnimationFrame(() => touchHint.classList.add('is-visible'));
       const dismissHint = () => {
         touchHint.classList.remove('is-visible');
@@ -813,8 +824,10 @@
 
   let expandedCard = null; // the sketch currently shown full-size, if any
 
+  let expandOpenedAt = 0;
   function openExpand(card) {
     expandedCard = card;
+    expandOpenedAt = performance.now();
     if (card.fullImage) {
       // Set the image only (not the whole 'background' shorthand) —
       // .wall-expand-card already defines background-size/position/
@@ -906,6 +919,12 @@
     // view entirely. Hit-test the click against every other card's real
     // on-screen position before deciding which it is.
     if (e.target !== expandVeil) return;
+    // Ghost click: on touch screens the view opens on finger-up, and the
+    // browser's own follow-up "click" for that same tap arrives a few ms
+    // later on the backdrop that has just appeared, which closed it again
+    // instantly (tapping a sketch sometimes seemed to do nothing). Ignore
+    // backdrop clicks in the first moment after opening.
+    if (performance.now() - expandOpenedAt < 400) return;
     const other = cards.find((c) => {
       if (c === expandedCard) return false;
       const r = c.el.getBoundingClientRect();
@@ -947,3 +966,12 @@
   buildField();
   requestAnimationFrame(physicsTick);
 })();
+
+// No native drag or text selection can start on the draggable surfaces:
+// a stray selection or image drag let the browser take over a press
+// (red "no drop" circle) instead of the page's own drag handling.
+['dragstart', 'selectstart'].forEach((type) => {
+  document.addEventListener(type, (e) => {
+    if (e.target && e.target.closest && e.target.closest('#wallField, .wall-expand-card, .wall-touch-hint')) e.preventDefault();
+  });
+});

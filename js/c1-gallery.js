@@ -99,8 +99,11 @@
     inner.style.setProperty('--delay', (-(i % 5) * 0.6).toFixed(1) + 's');
 
     const img = document.createElement('img');
-    img.src = src;
+    // A light 720px copy for the gallery; the full-size photo is only
+    // loaded when a photo is opened in the enlarged view.
+    img.src = src.replace(/\.jpg$/i, '-720w.jpg');
     img.alt = 'Surface C1 studio render';
+    img.draggable = false; // no native image drag (red "no drop" circle)
     img.loading = 'lazy';
     inner.appendChild(img);
 

@@ -80,3 +80,62 @@
     --side-padding-desktop: var(--side-padding-tablet);
   }
 }
+
+/* ==========================================================================
+   LARGE SCREENS. Below 1800px nothing changes. On big monitors (24"-32")
+   the layout used to stop growing at laptop sizes: 17px body text, a
+   1440px site width and ~560px of empty space each side on a 27" 2560px
+   screen. These steps scale type, spacing and width up in proportion
+   (on the same 8px grid), so it reads as the same design, sized for the
+   screen.
+   ========================================================================== */
+@media (min-width: 1800px) {
+  :root {
+    --fs-hero: 76px;
+    --fs-section: 42px;
+    --fs-body: 19px;
+    --fs-caption: 14px;
+    --space-4: 48px;
+    --space-5: 80px;
+    --space-6: 120px;
+    --space-7: 192px;
+    --content-max-width: 840px;
+    --site-max-width: 1920px;
+    --side-padding-desktop: 96px;
+    --radius-image: 14px;
+  }
+}
+@media (min-width: 2300px) {
+  :root {
+    --fs-hero: 88px;
+    --fs-section: 50px;
+    --fs-body: 21px;
+    --fs-caption: 15px;
+    --space-4: 56px;
+    --space-5: 88px;
+    --space-6: 136px;
+    --space-7: 224px;
+    --content-max-width: 960px;
+    --site-max-width: 2240px;
+    --side-padding-desktop: 128px;
+    --radius-image: 16px;
+  }
+}
+
+/* 4K monitors at 100% scaling (3200px+ wide): one more proportional step. */
+@media (min-width: 3200px) {
+  :root {
+    --fs-hero: 112px;
+    --fs-section: 64px;
+    --fs-body: 27px;
+    --fs-caption: 19px;
+    --space-4: 72px;
+    --space-5: 112px;
+    --space-6: 176px;
+    --space-7: 288px;
+    --content-max-width: 1240px;
+    --site-max-width: 3000px;
+    --side-padding-desktop: 160px;
+    --radius-image: 20px;
+  }
+}
