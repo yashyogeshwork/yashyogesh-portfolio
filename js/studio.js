@@ -374,7 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const base = headingTo();
       let d = (target - (((Math.round(base) % N) + N) % N) + N) % N;
       if (d > N / 2) d -= N;
-      const v = springRunning ? springVel : liveVel;
+      let v = springRunning ? springVel : liveVel;
+      if (v * d < 0) v = 0; // same rule: a reversal starts from a standstill
       stopMotion();
       springTo(Math.round(base) + d, v);
       return;
@@ -434,7 +435,11 @@ document.addEventListener('DOMContentLoaded', () => {
       lapsCompleted += 1;
       if (lapsCompleted >= LAPS_BEFORE_ABOUT) { stopMotion(); exitToAbout(); return; }
     }
-    const v = springRunning ? springVel : (state === 'hold' ? 0 : liveVel);
+    let v = springRunning ? springVel : (state === 'hold' ? 0 : liveVel);
+    // Reversing direction: start from a standstill. Inheriting the old
+    // speed made the carousel keep travelling the wrong way for a frame
+    // or two (2-6px) before turning, which felt like a backward tug.
+    if (v * dir < 0) v = 0;
     stopMotion();
     springTo(base + dir, v);
   }

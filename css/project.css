@@ -68,21 +68,24 @@
 /* ---- Case study sections ---- */
 
 :root {
-  /* Slide to slide: each slide gets its own moment. The gap scales with
-     the screen height (30% of it, never less than the spacing scale's
-     96px step), so on a big monitor the next slide arrives as you scroll
-     instead of already sitting underneath the current one. */
-  --cs-media-gap: max(var(--space-6), 30svh);
+  /* ONE vertical rhythm for every project page. All three scale smoothly
+     with the screen width (no jumps at breakpoints), and every slide image
+     is trimmed tight, so these are the gaps you actually see.
+       --cs-pad        top and bottom of every section
+       --cs-gap-text   text <-> the slide it belongs to, in BOTH directions
+                       (heading above it, caption below it)
+       --cs-gap-slide  slide <-> slide: each gets its own moment */
+  --cs-pad: clamp(64px, 6vw, 112px);
+  --cs-gap-text: clamp(40px, 5vw, 96px);
+  --cs-gap-slide: clamp(56px, 8vw, 160px);
 }
 
 .cs-section {
-  /* Was 160px top and bottom: ~320px of empty space at every section
-     change on desktop. */
-  padding: var(--space-6) 0;
+  padding: var(--cs-pad) 0;
 }
 
 .cs-section:first-of-type {
-  padding-top: var(--space-6);
+  padding-top: var(--cs-pad);
 }
 
 .cs-section-alt {
@@ -114,7 +117,6 @@
 .cs-fullbleed {
   width: 100%;
   aspect-ratio: 16 / 9;
-  margin: var(--cs-media-gap) 0 0;
   content-visibility: auto;
   background-color: var(--color-bg-section);
 }
@@ -335,17 +337,12 @@
    touched each other and the paragraph above. */
 .cs-image-stack {
   display: grid;
-  gap: var(--cs-media-gap);
-  margin-top: var(--cs-media-gap);
+  gap: var(--cs-gap-slide);
 }
 
 /* Phones: the desktop 160px section padding left ~320px of blank
    screen between sections on a 390px phone. Step down the scale. */
-@media (max-width: 768px) {
-  :root { --cs-media-gap: var(--space-4); }
-  .cs-section { padding: var(--space-5) 0; }
-  .cs-section:first-of-type { padding-top: var(--space-5); }
-}
+
 
 /* Hive's boards are real <img> tags: the card reveals on time as a soft
    grey placeholder and the photo fades in once decoded. No blank gap
@@ -372,15 +369,17 @@
   margin-right: 0;
 }
 
-/* Text -> the slide that illustrates it: a step tighter than slide -> slide,
-   because the slide belongs to the text above it. Slide-to-slide keeps
-   the full --cs-media-gap for breathing room. */
-:root { --cs-text-gap: var(--space-5); }
-:is(.cs-eyebrow, .cs-heading, .cs-body, .cs-stat-row) + :is(.cs-fullbleed, .cs-image-stack, .cs-board, .cs-render, .cs-problem-image) {
-  margin-top: var(--cs-text-gap);
+/* THE RHYTHM. Default: a slide that follows another slide gets the slide
+   gap. A slide that follows text, or text that follows a slide (a caption),
+   gets the closer text gap, because they belong together. */
+.cs-section :is(.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack) {
+  margin-top: var(--cs-gap-slide);
 }
-@media (max-width: 768px) {
-  :root { --cs-text-gap: var(--space-4); }
+.cs-section :is(.cs-eyebrow, .cs-heading, .cs-body, .cs-stat-row, .cs-problem-statement, .cs-board-statement)
+  + :is(.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack),
+.cs-section :is(.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack)
+  + :is(.cs-problem-statement, .cs-board-statement, .cs-body) {
+  margin-top: var(--cs-gap-text);
 }
 
 /* Large screens: the hero title keeps growing past its 80px laptop cap. */
@@ -395,9 +394,5 @@
   transform-origin: 50% 60%;
 }
 
-/* Phones: each slide gets its own moment too (was a fixed 40px). */
-@media (max-width: 768px) {
-  :root { --cs-media-gap: max(var(--space-4), 16svh); }
-}
 
 @media (min-width: 3200px) { .project-intro-title { font-size: 144px; } }

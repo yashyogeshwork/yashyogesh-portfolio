@@ -318,3 +318,23 @@ body[data-page="project-c1"] .project-scroll-cue {
           user-select: none;
   -webkit-user-drag: none;
 }
+
+/* Legibility over the drifting photos. The hero photos pass behind the
+   title block and the (deliberately transparent) nav, and dark text over a
+   dark photo disappeared ("SURFACE MOTO", the first words of the subtitle,
+   the logo). A soft halo in the page colour, around the letters only, keeps
+   every word readable without a box, a border or a change of layout. */
+body[data-page="project-c1"] .project-intro-eyebrow,
+body[data-page="project-c1"] .project-intro-title,
+body[data-page="project-c1"] .project-intro-sub,
+body[data-page="project-c1"] .project-scroll-cue,
+body[data-page="project-c1"] .nav-logo,
+body[data-page="project-c1"] .nav-link {
+  text-shadow:
+    0 0 2px #F5F5F3, 0 0 2px #F5F5F3, 0 0 2px #F5F5F3,
+    0 0 6px #F5F5F3, 0 0 6px #F5F5F3,
+    0 0 14px #F5F5F3,
+    0 0 26px rgba(245, 245, 243, 0.95),
+    0 0 44px rgba(245, 245, 243, 0.8);
+}
+body[data-page="project-c1"] .project-intro-eyebrow { opacity: 1; font-weight: var(--fw-medium); }
