@@ -11,6 +11,18 @@
      an optional typed name.
      ============================================================ */
 
+  // Only plain web addresses become links. Entries already stored on the
+  // board may hold other schemes (a javascript: link would run when clicked),
+  // so anything that is not http(s) is shown as text, not as a link.
+  function safeUrl(u) {
+    if (!u) return "";
+    try {
+      var p = new URL(String(u), location.href).protocol;
+      return p === "http:" || p === "https:" ? String(u) : "";
+    } catch (e) {
+      return "";
+    }
+  }
   function esc(s) {
     if (s === null || s === undefined) return "";
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -305,7 +317,7 @@
           "</div>" +
           '<div class="comp-card-main">' +
             '<div class="comp-card-host">' + esc(c.host) + "</div>" +
-            '<div class="comp-card-name">' + (c.link
+            '<div class="comp-card-name">' + (safeUrl(c.link)
               ? '<a href="' + esc(c.link) + '" target="_blank" rel="noopener noreferrer">' + esc(c.name) + "</a>"
               : esc(c.name)) + "</div>" +
             '<div class="comp-card-meta">added by ' + esc(c.addedBy || "anonymous") + "</div>" +
@@ -385,7 +397,9 @@
     return (
       '<li class="source-item" data-resource-id="' + esc(r.id) + '">' +
         '<div class="source-item-main">' +
-          '<a class="source-item-name" href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' + esc(r.name) + "</a>" +
+          (safeUrl(r.url)
+            ? '<a class="source-item-name" href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' + esc(r.name) + "</a>"
+            : '<span class="source-item-name">' + esc(r.name) + "</span>") +
           (r.note ? '<span class="source-item-note">' + esc(r.note) + "</span>" : "") +
           '<span class="source-item-meta">' + byline + "</span>" +
         "</div>" +

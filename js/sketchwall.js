@@ -939,6 +939,39 @@
   expandClose.addEventListener('click', closeExpand);
   addEventListener('keydown', (e) => { if (e.key === 'Escape') closeExpand(); });
 
+  // Dialog behaviour for the enlarged sketch: focus moves to Close when it
+  // opens and Tab stays there (the 25 cards behind it used to stay
+  // tabbable); when it closes, Close leaves the tab order again (it is
+  // invisible while closed) and focus returns to where it was.
+  (function dialogBehaviour() {
+    const card = document.getElementById('wallExpandCard');
+    if (card) {
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-modal', 'true');
+      card.setAttribute('aria-label', 'Sketch viewer');
+    }
+    expandClose.tabIndex = -1;
+    let prior = null;
+    new MutationObserver(() => {
+      const open = expandVeil.classList.contains('is-active');
+      if (open && expandClose.tabIndex !== 0) {
+        prior = document.activeElement;
+        expandClose.tabIndex = 0;
+        expandClose.focus({ preventScroll: true });
+      } else if (!open && expandClose.tabIndex === 0) {
+        expandClose.tabIndex = -1;
+        if (prior && prior !== document.body && document.contains(prior) && prior.focus) prior.focus({ preventScroll: true });
+        prior = null;
+      }
+    }).observe(expandVeil, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' && expandVeil.classList.contains('is-active')) {
+        e.preventDefault();
+        expandClose.focus({ preventScroll: true });
+      }
+    });
+  })();
+
   // Any resize used to rebuild the whole wall instantly: every card
   // vanished and re-scattered, which looks exactly like the page
   // refreshing. Small size changes happen constantly on a laptop (a

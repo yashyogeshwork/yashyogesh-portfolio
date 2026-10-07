@@ -30,7 +30,22 @@ function badRequest(msg) {
   return json({ error: msg }, 400);
 }
 
-export default async (req) => {
+// Only web addresses. `new URL()` on its own also accepts javascript:, data:
+// and other schemes, and these links are rendered as clickable on the site,
+// so a "javascript:" entry would have run when someone clicked it.
+function cleanLink(raw) {
+  if (!raw) return "";
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+  return raw;
+}
+
+async function handle(req) {
   const store = getStore("company-jobs");
   const url = new URL(req.url);
 
@@ -76,6 +91,7 @@ export default async (req) => {
     if (location.length > 120) return badRequest("location is too long");
     if (employerDate && !/^\d{4}-\d{2}-\d{2}$/.test(employerDate)) return badRequest("employerDate must be yyyy-mm-dd");
     if (link.length > 500) return badRequest("link is too long");
+    if (link && cleanLink(link) === null) return badRequest("link must be a web address starting with http:// or https://");
     if (postedBy.length > 80) return badRequest("name is too long");
 
     const posting = {
@@ -114,6 +130,17 @@ export default async (req) => {
   }
 
   return new Response("method not allowed", { status: 405 });
+}
+
+// A storage failure used to escape as an unformatted platform 500 that the
+// page silently turned into an empty list. It now returns the same {error}
+// JSON shape the other failures use.
+export default async (req) => {
+  try {
+    return await handle(req);
+  } catch (err) {
+    return json({ error: "something went wrong on the server, please try again" }, 500);
+  }
 };
 
 export const config = { path: "/api/jobs" };

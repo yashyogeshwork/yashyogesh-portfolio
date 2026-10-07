@@ -26,7 +26,7 @@ function badRequest(msg) {
   return json({ error: msg }, 400);
 }
 
-export default async (req) => {
+async function handle(req) {
   const store = getStore("community-studios");
 
   if (req.method === "GET") {
@@ -88,6 +88,17 @@ export default async (req) => {
   }
 
   return new Response("method not allowed", { status: 405 });
+}
+
+// A storage failure used to escape as an unformatted platform 500 that the
+// page silently turned into an empty list. It now returns the same {error}
+// JSON shape the other failures use.
+export default async (req) => {
+  try {
+    return await handle(req);
+  } catch (err) {
+    return json({ error: "something went wrong on the server, please try again" }, 500);
+  }
 };
 
 export const config = { path: "/api/studios" };

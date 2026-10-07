@@ -84,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
   ring.type = 'button';
   ring.className = 'progress-ring';
   ring.setAttribute('aria-label', 'Back to top');
+  ring.tabIndex = -1; // invisible until the case study starts: not a tab stop yet
+  ring.setAttribute('aria-hidden', 'true');
   ring.innerHTML = '<svg viewBox="0 0 44 44" aria-hidden="true"><circle class="progress-ring-track" cx="22" cy="22" r="20.5"/><circle class="progress-ring-arc" cx="22" cy="22" r="20.5" transform="rotate(-90 22 22)"/></svg><span class="progress-ring-arrow" aria-hidden="true"></span>';
   document.body.appendChild(ring);
   const arc = ring.querySelector('.progress-ring-arc');
@@ -99,6 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
     arc.style.strokeDashoffset = String(CIRC * (1 - p));
     const started = firstSection && firstSection.getBoundingClientRect().top < innerHeight * 0.5;
     ring.classList.toggle('is-on', !!started);
+    // Only focusable (and announced) while it is actually visible.
+    ring.tabIndex = started ? 0 : -1;
+    ring.setAttribute('aria-hidden', started ? 'false' : 'true');
+    // Rest above the footer instead of sitting on its text: as the footer
+    // scrolls into view the ring rises with it, with a small margin.
+    const foot = document.querySelector('.site-footer');
+    const lift = foot ? Math.max(0, innerHeight - foot.getBoundingClientRect().top) : 0;
+    ring.style.setProperty('--ring-lift', lift + 'px');
   }
   addEventListener('scroll', () => { if (!ringTick) { ringTick = true; requestAnimationFrame(updateRing); } }, { passive: true });
   addEventListener('resize', updateRing);

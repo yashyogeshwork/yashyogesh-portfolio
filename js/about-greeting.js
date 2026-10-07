@@ -25,13 +25,33 @@
     }, 250);
   }
 
-  setInterval(cycle, 2000);
+  // Only animate when it can be seen and the visitor hasn't asked for less
+  // motion. Before, the greeting swapped and the eyes blinked every 2s
+  // forever: ignoring reduced-motion (the only About script that did), and
+  // running while off-screen or in a background tab.
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let onScreen = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => { onScreen = entries[0].isIntersecting; }).observe(el);
+  }
+  if (!reducedMotion) {
+    setInterval(() => { if (onScreen && !document.hidden) cycle(); }, 2000);
+  }
 
   // Real cursor-tracking pupils — each pupil shifts toward the cursor,
   // clamped so it never leaves the white of the eye.
   if (eyesWrap && !matchMedia('(pointer: coarse)').matches) {
     const pupils = eyesWrap.querySelectorAll('.about-pupil');
+    // One update per frame, not one per mouse event, and none while the
+    // greeting is off-screen (it used to read layout on every pointermove).
+    let lastEvent = null, queued = false;
     addEventListener('pointermove', (e) => {
+      lastEvent = e;
+      if (queued || !onScreen) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; track(lastEvent); });
+    }, { passive: true });
+    function track(e) {
       eyes.forEach((eye, idx) => {
         const rect = eye.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
@@ -44,6 +64,6 @@
         const py = Math.sin(angle) * maxOffset;
         pupils[idx].style.transform = `translate(${px}px, ${py}px)`;
       });
-    });
+    }
   }
 })();

@@ -70,8 +70,10 @@
     const item = document.createElement('div');
     item.className = 'c1-mosaic-item';
     item.tabIndex = 0;
-    item.setAttribute('role', 'img');
-    item.setAttribute('aria-label', 'Surface C1 studio render');
+    // A button, because it opens the enlarged view (it was role=img), with a
+    // name of its own: all 8 used to share the identical label.
+    item.setAttribute('role', 'button');
+    item.setAttribute('aria-label', `Surface C1 studio render ${i + 1} of ${LAYOUT.length}, press Enter to enlarge`);
     item.style.setProperty('--top', spot.top);
     item.style.setProperty('--left', spot.left);
     item.style.setProperty('--w', spot.w);
@@ -102,7 +104,7 @@
     // A light 720px copy for the gallery; the full-size photo is only
     // loaded when a photo is opened in the enlarged view.
     img.src = src.replace(/\.jpg$/i, '-720w.jpg');
-    img.alt = 'Surface C1 studio render';
+    img.alt = ''; // the button around it carries the name; no duplicate announcement
     img.draggable = false; // no native image drag (red "no drop" circle)
     img.loading = 'lazy';
     inner.appendChild(img);

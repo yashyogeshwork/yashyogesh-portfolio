@@ -565,8 +565,7 @@
 .about-popit-label {
   font-size: var(--fs-caption);
   letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
-  opacity: 0.7;
+  color: var(--color-text-secondary); /* #707070 = 4.95:1; the extra 0.7 opacity dropped it to about 2.8:1 */
   user-select: none;
 }
 

@@ -9,6 +9,9 @@
 }
 
 html {
+  /* Anchor targets and skip links stop below the fixed nav instead of
+     sliding underneath it (the nav is about 60px tall). */
+  scroll-padding-top: 88px;
   scroll-behavior: smooth;
   background: var(--color-bg);
   /* Stops Safari/mobile browsers from intercepting a horizontal swipe as

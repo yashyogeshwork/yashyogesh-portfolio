@@ -1,6 +1,18 @@
 (function () {
   "use strict";
 
+  // Only plain web addresses become links. Entries already stored on the
+  // board may hold other schemes (a javascript: link would run when clicked),
+  // so anything that is not http(s) is shown as text, not as a link.
+  function safeUrl(u) {
+    if (!u) return "";
+    try {
+      var p = new URL(String(u), location.href).protocol;
+      return p === "http:" || p === "https:" ? String(u) : "";
+    } catch (e) {
+      return "";
+    }
+  }
   function esc(s) {
     if (s === null || s === undefined) return "";
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -123,7 +135,7 @@
     return (
       '<li class="jobs-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(companyId) + '" data-job-type="' + esc(p.type || "") + '">' +
         '<div class="jobs-item-main">' +
-          (p.link
+          (safeUrl(p.link)
             ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
             : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
           jobTagsHtml(p) +
@@ -177,7 +189,7 @@
     return (
       '<li class="jobs-item feed-item" data-job-id="' + esc(p.id) + '" data-company-id="' + esc(cid) + '" data-job-type="' + esc(p.type || "") + '">' +
         '<div class="jobs-item-main">' +
-          (p.link
+          (safeUrl(p.link)
             ? '<a class="jobs-item-role" href="' + esc(p.link) + '" target="_blank" rel="noopener noreferrer">' + esc(p.role) + "</a>"
             : '<span class="jobs-item-role">' + esc(p.role) + "</span>") +
           jobTagsHtml(p) +
@@ -491,7 +503,9 @@
     return (
       '<li class="source-item"' + (s.id ? ' data-source-id="' + esc(s.id) + '"' : "") + ">" +
         '<div class="source-item-main">' +
-          '<a class="source-item-name" href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.name) + "</a>" +
+          (safeUrl(s.url)
+            ? '<a class="source-item-name" href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.name) + "</a>"
+            : '<span class="source-item-name">' + esc(s.name) + "</span>") +
           (s.note ? '<span class="source-item-note">' + esc(s.note) + "</span>" : "") +
           (s.addedAt ? '<span class="source-item-meta">' + byline + when + "</span>" : "") +
         "</div>" +

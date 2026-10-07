@@ -112,6 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     link.href = s.href;
     link.style.cssText = 'position:absolute;inset:0;z-index:3;pointer-events:none;';
     link.draggable = false;
+    // Out of the tab order and hidden from screen readers: these four
+    // anchors had no name and duplicated the four label buttons (same
+    // destinations), so keyboard users tabbed through eight stops and
+    // screen readers met four silent links. The labels are the keyboard
+    // route; Enter on the page also opens the centred project.
+    link.tabIndex = -1;
+    link.setAttribute('aria-hidden', 'true');
     link.addEventListener('dragstart', (ev) => ev.preventDefault());
     link.addEventListener('click', (ev) => {
       // Safety guard: if a real drag just happened, don't navigate even

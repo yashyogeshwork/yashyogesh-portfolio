@@ -1,8 +1,11 @@
 # yashyogesh.com — Owner's Manual
 
-Your portfolio is a static site: HTML + CSS + JS, hosted on Netlify, deployed
+Your portfolio is a static site (HTML + CSS + JS) hosted on Netlify and deployed
 automatically from GitHub. **Anything committed to GitHub goes live in about a
-minute.** No servers, no database, nothing to maintain.
+minute.** The pages themselves need no server. A few small pieces do run live,
+as Netlify Functions that keep their data in Netlify Blobs: the job, competition,
+resource and studio boards on `uid.html` / `companies.html`, and the shared
+pop-it counter on the About page. See "The live pieces" below.
 
 ---
 
@@ -79,6 +82,52 @@ add in `content.js`.
 
 ---
 
+## The live pieces (Netlify Functions)
+
+These are the only parts that aren't plain files. They live in
+`netlify/functions/` and store their data in Netlify Blobs.
+
+| Address            | What it does                                            |
+|--------------------|---------------------------------------------------------|
+| `/api/jobs`        | job postings under each employer                        |
+| `/api/competitions`| open design competitions                                |
+| `/api/resources`   | shared links and sources                                |
+| `/api/studios`     | studios people add to the list                          |
+| `/api/pops`        | the shared total of bubbles popped on the About page    |
+
+Things to know:
+- **There is no login on the boards.** Anyone with the link can add an entry,
+  and anyone can delete one. That was a deliberate choice for the batchmates'
+  page, but it means the data can be changed by anyone.
+- Links are only accepted if they start with `http://` or `https://`, and the
+  pages only turn http(s) links into clickable links.
+- **Nothing here is backed up automatically.** If the data matters, export it
+  from the Netlify dashboard (Blobs) now and then.
+- Test any change to these functions on a Netlify **deploy preview** first,
+  not on the live site.
+
+## Private pages are not actually private
+
+`playbook.html`, `uid.html`, `companies.html` and `admin.html` are ordinary
+public pages. They are hidden from search engines (a "noindex" tag and
+robots.txt) but anyone who knows or guesses the address can open them, and
+`companies-data.js` carries the full data. Treat anything in them as public
+until they are moved behind a login or out of this repository.
+
+## Images: names, sizes and shapes
+
+- Every project slide has two files: the full image, and a smaller `-800w`
+  copy that phones download. When you replace a slide, replace **both**.
+  (The C1 gallery uses `-720w` copies in the same way.)
+- Slides use `-v3` in their file names. If you ever replace an image with one
+  of a **different shape**, also update the `aspect-ratio` on that slide in the
+  HTML (and save it under a new name, such as `-v4`, so browsers fetch the new
+  file straight away instead of showing the old one inside the new layout).
+- Images, CSS and JS are not cached for long, so same-name replacements
+  normally show up on the next visit.
+
+---
+
 ## How deployment works
 
 GitHub repo → Netlify (auto-deploy on every commit) → yashyogesh.com
@@ -103,4 +152,5 @@ version.
 | Add a sketch                     | Upload file + add row in admin.html              |
 | Change colors/fonts/spacing      | Edit css/variables.css                           |
 | Rearrange page sections          | Reorder `<section>` blocks in the page's HTML    |
+| Replace a project slide          | Upload the new full image and its -800w copy     |
 | Undo a mistake                   | GitHub → file → History → restore                |

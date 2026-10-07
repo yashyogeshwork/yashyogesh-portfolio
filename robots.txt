@@ -3,5 +3,6 @@ Allow: /
 Disallow: /companies.html
 Disallow: /playbook.html
 Disallow: /admin.html
+Disallow: /uid.html
 
 Sitemap: https://yashyogesh.com/sitemap.xml

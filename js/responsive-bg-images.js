@@ -1,45 +1,24 @@
-// Responsive background images — background-image has no native
-// srcset equivalent for viewport-width-based selection (image-set()
-// only handles device pixel ratio, not layout width), so this swaps
-// in a genuinely smaller, pre-generated -800w variant on narrow
-// viewports after apply-content.js has already set the full-size
-// image. Runs once on load and once on resize (debounced), not on
-// every scroll or frame.
+// Keeps slide images sharp when the window changes. apply-content.js picks
+// the right size when the page loads; if the window is later made larger
+// (or the page is zoomed), this upgrades the slides to a bigger size. It
+// only ever upgrades: shrinking the window never swaps in a softer image.
+// Runs on resize (debounced), never on scroll or per frame.
 (() => {
-  const MOBILE_BREAKPOINT = 768;
+  const rank = (u) => { const m = u.match(/-(\d+)w\.[a-z]+$/i); return m ? +m[1] : 99999; };
+  const stripSize = (u) => u.replace(/-\d+w(\.[a-z]+)$/i, '$1');
 
-  function toSmallVariant(url) {
-    // "images/toad/persona.jpg" -> "images/toad/persona-800w.jpg"
-    const match = url.match(/^(.*)\.(jpg|jpeg|webp|png)$/i);
-    if (!match) return url;
-    return `${match[1]}-800w.${match[2]}`;
-  }
-
-  function applyResponsiveImages() {
-    const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+  function refresh() {
+    if (!window.pickSlideVariant) return;
     document.querySelectorAll('[data-c-bg]').forEach((el) => {
-      const current = el.style.backgroundImage;
-      const urlMatch = current.match(/url\(['"]?([^'")]+)['"]?\)/);
-      if (!urlMatch) return;
-      const currentUrl = urlMatch[1];
-      const isAlreadySmall = /-800w\.(jpg|jpeg|webp|png)$/i.test(currentUrl);
-
-      if (isMobile && !isAlreadySmall) {
-        el.style.backgroundImage = `url('${toSmallVariant(currentUrl)}')`;
-      } else if (!isMobile && isAlreadySmall) {
-        el.style.backgroundImage = `url('${currentUrl.replace('-800w.', '.')}')`;
-      }
+      const current = el.dataset.cBgSrc;
+      if (!current) return;
+      const wanted = window.pickSlideVariant(stripSize(current), el.getBoundingClientRect().width);
+      if (rank(wanted) <= rank(current)) return;
+      el.dataset.cBgSrc = wanted;
+      if (el.style.backgroundImage) el.style.backgroundImage = `url('${wanted}')`;
     });
   }
 
-  // Run after apply-content.js has had a chance to set the real
-  // background images — a microtask delay is enough since both
-  // scripts run synchronously on initial page load.
-  setTimeout(applyResponsiveImages, 0);
-
-  let resizeTimer;
-  addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(applyResponsiveImages, 200);
-  });
+  let timer;
+  addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(refresh, 250); });
 })();

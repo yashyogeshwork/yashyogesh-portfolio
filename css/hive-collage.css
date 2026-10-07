@@ -22,12 +22,20 @@
 }
 
 .cs-problem-statement {
-  max-width: 900px;
-  margin: 0 auto; /* spacing comes from the shared rhythm in project.css */
+  /* Centred in the content column (Figma handoff 2026-10-07): 866px at the
+     1440 reference, which is 66% of the 1312px column. This statement only;
+     the journey-board statement below stays left-aligned. */
+  width: 66%;
+  max-width: 100%;
+  margin-inline: auto;
   text-align: center;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--color-text-primary);
+}
+/* Narrow screens: 66% would leave a sliver, so use the full column. */
+@media (max-width: 1023px) {
+  .cs-problem-statement { width: 100%; }
 }
 
 /* ---- Full-width board (a complete presentation board kept intact,
@@ -65,9 +73,9 @@
 }
 
 .cs-board-statement {
-  text-align: center;
-  max-width: 700px;
-  margin: 0 auto;
+  text-align: center; /* centred under the board (Yash, 2026-10-07) */
+  max-width: min(100%, 72em); /* one line on desktop */
+  margin-inline: auto;
   color: var(--color-text-primary);
 }
 

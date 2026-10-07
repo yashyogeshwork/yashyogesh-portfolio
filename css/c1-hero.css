@@ -39,7 +39,7 @@ body[data-page="project-c1"] .project-scroll-cue {
      so they still read as physical prints, just square-on rather than
      rounded and rotated. */
   border-radius:0;
-  border:1px solid rgba(255,255,255,0.55);
+  border:0;
   background-size:cover; background-position:center;
   box-shadow:0 2px 6px -2px rgba(17,17,17,0.14), 0 14px 30px -18px rgba(17,17,17,0.28);
   cursor:pointer;
@@ -107,7 +107,10 @@ body[data-page="project-c1"] .project-scroll-cue {
 }
 .c1-expand-veil.is-active .c1-expand-card { transform:scale(1); }
 .c1-expand-close {
-  position:fixed; top:30px; right:40px; z-index:101;
+  /* 44px tap area (was bare 12px text). The padding is taken off top/right
+     so the text itself stays exactly where it was. */
+  position:fixed; top:16px; right:24px; z-index:101;
+  padding:14px 16px; min-height:44px; min-width:44px;
   color:#fff; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
   opacity:0; pointer-events:none; transition:opacity 0.3s ease;
   background:none; border:none; cursor:pointer; font-family:inherit;
@@ -149,6 +152,7 @@ body[data-page="project-c1"] .project-scroll-cue {
 }
 
 .c1-mosaic-item {
+  cursor: pointer; /* it opens the enlarged view */
   position: absolute;
   top: var(--top);
   left: var(--left);
@@ -172,7 +176,7 @@ body[data-page="project-c1"] .project-scroll-cue {
      corner artifacts in Chromium; clip-path doesn't hit the bug and
      this frame animates transform on hover). */
   clip-path: inset(0 round var(--radius-image));
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 0;
   box-shadow: 0 2px 6px -2px rgba(17, 17, 17, 0.14),
               0 14px 30px -18px rgba(17, 17, 17, 0.28);
   transform: scale(1) translateY(0);
@@ -252,7 +256,7 @@ body[data-page="project-c1"] .project-scroll-cue {
   filter: saturate(0.85) brightness(0.97);
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) { /* was 700px: the rest of the site switches at 768px */
   /* The layout switches to a simple grid on narrow screens (the
      scattered absolute-positioned collage doesn't read well at this
      width), but the tilt/field/glow interaction itself now works via
@@ -319,22 +323,5 @@ body[data-page="project-c1"] .project-scroll-cue {
   -webkit-user-drag: none;
 }
 
-/* Legibility over the drifting photos. The hero photos pass behind the
-   title block and the (deliberately transparent) nav, and dark text over a
-   dark photo disappeared ("SURFACE MOTO", the first words of the subtitle,
-   the logo). A soft halo in the page colour, around the letters only, keeps
-   every word readable without a box, a border or a change of layout. */
-body[data-page="project-c1"] .project-intro-eyebrow,
-body[data-page="project-c1"] .project-intro-title,
-body[data-page="project-c1"] .project-intro-sub,
-body[data-page="project-c1"] .project-scroll-cue,
-body[data-page="project-c1"] .nav-logo,
-body[data-page="project-c1"] .nav-link {
-  text-shadow:
-    0 0 2px #F5F5F3, 0 0 2px #F5F5F3, 0 0 2px #F5F5F3,
-    0 0 6px #F5F5F3, 0 0 6px #F5F5F3,
-    0 0 14px #F5F5F3,
-    0 0 26px rgba(245, 245, 243, 0.95),
-    0 0 44px rgba(245, 245, 243, 0.8);
-}
+/* No glow behind the hero text (removed at Yash's request, 2026-10-07). */
 body[data-page="project-c1"] .project-intro-eyebrow { opacity: 1; font-weight: var(--fw-medium); }

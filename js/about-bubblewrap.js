@@ -111,18 +111,26 @@
     };
   })();
 
-  // Real keyboard access — without this, every bubble on the page is
-  // only reachable by mouse or touch, the same gap already found and
-  // fixed on the sketch wall and the C1 studio gallery elsewhere on
-  // this site. Applied once here, used everywhere a bubble is made.
+  // Keyboard access, without ~1,800 tab stops. Every bubble used to be its
+  // own focusable button (the footer patch plus the 12-shape gallery came
+  // to about 1,800 stops in front of the contact links). Bubbles are now
+  // pointer and touch targets only; each PATCH is a single tab stop, and
+  // Enter or Space on it pops the next bubble, so the toy still works from
+  // the keyboard.
   function makeBubbleAccessible(bubble) {
-    bubble.tabIndex = 0;
-    bubble.setAttribute('role', 'button');
-    bubble.setAttribute('aria-label', 'Pop');
-    bubble.addEventListener('keydown', (e) => {
+    bubble.tabIndex = -1;
+    bubble.setAttribute('aria-hidden', 'true');
+  }
+  function makePatchKeyboardAccessible(container) {
+    container.tabIndex = 0;
+    container.setAttribute('role', 'group');
+    container.setAttribute('aria-label', 'Pop-it. Press Enter or Space to pop the next bubble.');
+    container.addEventListener('keydown', (e) => {
+      if (e.target !== container) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        pop(bubble);
+        const next = container.querySelector('.about-bubble:not(.is-popped)');
+        if (next) pop(next);
       }
     });
   }
@@ -171,6 +179,7 @@
   }
 
   function wireDragToPop(container) {
+    if (!container.hasAttribute('data-kbd')) { container.setAttribute('data-kbd', '1'); makePatchKeyboardAccessible(container); }
     if (wired.has(container)) return;
     wired.add(container);
     container.addEventListener('pointerdown', (e) => {

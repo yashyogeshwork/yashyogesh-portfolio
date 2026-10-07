@@ -129,6 +129,8 @@
     // the same image URL on every recycle forced a repaint of the photo.
     if (card.size !== size) { card.el.style.width = size + 'px'; card.el.style.height = size + 'px'; }
     const bg = (item && item.image) ? `url('${item.image}') center/cover` : tones[card.index % tones.length];
+    // The sharp large version of this photo, used only by the enlarged view.
+    card.el.dataset.large = (item && item.image) ? item.image.replace(/\.jpg$/i, '-lg.jpg') : '';
     if (card.bg !== bg) { card.el.style.background = bg; card.bg = bg; }
 
     const existing = placed.find((p) => p.card === card);
@@ -191,9 +193,13 @@
   for (let i = 0; i < N; i++) {
     const el = document.createElement('div');
     el.className = 'c1-card';
-    el.tabIndex = 0;
+    // These photos drift across the screen continuously, so they are
+    // decoration for pointer and touch (click to enlarge), not keyboard
+    // stops: 32 of them sat in the tab order ahead of the case study. The
+    // gallery below is the keyboard route to the same viewer.
+    el.tabIndex = -1;
     el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', `Surface C1 photo ${i + 1}, press Enter to view`);
+    el.setAttribute('aria-hidden', 'true');
     fieldWrap.appendChild(el);
     const card = { el, index: i };
     function openThisCard() {
@@ -202,7 +208,17 @@
       // should emerge from where they came" rule, the card the person
       // just looked at is the origin, not the middle of the screen.
       const from = el.getBoundingClientRect();
-      expandCard.style.background = el.style.background;
+      expandCard.style.background = el.style.background; // the thumbnail shows instantly...
+      // ...and is swapped for the sharp large version the moment it has loaded
+      // (the card used to stay a blown-up thumbnail, which looked soft).
+      const largeSrc = el.dataset.large;
+      if (largeSrc) {
+        const big = new Image();
+        big.onload = () => {
+          if (expandVeil.classList.contains('is-active')) expandCard.style.background = `url('${largeSrc}') center/cover`;
+        };
+        big.src = largeSrc;
+      }
       expandVeil.classList.add('is-active');
       expandClose.classList.add('is-active');
 
@@ -298,6 +314,36 @@
   }
   expandVeil.addEventListener('click', closeExpand);
   expandClose.addEventListener('click', closeExpand);
+
+  // Dialog behaviour for the enlarged viewer. It is shared with the gallery
+  // below, so this watches the veil instead of hooking each opener: when it
+  // opens, focus moves to Close and Tab stays there; when it closes, the
+  // Close button leaves the tab order and focus returns to where it was.
+  (function dialogBehaviour() {
+    expandCard.setAttribute('role', 'dialog');
+    expandCard.setAttribute('aria-modal', 'true');
+    expandCard.setAttribute('aria-label', 'Photo viewer');
+    expandClose.tabIndex = -1;
+    let prior = null;
+    new MutationObserver(() => {
+      const open = expandVeil.classList.contains('is-active');
+      if (open && expandClose.tabIndex !== 0) {
+        prior = document.activeElement;
+        expandClose.tabIndex = 0;
+        expandClose.focus({ preventScroll: true });
+      } else if (!open && expandClose.tabIndex === 0) {
+        expandClose.tabIndex = -1;
+        if (prior && prior !== document.body && document.contains(prior) && prior.focus) prior.focus({ preventScroll: true });
+        prior = null;
+      }
+    }).observe(expandVeil, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' && expandVeil.classList.contains('is-active')) {
+        e.preventDefault();
+        expandClose.focus({ preventScroll: true });
+      }
+    });
+  })();
   addEventListener('keydown', (e) => { if (e.key === 'Escape') closeExpand(); });
 
   // Reduced motion: cards are already laid out in a static, fully-visible
@@ -329,7 +375,17 @@
   fieldWrap.parentElement.appendChild(progressWrap);
 
   let separateFrameCounter = 0;
+  // Once the lock is released and the hero has scrolled out of view, the
+  // frame loop kept moving and re-separating 32 cards nobody could see for
+  // the rest of the visit. It now idles until the hero is back in view.
+  let heroInView = true;
+  const heroEl = document.querySelector('.project-intro');
+  if (heroEl && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => { heroInView = entries[0].isIntersecting; }).observe(heroEl);
+  }
+
   function tick() {
+    if (unlocked && !heroInView) { requestAnimationFrame(tick); return; }
     separateFrameCounter++;
     if (separateFrameCounter % 2 === 0) separateCards();
     const { h } = getDims();
@@ -360,8 +416,10 @@
     if (!unlocked) {
       progressBar.style.transform = `scaleX(${Math.min(1, seen.size / N)})`;
       if (seen.size >= N) {
-        unlocked = true;
-        progressWrap.classList.add('is-hidden');
+        // Via the one unlock function. Setting the flag directly here left
+        // the page at overflow:hidden, so a keyboard-only visitor (whose
+        // key handler returns early once unlocked) could be stuck for good.
+        forceUnlock();
       }
     }
     boost += (boostTarget - boost) * 0.12; // accelerate toward the push
@@ -401,7 +459,10 @@
   addEventListener('keydown', (e) => {
     if (unlocked || !SCROLL_KEYS.has(e.key)) return;
     const t = e.target;
-    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName))) return;
+    // A focused photo card is a div[role=button], not a <button>: pressing
+    // Space on it opened the card AND unlocked the page behind it.
+    if ((e.key === ' ' || e.key === 'Spacebar') && t && t.closest && t.closest('[role="button"]')) return;
     forceUnlock();
   });
 
@@ -463,23 +524,39 @@
   // no visible way out. Each touchstart is its own gesture (a swipe has
   // a natural start/end, unlike a wheel stream), so it counts directly.
   let touchStartY = null;
+  let touchTravel = 0;       // how far this touch has moved in total
+  let touchCounted = false;  // has this touch already counted as a gesture?
   addEventListener('touchstart', (e) => {
     touchStartY = e.touches[0].clientY;
-    if (!unlocked) {
-      if (gestureCount >= GESTURE_LIMIT) {
-        forceUnlock();
-        const first = document.querySelector('.cs-section');
-        if (first) window.scrollTo({ top: first.getBoundingClientRect().top + scrollY, behavior: reduceMotion ? 'auto' : 'smooth' });
-      } else {
-        gestureCount += 1;
-      }
-    }
+    touchTravel = 0;
+    touchCounted = false;
+    // Nothing is counted here. It used to be, so simply TAPPING a photo
+    // three times counted as three scroll gestures, and the third tap
+    // force-unlocked and scrolled the page away instead of opening it.
   }, { passive: true });
 
   addEventListener('touchmove', (e) => {
     if (touchStartY === null) return;
     const dy = touchStartY - e.touches[0].clientY;
     touchStartY = e.touches[0].clientY;
+    touchTravel += Math.abs(dy);
+    if (!unlocked && !touchCounted && touchTravel > 12) {
+      // The finger really is swiping: only now does it count as a gesture.
+      touchCounted = true;
+      if (gestureCount >= GESTURE_LIMIT) {
+        // Third swipe: glide to the start of the case study, absorbing the
+        // rest of this swipe (same as the wheel path above).
+        e.preventDefault();
+        forceUnlock();
+        swallowUntilIdle = true;
+        const first = document.querySelector('.cs-section');
+        if (first) window.scrollTo({ top: first.getBoundingClientRect().top + scrollY, behavior: reduceMotion ? 'auto' : 'smooth' });
+        clearTimeout(gestureTimer);
+        gestureTimer = setTimeout(() => { gestureActive = false; swallowUntilIdle = false; }, 220);
+        return;
+      }
+      gestureCount += 1;
+    }
     if (!unlocked) {
       if (dy > 0) e.preventDefault();
       boostTarget = Math.min(24, boostTarget + Math.abs(dy) * 0.66);
@@ -496,7 +573,9 @@
     }
   }, { passive: false });
 
-  addEventListener('resize', () => {
+  let respawnToken = 0;
+  function respawnAll() {
+    const token = ++respawnToken; // a newer re-placement cancels an older one still in progress
     placed.length = 0;
     // Spawning all 32 cards synchronously in one go was the real cause
     // of the load-time freeze — each spawn can retry its overlap search
@@ -508,6 +587,7 @@
     const BATCH_SIZE = 6;
     let spawnIndex = 0;
     function spawnBatch() {
+      if (token !== respawnToken) return;
       const end = Math.min(spawnIndex + BATCH_SIZE, cards.length);
       for (; spawnIndex < end; spawnIndex++) {
         spawn(cards[spawnIndex]);
@@ -517,6 +597,19 @@
       }
     }
     spawnBatch();
+  }
+  // Re-place the photos once, 200ms after resizing stops. It used to run on
+  // every resize event (dozens per window drag), and also when a phone's
+  // address bar slid away, which changes the height but needs no re-placing.
+  let lastW = innerWidth, lastH = innerHeight, resizeTimer = null;
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const dw = Math.abs(innerWidth - lastW), dh = Math.abs(innerHeight - lastH);
+      if (dw < 40 && dh < lastH * 0.25) return;
+      lastW = innerWidth; lastH = innerHeight;
+      respawnAll();
+    }, 200);
   });
 
   requestAnimationFrame(tick);

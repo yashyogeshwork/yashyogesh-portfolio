@@ -39,14 +39,24 @@
      real photo once one is set, otherwise leaves whatever's already
      there (the gradient placeholder), so nothing breaks before real
      images exist. */
-  // Speed: every slide used to request its full-size image the moment the
-  // page loaded, including slides far down the page, and phones then
-  // swapped to the small version, so they downloaded both (TOAD: 19
-  // images, 4.5MB up front). Now the right size is chosen before anything
-  // is requested (the -800w version under 768px), and each image loads
-  // only when its slide is about a screen away from view.
-  const smallScreen = window.innerWidth < 768;
-  const pickSize = (v) => smallScreen ? v.replace(/\.(jpg|jpeg|webp|png)$/i, '-800w.$1') : v;
+  // Which size of a slide to load, per visitor. Each slide exists in five
+  // sizes (800 / 1200 / 1600 / 2400 wide and the full-resolution original). The one
+  // chosen is the smallest that still covers the slide's on-screen width at
+  // the screen's pixel density, so a phone downloads a small file while a
+  // retina laptop or a 27-inch monitor gets a genuinely sharp one. (Slides
+  // used to be a single size, shrunk well below the originals to keep pages
+  // light, which made them soft on high-density and large screens.)
+  const SLIDE_LADDER = [800, 1200, 1600];
+  window.pickSlideVariant = function (url, cssWidth) {
+    if (!/-v4\.(jpg|jpeg|webp|png)$/i.test(url)) return url; // not a ladder image
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const need = (cssWidth || window.innerWidth) * dpr;
+    for (const t of SLIDE_LADDER) {
+      if (t >= need * 0.97) return url.replace(/\.(jpg|jpeg|webp|png)$/i, `-${t}w.$1`);
+    }
+    return url; // the full-resolution original
+  };
+  // Each image also loads only when its slide is about a screen from view.
   const setBg = (el) => { el.style.backgroundImage = `url('${el.dataset.cBgSrc}')`; };
   const lazyBg = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries) => entries.forEach((e) => {
@@ -56,7 +66,7 @@
   document.querySelectorAll('[data-c-bg]').forEach((el) => {
     const val = get(el.getAttribute('data-c-bg'));
     if (typeof val === 'string' && val.length) {
-      el.dataset.cBgSrc = pickSize(val);
+      el.dataset.cBgSrc = window.pickSlideVariant(val, el.getBoundingClientRect().width / (parseFloat(getComputedStyle(el).getPropertyValue('--cw')) || 1));
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
       if (lazyBg) lazyBg.observe(el); else setBg(el);

@@ -75,7 +75,7 @@
        --cs-gap-text   text <-> the slide it belongs to, in BOTH directions
                        (heading above it, caption below it)
        --cs-gap-slide  slide <-> slide: each gets its own moment */
-  --cs-pad: clamp(64px, 6vw, 112px);
+  --cs-pad: clamp(48px, 4.4vw, 96px); /* was clamp(64px,6vw,112px): every section boundary stacked two of these */
   --cs-gap-text: clamp(40px, 5vw, 96px);
   --cs-gap-slide: clamp(56px, 8vw, 160px);
 }
@@ -378,8 +378,15 @@
 .cs-section :is(.cs-eyebrow, .cs-heading, .cs-body, .cs-stat-row, .cs-problem-statement, .cs-board-statement)
   + :is(.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack),
 .cs-section :is(.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack)
-  + :is(.cs-problem-statement, .cs-board-statement, .cs-body) {
+  + :is(.cs-problem-statement, .cs-board-statement, .cs-body, .cs-credit) {
   margin-top: var(--cs-gap-text);
+}
+/* ...except a caption after a slide. It belongs to the slide above it, so
+   it sits close to it (24px on a laptop, a little more on big screens)
+   instead of a full text gap away, where it read as an orphaned line. */
+.cs-section :is(.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack)
+  + :is(.cs-problem-statement, .cs-board-statement, .cs-body, .cs-credit) {
+  margin-top: clamp(24px, 1.6vw, 40px);
 }
 
 /* Large screens: the hero title keeps growing past its 80px laptop cap. */
@@ -396,3 +403,52 @@
 
 
 @media (min-width: 3200px) { .project-intro-title { font-size: 144px; } }
+
+/* Image credit under the last photo slide of a case study: quiet on purpose,
+   right-aligned to the edge of the slide above it. */
+.cs-credit {
+  font-size: var(--fs-caption);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.01em;
+  text-align: right;
+}
+
+/* One quiet line under the hero subtitle on the personal concept projects. */
+
+/* The page end. The next-project block alone carried 160px above and below
+   its text and the footer another 96px, so about 250px of padding surrounded
+   one line of text. Both now follow the shared section padding. */
+.cs-next { padding: var(--cs-pad) 0; }
+body[data-page^="project"] .site-footer { padding-top: var(--space-4); }
+
+/* One visible frame on every slide. The same white board used to read as a
+   card on a grey section but vanish on a white one, so some slides looked
+   "fitted to the grid" and the next one didn't. Every slide now has the same
+   hairline and white ground, on any background. */
+.cs-board, .cs-render, .cs-problem-image, .cs-fullbleed, .cs-image-stack-item {
+  /* Frame line removed (Figma handoff 2026-10-07): slides carry no border. */
+  border: 0;
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
+
+/* ==========================================================================
+   CROPS FROM THE FIGMA FILE (2026-10-07). Slides keep their proportions but
+   are trimmed in by a few percent. --cx/--cy are the crop window's offset and
+   --cw/--ch its size, as fractions of the image. The slide's own box (and so
+   the grid) never changes; only the picture inside is scaled and shifted.
+   ========================================================================== */
+.cs-crop > img {
+  width: calc(100% / var(--cw));
+  max-width: none;
+  height: auto;
+  transform: translate(calc(var(--cx) * -100%), calc(var(--cy) * -100%));
+  transform-origin: 0 0;
+}
+.cs-crop-bg {
+  background-size: calc(100% / var(--cw)) auto !important;
+  background-position: calc(var(--cx) / (1 - var(--cw)) * 100%) calc(var(--cy) / (1 - var(--ch)) * 100%) !important;
+}
+/* C1 process sketches: cropped from the bottom only (top edge kept). */
+.cs-crop-top { background-position: center top !important; }

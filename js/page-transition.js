@@ -85,8 +85,16 @@
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a');
     if (!a) return;
+    // Leave the browser's own behaviour alone for anything that isn't a
+    // plain left-click on a page link: Ctrl/Cmd/Shift/Alt+click (new tab or
+    // window, download), middle or right button, and download links such
+    // as the CV. Before, these were all turned into a delayed same-tab
+    // navigation, so Ctrl+click never opened a new tab and the CV download
+    // was hijacked.
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.hasAttribute('download')) return;
     const href = a.getAttribute('href');
-    if (!href || href.startsWith('#') || href.startsWith('mailto:')) return;
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
     if (a.target === '_blank' || a.hasAttribute('data-no-transition')) return;
     if (/^https?:\/\//i.test(href)) return; // external links: leave alone
 

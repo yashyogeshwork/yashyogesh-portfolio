@@ -211,7 +211,7 @@
 .progress-ring {
   position: fixed;
   right: 20px;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--ring-lift, 0px));
   z-index: 90;
   width: 44px;
   height: 44px;
